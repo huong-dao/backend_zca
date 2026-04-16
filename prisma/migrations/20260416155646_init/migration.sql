@@ -1,11 +1,11 @@
--- CreateSchema
-CREATE SCHEMA IF NOT EXISTS "public";
-
 -- CreateEnum
 CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'USER');
 
 -- CreateEnum
-CREATE TYPE "MessageStatus" AS ENUM ('SENT', 'FAILED');
+CREATE TYPE "MessageStatus" AS ENUM ('SENT', 'FAILED', 'RECALL');
+
+-- CreateEnum
+CREATE TYPE "ZaloSessionStatus" AS ENUM ('ACTIVE', 'EXPIRED', 'INVALID', 'PENDING_RELOGIN');
 
 -- CreateTable
 CREATE TABLE "users" (
@@ -47,6 +47,21 @@ CREATE TABLE "zalo_accounts" (
 );
 
 -- CreateTable
+CREATE TABLE "zalo_sessions" (
+    "id" UUID NOT NULL,
+    "zalo_account_id" UUID NOT NULL,
+    "encrypted_credentials" TEXT NOT NULL,
+    "status" "ZaloSessionStatus" NOT NULL DEFAULT 'ACTIVE',
+    "last_validated_at" TIMESTAMP(3),
+    "expires_at" TIMESTAMP(3),
+    "invalid_reason" TEXT,
+    "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updated_at" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "zalo_sessions_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
 CREATE TABLE "zalo_account_groups" (
     "id" UUID NOT NULL,
     "zalo_account_id" UUID NOT NULL,
@@ -60,6 +75,8 @@ CREATE TABLE "zalo_account_groups" (
 CREATE TABLE "messages" (
     "id" UUID NOT NULL,
     "message_zalo_id" VARCHAR(255),
+    "cli_msg_id" VARCHAR(255),
+    "uid_from" VARCHAR(255),
     "content" TEXT NOT NULL,
     "sender_id" UUID NOT NULL,
     "group_id" UUID NOT NULL,
@@ -101,6 +118,12 @@ CREATE UNIQUE INDEX "zalo_groups_group_zalo_id_key" ON "zalo_groups"("group_zalo
 CREATE UNIQUE INDEX "zalo_accounts_zalo_id_key" ON "zalo_accounts"("zalo_id");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "zalo_sessions_zalo_account_id_key" ON "zalo_sessions"("zalo_account_id");
+
+-- CreateIndex
+CREATE INDEX "zalo_sessions_status_idx" ON "zalo_sessions"("status");
+
+-- CreateIndex
 CREATE INDEX "messages_sender_id_group_id_idx" ON "messages"("sender_id", "group_id");
 
 -- CreateIndex
@@ -111,6 +134,9 @@ CREATE UNIQUE INDEX "configurations_key_key" ON "configurations"("key");
 
 -- AddForeignKey
 ALTER TABLE "zalo_accounts" ADD CONSTRAINT "zalo_accounts_master_id_fkey" FOREIGN KEY ("master_id") REFERENCES "zalo_accounts"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "zalo_sessions" ADD CONSTRAINT "zalo_sessions_zalo_account_id_fkey" FOREIGN KEY ("zalo_account_id") REFERENCES "zalo_accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "zalo_account_groups" ADD CONSTRAINT "zalo_account_groups_zalo_account_id_fkey" FOREIGN KEY ("zalo_account_id") REFERENCES "zalo_accounts"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
