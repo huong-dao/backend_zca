@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "MessageStatus" ADD VALUE IF NOT EXISTS 'RECALL';
