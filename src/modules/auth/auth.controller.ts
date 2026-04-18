@@ -15,15 +15,16 @@ export class AuthController {
   ) {}
 
   private getAuthCookieOptions(): CookieOptions {
-    const secure = this.configService.get<boolean>('auth.cookieSecure') ?? false;
+    const secure =
+      this.configService.get<boolean>('auth.cookieSecure') ?? false;
 
     return {
       httpOnly: true,
       secure,
       sameSite:
-        (this.configService.get<'lax' | 'strict' | 'none'>(
+        this.configService.get<'lax' | 'strict' | 'none'>(
           'auth.cookieSameSite',
-        ) ?? 'lax'),
+        ) ?? 'lax',
       path: '/',
       maxAge: 7 * 24 * 60 * 60 * 1000,
     };
@@ -31,7 +32,10 @@ export class AuthController {
 
   @Public()
   @Post('login')
-  async login(@Body() dto: LoginDto, @Res({ passthrough: true }) res: Response) {
+  async login(
+    @Body() dto: LoginDto,
+    @Res({ passthrough: true }) res: Response,
+  ) {
     const result = await this.authService.login(dto);
     const cookieName =
       this.configService.get<string>('auth.cookieName') ?? 'access_token';

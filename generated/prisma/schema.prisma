@@ -41,28 +41,53 @@ model ZaloGroup {
   @@map("zalo_groups")
 }
 
+model ZaloAccountRelation {
+  id        String   @id @default(uuid()) @db.Uuid
+  masterId  String   @map("master_id") @db.Uuid
+  childId   String   @map("child_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at")
+
+  master ZaloAccount @relation("MasterRelations", fields: [masterId], references: [id])
+  child  ZaloAccount @relation("ChildRelations", fields: [childId], references: [id])
+
+  @@unique([masterId, childId]) // tránh duplicate
+  @@map("zalo_account_relations")
+}
+
 model ZaloAccount {
   id         String   @id @default(uuid()) @db.Uuid
   zaloId     String?  @unique @map("zalo_id") @db.VarChar(255)
   phone      String?  @db.VarChar(50)
   name       String?  @db.VarChar(255)
   isMaster   Boolean  @default(false) @map("is_master")
-  masterId   String?  @map("master_id") @db.Uuid
   groupCount Int      @default(0) @map("group_count")
   groupData  Json?    @map("group_data")
   createdAt  DateTime @default(now()) @map("created_at")
   updatedAt  DateTime @updatedAt @map("updated_at")
 
-  master   ZaloAccount?  @relation("ZaloAccountHierarchy", fields: [masterId], references: [id])
-  children ZaloAccount[] @relation("ZaloAccountHierarchy")
+  // 👉 relation mới
+  masters  ZaloAccountRelation[] @relation("ChildRelations")
+  children ZaloAccountRelation[] @relation("MasterRelations")
 
   groupMaps ZaloAccountGroup[]
   messages  Message[]
 
-  friends  ZaloAccountFriend[] @relation("MasterFriends") // mình là master, có nhiều friend
-  friendOf ZaloAccountFriend[] @relation("FriendOf") // mình là friend của ai đó
+  friends  ZaloAccountFriend[] @relation("MasterFriends")
+  friendOf ZaloAccountFriend[] @relation("FriendOf")
 
   @@map("zalo_accounts")
+}
+
+model ZaloAccountGroup {
+  id            String      @id @default(uuid()) @db.Uuid
+  groupZaloId   String      @unique @map("group_zalo_id")
+  zaloAccountId String      @map("zalo_account_id") @db.Uuid
+  groupId       String      @map("group_id") @db.Uuid
+  joinedAt      DateTime    @default(now()) @map("joined_at")
+  zaloAccount   ZaloAccount @relation(fields: [zaloAccountId], references: [id])
+  group         ZaloGroup   @relation(fields: [groupId], references: [id])
+
+  @@map("zalo_account_groups")
 }
 
 model ZaloAccountFriend {
@@ -78,18 +103,6 @@ model ZaloAccountFriend {
 
   @@unique([masterId, friendId])
   @@map("zalo_account_friends")
-}
-
-model ZaloAccountGroup {
-  id            String      @id @default(uuid()) @db.Uuid
-  groupZaloId   String      @unique @map("group_zalo_id")
-  zaloAccountId String      @map("zalo_account_id") @db.Uuid
-  groupId       String      @map("group_id") @db.Uuid
-  joinedAt      DateTime    @default(now()) @map("joined_at")
-  zaloAccount   ZaloAccount @relation(fields: [zaloAccountId], references: [id])
-  group         ZaloGroup   @relation(fields: [groupId], references: [id])
-
-  @@map("zalo_account_groups")
 }
 
 model Message {

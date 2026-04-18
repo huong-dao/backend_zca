@@ -49,7 +49,6 @@ export class MessagesService {
             select: {
               id: true,
               groupName: true,
-              groupZaloId: true,
             },
           },
         },
@@ -71,6 +70,8 @@ export class MessagesService {
   }
 
   async send(dto: SendMessageDto) {
+    await Promise.resolve();
+
     void dto;
 
     throw new BadRequestException(

@@ -10,17 +10,16 @@ import {
 } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AddChildAccountDto } from './dto/add-child-account.dto';
-import { ConfirmLoginDto } from './dto/confirm-login.dto';
 import { CreateZaloAccountDto } from './dto/create-zalo-account.dto';
 import { UpdateGroupDataDto } from './dto/update-zalo-account-group-data';
 import { ZaloAccountsService } from './zalo-accounts.service';
+import { SearchZaloAccountsDto } from './dto/search.dto';
 
-@Roles('ADMIN')
+@Roles('ADMIN', 'USER')
 @Controller('zalo-accounts')
 export class ZaloAccountsController {
   constructor(private readonly zaloAccountsService: ZaloAccountsService) {}
 
-  @Roles('ADMIN', 'USER')
   @Post()
   create(@Body() dto: CreateZaloAccountDto) {
     return this.zaloAccountsService.create(dto);
@@ -29,6 +28,11 @@ export class ZaloAccountsController {
   @Get()
   findAll() {
     return this.zaloAccountsService.findAll();
+  }
+
+  @Post('search')
+  search(@Body() dto: SearchZaloAccountsDto) {
+    return this.zaloAccountsService.search(dto);
   }
 
   @Get(':id')

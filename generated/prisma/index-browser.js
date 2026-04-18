@@ -137,24 +137,23 @@ exports.Prisma.ZaloGroupScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ZaloAccountRelationScalarFieldEnum = {
+  id: 'id',
+  masterId: 'masterId',
+  childId: 'childId',
+  createdAt: 'createdAt'
+};
+
 exports.Prisma.ZaloAccountScalarFieldEnum = {
   id: 'id',
   zaloId: 'zaloId',
   phone: 'phone',
   name: 'name',
   isMaster: 'isMaster',
-  masterId: 'masterId',
   groupCount: 'groupCount',
   groupData: 'groupData',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
-};
-
-exports.Prisma.ZaloAccountFriendScalarFieldEnum = {
-  id: 'id',
-  masterId: 'masterId',
-  friendId: 'friendId',
-  createdAt: 'createdAt'
 };
 
 exports.Prisma.ZaloAccountGroupScalarFieldEnum = {
@@ -163,6 +162,13 @@ exports.Prisma.ZaloAccountGroupScalarFieldEnum = {
   zaloAccountId: 'zaloAccountId',
   groupId: 'groupId',
   joinedAt: 'joinedAt'
+};
+
+exports.Prisma.ZaloAccountFriendScalarFieldEnum = {
+  id: 'id',
+  masterId: 'masterId',
+  friendId: 'friendId',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.MessageScalarFieldEnum = {
@@ -232,9 +238,10 @@ exports.MessageStatus = exports.$Enums.MessageStatus = {
 exports.Prisma.ModelName = {
   User: 'User',
   ZaloGroup: 'ZaloGroup',
+  ZaloAccountRelation: 'ZaloAccountRelation',
   ZaloAccount: 'ZaloAccount',
-  ZaloAccountFriend: 'ZaloAccountFriend',
   ZaloAccountGroup: 'ZaloAccountGroup',
+  ZaloAccountFriend: 'ZaloAccountFriend',
   Message: 'Message',
   ApiKey: 'ApiKey',
   Configuration: 'Configuration'

@@ -1,7 +1,6 @@
 export type ZaloGroupRecord = {
   id: string;
   groupName: string;
-  groupZaloId: string;
   createdAt: Date;
   updatedAt: Date;
 };

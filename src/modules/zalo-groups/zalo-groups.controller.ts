@@ -32,14 +32,13 @@ export class ZaloGroupsController {
     return this.zaloGroupsService.create(dto);
   }
 
-  @Post('bulk')
+  @Post('bulk/:id')
   async createMultiple(
+    @Param('id', new ParseUUIDPipe()) id: string,
     @Body() dto: CreateMultipleZaloGroupsDto,
   ): Promise<CreateMultipleZaloGroupsResult> {
-    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
     const result: CreateMultipleZaloGroupsResult =
-      await this.zaloGroupsService.createMultiple(dto);
-    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+      await this.zaloGroupsService.createMultiple(id, dto);
 
     return result;
   }

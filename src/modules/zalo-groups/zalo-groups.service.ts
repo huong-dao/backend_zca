@@ -1,18 +1,16 @@
-import {
-  ConflictException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
-import type { CreateMultipleZaloGroupsResult } from './dto/create-multiple-zalo-groups-result.dto';
+import type {
+  CreateMultipleZaloGroupsResult,
+  ZaloGroupRecord,
+} from './dto/create-multiple-zalo-groups-result.dto';
 import { FindZaloGroupsDto } from './dto/find-zalo-groups.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 
 const zaloGroupSelect = {
   id: true,
   groupName: true,
-  groupZaloId: true,
   createdAt: true,
   updatedAt: true,
 } as const;
@@ -61,14 +59,27 @@ export class ZaloGroupsService {
   }
 
   async createMultiple(
+    zaloAccountId: string,
     dto: CreateMultipleZaloGroupsDto,
   ): Promise<CreateMultipleZaloGroupsResult> {
+    const zaloAccount = await this.prismaService.zaloAccount.findUnique({
+      where: { id: zaloAccountId },
+      select: { id: true },
+    });
+
+    if (!zaloAccount) {
+      throw new NotFoundException('Zalo account not found.');
+    }
+
     const normalizedGroups = dto.groups.map((group) => ({
       groupName: group.group_name.trim(),
       groupZaloId: group.group_zalo_id.trim(),
     }));
 
-    const uniqueGroups = new Map<string, { groupName: string; groupZaloId: string }>();
+    const uniqueGroups = new Map<
+      string,
+      { groupName: string; groupZaloId: string }
+    >();
     const duplicateInputGroupZaloIds = new Set<string>();
 
     for (const group of normalizedGroups) {
@@ -81,17 +92,19 @@ export class ZaloGroupsService {
     }
 
     const requestedGroupZaloIds = [...uniqueGroups.keys()];
-    const existingGroups = await this.prismaService.zaloGroup.findMany({
-      where: {
-        groupZaloId: {
-          in: requestedGroupZaloIds,
+    const existingGroups: Array<{ groupZaloId: string }> =
+      await this.prismaService.zaloAccountGroup.findMany({
+        where: {
+          groupZaloId: {
+            in: requestedGroupZaloIds,
+          },
         },
-      },
-      select: {
-        groupZaloId: true,
-      },
-    });
-    const existingGroupZaloIds = new Set(
+        select: {
+          groupZaloId: true,
+        },
+      });
+
+    const existingGroupZaloIds = new Set<string>(
       existingGroups.map((group) => group.groupZaloId),
     );
 
@@ -99,23 +112,45 @@ export class ZaloGroupsService {
       .filter((groupZaloId) => !existingGroupZaloIds.has(groupZaloId))
       .map((groupZaloId) => uniqueGroups.get(groupZaloId)!);
 
-    const created = await this.prismaService.$transaction(
-      groupsToCreate.map((group) =>
-        this.prismaService.zaloGroup.create({
+    const created = await this.prismaService.$transaction(async (tx) => {
+      const createdGroups: ZaloGroupRecord[] = [];
+
+      for (const group of groupsToCreate) {
+        const createdGroup = await tx.zaloGroup.create({
           data: {
             groupName: group.groupName,
-            groupZaloId: group.groupZaloId,
           },
           select: zaloGroupSelect,
-        }),
-      ),
-    );
+        });
+
+        await tx.zaloAccountGroup.create({
+          data: {
+            groupZaloId: group.groupZaloId,
+            zaloAccountId,
+            groupId: createdGroup.id,
+          },
+        });
+
+        createdGroups.push(createdGroup);
+      }
+
+      const groupCount = await tx.zaloAccountGroup.count({
+        where: { zaloAccountId },
+      });
+
+      await tx.zaloAccount.update({
+        where: { id: zaloAccountId },
+        data: { groupCount },
+      });
+
+      return createdGroups;
+    });
 
     return {
       created,
       skipped: {
-        existingGroupZaloIds: [...existingGroupZaloIds],
-        duplicateInputGroupZaloIds: [...duplicateInputGroupZaloIds],
+        existingGroupZaloIds: Array.from(existingGroupZaloIds),
+        duplicateInputGroupZaloIds: Array.from(duplicateInputGroupZaloIds),
       },
       summary: {
         requested: dto.groups.length,
@@ -157,36 +192,11 @@ export class ZaloGroupsService {
   }
 
   private async createOrUpdate(dto: UpsertZaloGroupDto, id?: string) {
-    const duplicatedGroup = await this.prismaService.zaloGroup.findFirst({
-      where: {
-        groupZaloId: dto.group_zalo_id,
-        ...(id
-          ? {
-              id: {
-                not: id,
-              },
-            }
-          : {}),
-      },
-      select: {
-        id: true,
-      },
-    });
-
-    if (duplicatedGroup) {
-      throw new ConflictException(
-        id
-          ? 'Another Zalo group already uses this group.'
-          : 'Zalo group already exists.',
-      );
-    }
-
     if (id) {
       return this.prismaService.zaloGroup.update({
         where: { id },
         data: {
           groupName: dto.group_name,
-          groupZaloId: dto.group_zalo_id,
         },
         select: zaloGroupSelect,
       });
@@ -195,7 +205,6 @@ export class ZaloGroupsService {
     return this.prismaService.zaloGroup.create({
       data: {
         groupName: dto.group_name,
-        groupZaloId: dto.group_zalo_id,
       },
       select: zaloGroupSelect,
     });

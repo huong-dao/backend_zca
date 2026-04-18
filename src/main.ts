@@ -20,7 +20,8 @@ async function bootstrap() {
   const configService = app.get(ConfigService);
   const port = configService.get<number>('app.port') ?? 3000;
 
-  const frontendOrigin = configService.get<string>('APP_FRONTEND_ORIGIN') ?? 'http://localhost:3001';
+  const frontendOrigin =
+    configService.get<string>('APP_FRONTEND_ORIGIN') ?? 'http://localhost:3001';
 
   app.use(cookieParser());
   app.enableCors({

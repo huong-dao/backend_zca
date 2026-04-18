@@ -24,20 +24,25 @@ export type User = $Result.DefaultSelection<Prisma.$UserPayload>
  */
 export type ZaloGroup = $Result.DefaultSelection<Prisma.$ZaloGroupPayload>
 /**
+ * Model ZaloAccountRelation
+ * 
+ */
+export type ZaloAccountRelation = $Result.DefaultSelection<Prisma.$ZaloAccountRelationPayload>
+/**
  * Model ZaloAccount
  * 
  */
 export type ZaloAccount = $Result.DefaultSelection<Prisma.$ZaloAccountPayload>
 /**
- * Model ZaloAccountFriend
- * 
- */
-export type ZaloAccountFriend = $Result.DefaultSelection<Prisma.$ZaloAccountFriendPayload>
-/**
  * Model ZaloAccountGroup
  * 
  */
 export type ZaloAccountGroup = $Result.DefaultSelection<Prisma.$ZaloAccountGroupPayload>
+/**
+ * Model ZaloAccountFriend
+ * 
+ */
+export type ZaloAccountFriend = $Result.DefaultSelection<Prisma.$ZaloAccountFriendPayload>
 /**
  * Model Message
  * 
@@ -226,6 +231,16 @@ export class PrismaClient<
   get zaloGroup(): Prisma.ZaloGroupDelegate<ExtArgs, ClientOptions>;
 
   /**
+   * `prisma.zaloAccountRelation`: Exposes CRUD operations for the **ZaloAccountRelation** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ZaloAccountRelations
+    * const zaloAccountRelations = await prisma.zaloAccountRelation.findMany()
+    * ```
+    */
+  get zaloAccountRelation(): Prisma.ZaloAccountRelationDelegate<ExtArgs, ClientOptions>;
+
+  /**
    * `prisma.zaloAccount`: Exposes CRUD operations for the **ZaloAccount** model.
     * Example usage:
     * ```ts
@@ -236,16 +251,6 @@ export class PrismaClient<
   get zaloAccount(): Prisma.ZaloAccountDelegate<ExtArgs, ClientOptions>;
 
   /**
-   * `prisma.zaloAccountFriend`: Exposes CRUD operations for the **ZaloAccountFriend** model.
-    * Example usage:
-    * ```ts
-    * // Fetch zero or more ZaloAccountFriends
-    * const zaloAccountFriends = await prisma.zaloAccountFriend.findMany()
-    * ```
-    */
-  get zaloAccountFriend(): Prisma.ZaloAccountFriendDelegate<ExtArgs, ClientOptions>;
-
-  /**
    * `prisma.zaloAccountGroup`: Exposes CRUD operations for the **ZaloAccountGroup** model.
     * Example usage:
     * ```ts
@@ -254,6 +259,16 @@ export class PrismaClient<
     * ```
     */
   get zaloAccountGroup(): Prisma.ZaloAccountGroupDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.zaloAccountFriend`: Exposes CRUD operations for the **ZaloAccountFriend** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ZaloAccountFriends
+    * const zaloAccountFriends = await prisma.zaloAccountFriend.findMany()
+    * ```
+    */
+  get zaloAccountFriend(): Prisma.ZaloAccountFriendDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.message`: Exposes CRUD operations for the **Message** model.
@@ -720,9 +735,10 @@ export namespace Prisma {
   export const ModelName: {
     User: 'User',
     ZaloGroup: 'ZaloGroup',
+    ZaloAccountRelation: 'ZaloAccountRelation',
     ZaloAccount: 'ZaloAccount',
-    ZaloAccountFriend: 'ZaloAccountFriend',
     ZaloAccountGroup: 'ZaloAccountGroup',
+    ZaloAccountFriend: 'ZaloAccountFriend',
     Message: 'Message',
     ApiKey: 'ApiKey',
     Configuration: 'Configuration'
@@ -741,7 +757,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "zaloGroup" | "zaloAccount" | "zaloAccountFriend" | "zaloAccountGroup" | "message" | "apiKey" | "configuration"
+      modelProps: "user" | "zaloGroup" | "zaloAccountRelation" | "zaloAccount" | "zaloAccountGroup" | "zaloAccountFriend" | "message" | "apiKey" | "configuration"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -893,6 +909,80 @@ export namespace Prisma {
           }
         }
       }
+      ZaloAccountRelation: {
+        payload: Prisma.$ZaloAccountRelationPayload<ExtArgs>
+        fields: Prisma.ZaloAccountRelationFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ZaloAccountRelationFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ZaloAccountRelationFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>
+          }
+          findFirst: {
+            args: Prisma.ZaloAccountRelationFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ZaloAccountRelationFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>
+          }
+          findMany: {
+            args: Prisma.ZaloAccountRelationFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>[]
+          }
+          create: {
+            args: Prisma.ZaloAccountRelationCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>
+          }
+          createMany: {
+            args: Prisma.ZaloAccountRelationCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ZaloAccountRelationCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>[]
+          }
+          delete: {
+            args: Prisma.ZaloAccountRelationDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>
+          }
+          update: {
+            args: Prisma.ZaloAccountRelationUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>
+          }
+          deleteMany: {
+            args: Prisma.ZaloAccountRelationDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ZaloAccountRelationUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ZaloAccountRelationUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>[]
+          }
+          upsert: {
+            args: Prisma.ZaloAccountRelationUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountRelationPayload>
+          }
+          aggregate: {
+            args: Prisma.ZaloAccountRelationAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateZaloAccountRelation>
+          }
+          groupBy: {
+            args: Prisma.ZaloAccountRelationGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ZaloAccountRelationGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ZaloAccountRelationCountArgs<ExtArgs>
+            result: $Utils.Optional<ZaloAccountRelationCountAggregateOutputType> | number
+          }
+        }
+      }
       ZaloAccount: {
         payload: Prisma.$ZaloAccountPayload<ExtArgs>
         fields: Prisma.ZaloAccountFieldRefs
@@ -967,80 +1057,6 @@ export namespace Prisma {
           }
         }
       }
-      ZaloAccountFriend: {
-        payload: Prisma.$ZaloAccountFriendPayload<ExtArgs>
-        fields: Prisma.ZaloAccountFriendFieldRefs
-        operations: {
-          findUnique: {
-            args: Prisma.ZaloAccountFriendFindUniqueArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload> | null
-          }
-          findUniqueOrThrow: {
-            args: Prisma.ZaloAccountFriendFindUniqueOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
-          }
-          findFirst: {
-            args: Prisma.ZaloAccountFriendFindFirstArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload> | null
-          }
-          findFirstOrThrow: {
-            args: Prisma.ZaloAccountFriendFindFirstOrThrowArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
-          }
-          findMany: {
-            args: Prisma.ZaloAccountFriendFindManyArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>[]
-          }
-          create: {
-            args: Prisma.ZaloAccountFriendCreateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
-          }
-          createMany: {
-            args: Prisma.ZaloAccountFriendCreateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          createManyAndReturn: {
-            args: Prisma.ZaloAccountFriendCreateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>[]
-          }
-          delete: {
-            args: Prisma.ZaloAccountFriendDeleteArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
-          }
-          update: {
-            args: Prisma.ZaloAccountFriendUpdateArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
-          }
-          deleteMany: {
-            args: Prisma.ZaloAccountFriendDeleteManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateMany: {
-            args: Prisma.ZaloAccountFriendUpdateManyArgs<ExtArgs>
-            result: BatchPayload
-          }
-          updateManyAndReturn: {
-            args: Prisma.ZaloAccountFriendUpdateManyAndReturnArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>[]
-          }
-          upsert: {
-            args: Prisma.ZaloAccountFriendUpsertArgs<ExtArgs>
-            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
-          }
-          aggregate: {
-            args: Prisma.ZaloAccountFriendAggregateArgs<ExtArgs>
-            result: $Utils.Optional<AggregateZaloAccountFriend>
-          }
-          groupBy: {
-            args: Prisma.ZaloAccountFriendGroupByArgs<ExtArgs>
-            result: $Utils.Optional<ZaloAccountFriendGroupByOutputType>[]
-          }
-          count: {
-            args: Prisma.ZaloAccountFriendCountArgs<ExtArgs>
-            result: $Utils.Optional<ZaloAccountFriendCountAggregateOutputType> | number
-          }
-        }
-      }
       ZaloAccountGroup: {
         payload: Prisma.$ZaloAccountGroupPayload<ExtArgs>
         fields: Prisma.ZaloAccountGroupFieldRefs
@@ -1112,6 +1128,80 @@ export namespace Prisma {
           count: {
             args: Prisma.ZaloAccountGroupCountArgs<ExtArgs>
             result: $Utils.Optional<ZaloAccountGroupCountAggregateOutputType> | number
+          }
+        }
+      }
+      ZaloAccountFriend: {
+        payload: Prisma.$ZaloAccountFriendPayload<ExtArgs>
+        fields: Prisma.ZaloAccountFriendFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ZaloAccountFriendFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ZaloAccountFriendFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
+          }
+          findFirst: {
+            args: Prisma.ZaloAccountFriendFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ZaloAccountFriendFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
+          }
+          findMany: {
+            args: Prisma.ZaloAccountFriendFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>[]
+          }
+          create: {
+            args: Prisma.ZaloAccountFriendCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
+          }
+          createMany: {
+            args: Prisma.ZaloAccountFriendCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ZaloAccountFriendCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>[]
+          }
+          delete: {
+            args: Prisma.ZaloAccountFriendDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
+          }
+          update: {
+            args: Prisma.ZaloAccountFriendUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
+          }
+          deleteMany: {
+            args: Prisma.ZaloAccountFriendDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ZaloAccountFriendUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ZaloAccountFriendUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>[]
+          }
+          upsert: {
+            args: Prisma.ZaloAccountFriendUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloAccountFriendPayload>
+          }
+          aggregate: {
+            args: Prisma.ZaloAccountFriendAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateZaloAccountFriend>
+          }
+          groupBy: {
+            args: Prisma.ZaloAccountFriendGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ZaloAccountFriendGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ZaloAccountFriendCountArgs<ExtArgs>
+            result: $Utils.Optional<ZaloAccountFriendCountAggregateOutputType> | number
           }
         }
       }
@@ -1447,9 +1537,10 @@ export namespace Prisma {
   export type GlobalOmitConfig = {
     user?: UserOmit
     zaloGroup?: ZaloGroupOmit
+    zaloAccountRelation?: ZaloAccountRelationOmit
     zaloAccount?: ZaloAccountOmit
-    zaloAccountFriend?: ZaloAccountFriendOmit
     zaloAccountGroup?: ZaloAccountGroupOmit
+    zaloAccountFriend?: ZaloAccountFriendOmit
     message?: MessageOmit
     apiKey?: ApiKeyOmit
     configuration?: ConfigurationOmit
@@ -1573,6 +1664,7 @@ export namespace Prisma {
    */
 
   export type ZaloAccountCountOutputType = {
+    masters: number
     children: number
     groupMaps: number
     messages: number
@@ -1581,6 +1673,7 @@ export namespace Prisma {
   }
 
   export type ZaloAccountCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    masters?: boolean | ZaloAccountCountOutputTypeCountMastersArgs
     children?: boolean | ZaloAccountCountOutputTypeCountChildrenArgs
     groupMaps?: boolean | ZaloAccountCountOutputTypeCountGroupMapsArgs
     messages?: boolean | ZaloAccountCountOutputTypeCountMessagesArgs
@@ -1602,8 +1695,15 @@ export namespace Prisma {
   /**
    * ZaloAccountCountOutputType without action
    */
+  export type ZaloAccountCountOutputTypeCountMastersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ZaloAccountRelationWhereInput
+  }
+
+  /**
+   * ZaloAccountCountOutputType without action
+   */
   export type ZaloAccountCountOutputTypeCountChildrenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ZaloAccountWhereInput
+    where?: ZaloAccountRelationWhereInput
   }
 
   /**
@@ -3756,6 +3856,1064 @@ export namespace Prisma {
 
 
   /**
+   * Model ZaloAccountRelation
+   */
+
+  export type AggregateZaloAccountRelation = {
+    _count: ZaloAccountRelationCountAggregateOutputType | null
+    _min: ZaloAccountRelationMinAggregateOutputType | null
+    _max: ZaloAccountRelationMaxAggregateOutputType | null
+  }
+
+  export type ZaloAccountRelationMinAggregateOutputType = {
+    id: string | null
+    masterId: string | null
+    childId: string | null
+    createdAt: Date | null
+  }
+
+  export type ZaloAccountRelationMaxAggregateOutputType = {
+    id: string | null
+    masterId: string | null
+    childId: string | null
+    createdAt: Date | null
+  }
+
+  export type ZaloAccountRelationCountAggregateOutputType = {
+    id: number
+    masterId: number
+    childId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ZaloAccountRelationMinAggregateInputType = {
+    id?: true
+    masterId?: true
+    childId?: true
+    createdAt?: true
+  }
+
+  export type ZaloAccountRelationMaxAggregateInputType = {
+    id?: true
+    masterId?: true
+    childId?: true
+    createdAt?: true
+  }
+
+  export type ZaloAccountRelationCountAggregateInputType = {
+    id?: true
+    masterId?: true
+    childId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ZaloAccountRelationAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ZaloAccountRelation to aggregate.
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountRelations to fetch.
+     */
+    orderBy?: ZaloAccountRelationOrderByWithRelationInput | ZaloAccountRelationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ZaloAccountRelationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountRelations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountRelations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ZaloAccountRelations
+    **/
+    _count?: true | ZaloAccountRelationCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ZaloAccountRelationMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ZaloAccountRelationMaxAggregateInputType
+  }
+
+  export type GetZaloAccountRelationAggregateType<T extends ZaloAccountRelationAggregateArgs> = {
+        [P in keyof T & keyof AggregateZaloAccountRelation]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateZaloAccountRelation[P]>
+      : GetScalarType<T[P], AggregateZaloAccountRelation[P]>
+  }
+
+
+
+
+  export type ZaloAccountRelationGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ZaloAccountRelationWhereInput
+    orderBy?: ZaloAccountRelationOrderByWithAggregationInput | ZaloAccountRelationOrderByWithAggregationInput[]
+    by: ZaloAccountRelationScalarFieldEnum[] | ZaloAccountRelationScalarFieldEnum
+    having?: ZaloAccountRelationScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ZaloAccountRelationCountAggregateInputType | true
+    _min?: ZaloAccountRelationMinAggregateInputType
+    _max?: ZaloAccountRelationMaxAggregateInputType
+  }
+
+  export type ZaloAccountRelationGroupByOutputType = {
+    id: string
+    masterId: string
+    childId: string
+    createdAt: Date
+    _count: ZaloAccountRelationCountAggregateOutputType | null
+    _min: ZaloAccountRelationMinAggregateOutputType | null
+    _max: ZaloAccountRelationMaxAggregateOutputType | null
+  }
+
+  type GetZaloAccountRelationGroupByPayload<T extends ZaloAccountRelationGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ZaloAccountRelationGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ZaloAccountRelationGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ZaloAccountRelationGroupByOutputType[P]>
+            : GetScalarType<T[P], ZaloAccountRelationGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ZaloAccountRelationSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    masterId?: boolean
+    childId?: boolean
+    createdAt?: boolean
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    child?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloAccountRelation"]>
+
+  export type ZaloAccountRelationSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    masterId?: boolean
+    childId?: boolean
+    createdAt?: boolean
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    child?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloAccountRelation"]>
+
+  export type ZaloAccountRelationSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    masterId?: boolean
+    childId?: boolean
+    createdAt?: boolean
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    child?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloAccountRelation"]>
+
+  export type ZaloAccountRelationSelectScalar = {
+    id?: boolean
+    masterId?: boolean
+    childId?: boolean
+    createdAt?: boolean
+  }
+
+  export type ZaloAccountRelationOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "masterId" | "childId" | "createdAt", ExtArgs["result"]["zaloAccountRelation"]>
+  export type ZaloAccountRelationInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    child?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }
+  export type ZaloAccountRelationIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    child?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }
+  export type ZaloAccountRelationIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    child?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }
+
+  export type $ZaloAccountRelationPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ZaloAccountRelation"
+    objects: {
+      master: Prisma.$ZaloAccountPayload<ExtArgs>
+      child: Prisma.$ZaloAccountPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      masterId: string
+      childId: string
+      createdAt: Date
+    }, ExtArgs["result"]["zaloAccountRelation"]>
+    composites: {}
+  }
+
+  type ZaloAccountRelationGetPayload<S extends boolean | null | undefined | ZaloAccountRelationDefaultArgs> = $Result.GetResult<Prisma.$ZaloAccountRelationPayload, S>
+
+  type ZaloAccountRelationCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ZaloAccountRelationFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ZaloAccountRelationCountAggregateInputType | true
+    }
+
+  export interface ZaloAccountRelationDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ZaloAccountRelation'], meta: { name: 'ZaloAccountRelation' } }
+    /**
+     * Find zero or one ZaloAccountRelation that matches the filter.
+     * @param {ZaloAccountRelationFindUniqueArgs} args - Arguments to find a ZaloAccountRelation
+     * @example
+     * // Get one ZaloAccountRelation
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ZaloAccountRelationFindUniqueArgs>(args: SelectSubset<T, ZaloAccountRelationFindUniqueArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ZaloAccountRelation that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ZaloAccountRelationFindUniqueOrThrowArgs} args - Arguments to find a ZaloAccountRelation
+     * @example
+     * // Get one ZaloAccountRelation
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ZaloAccountRelationFindUniqueOrThrowArgs>(args: SelectSubset<T, ZaloAccountRelationFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ZaloAccountRelation that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationFindFirstArgs} args - Arguments to find a ZaloAccountRelation
+     * @example
+     * // Get one ZaloAccountRelation
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ZaloAccountRelationFindFirstArgs>(args?: SelectSubset<T, ZaloAccountRelationFindFirstArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ZaloAccountRelation that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationFindFirstOrThrowArgs} args - Arguments to find a ZaloAccountRelation
+     * @example
+     * // Get one ZaloAccountRelation
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ZaloAccountRelationFindFirstOrThrowArgs>(args?: SelectSubset<T, ZaloAccountRelationFindFirstOrThrowArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ZaloAccountRelations that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ZaloAccountRelations
+     * const zaloAccountRelations = await prisma.zaloAccountRelation.findMany()
+     * 
+     * // Get first 10 ZaloAccountRelations
+     * const zaloAccountRelations = await prisma.zaloAccountRelation.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const zaloAccountRelationWithIdOnly = await prisma.zaloAccountRelation.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ZaloAccountRelationFindManyArgs>(args?: SelectSubset<T, ZaloAccountRelationFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ZaloAccountRelation.
+     * @param {ZaloAccountRelationCreateArgs} args - Arguments to create a ZaloAccountRelation.
+     * @example
+     * // Create one ZaloAccountRelation
+     * const ZaloAccountRelation = await prisma.zaloAccountRelation.create({
+     *   data: {
+     *     // ... data to create a ZaloAccountRelation
+     *   }
+     * })
+     * 
+     */
+    create<T extends ZaloAccountRelationCreateArgs>(args: SelectSubset<T, ZaloAccountRelationCreateArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ZaloAccountRelations.
+     * @param {ZaloAccountRelationCreateManyArgs} args - Arguments to create many ZaloAccountRelations.
+     * @example
+     * // Create many ZaloAccountRelations
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ZaloAccountRelationCreateManyArgs>(args?: SelectSubset<T, ZaloAccountRelationCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ZaloAccountRelations and returns the data saved in the database.
+     * @param {ZaloAccountRelationCreateManyAndReturnArgs} args - Arguments to create many ZaloAccountRelations.
+     * @example
+     * // Create many ZaloAccountRelations
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ZaloAccountRelations and only return the `id`
+     * const zaloAccountRelationWithIdOnly = await prisma.zaloAccountRelation.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ZaloAccountRelationCreateManyAndReturnArgs>(args?: SelectSubset<T, ZaloAccountRelationCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ZaloAccountRelation.
+     * @param {ZaloAccountRelationDeleteArgs} args - Arguments to delete one ZaloAccountRelation.
+     * @example
+     * // Delete one ZaloAccountRelation
+     * const ZaloAccountRelation = await prisma.zaloAccountRelation.delete({
+     *   where: {
+     *     // ... filter to delete one ZaloAccountRelation
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ZaloAccountRelationDeleteArgs>(args: SelectSubset<T, ZaloAccountRelationDeleteArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ZaloAccountRelation.
+     * @param {ZaloAccountRelationUpdateArgs} args - Arguments to update one ZaloAccountRelation.
+     * @example
+     * // Update one ZaloAccountRelation
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ZaloAccountRelationUpdateArgs>(args: SelectSubset<T, ZaloAccountRelationUpdateArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ZaloAccountRelations.
+     * @param {ZaloAccountRelationDeleteManyArgs} args - Arguments to filter ZaloAccountRelations to delete.
+     * @example
+     * // Delete a few ZaloAccountRelations
+     * const { count } = await prisma.zaloAccountRelation.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ZaloAccountRelationDeleteManyArgs>(args?: SelectSubset<T, ZaloAccountRelationDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ZaloAccountRelations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ZaloAccountRelations
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ZaloAccountRelationUpdateManyArgs>(args: SelectSubset<T, ZaloAccountRelationUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ZaloAccountRelations and returns the data updated in the database.
+     * @param {ZaloAccountRelationUpdateManyAndReturnArgs} args - Arguments to update many ZaloAccountRelations.
+     * @example
+     * // Update many ZaloAccountRelations
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ZaloAccountRelations and only return the `id`
+     * const zaloAccountRelationWithIdOnly = await prisma.zaloAccountRelation.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ZaloAccountRelationUpdateManyAndReturnArgs>(args: SelectSubset<T, ZaloAccountRelationUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ZaloAccountRelation.
+     * @param {ZaloAccountRelationUpsertArgs} args - Arguments to update or create a ZaloAccountRelation.
+     * @example
+     * // Update or create a ZaloAccountRelation
+     * const zaloAccountRelation = await prisma.zaloAccountRelation.upsert({
+     *   create: {
+     *     // ... data to create a ZaloAccountRelation
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ZaloAccountRelation we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ZaloAccountRelationUpsertArgs>(args: SelectSubset<T, ZaloAccountRelationUpsertArgs<ExtArgs>>): Prisma__ZaloAccountRelationClient<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ZaloAccountRelations.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationCountArgs} args - Arguments to filter ZaloAccountRelations to count.
+     * @example
+     * // Count the number of ZaloAccountRelations
+     * const count = await prisma.zaloAccountRelation.count({
+     *   where: {
+     *     // ... the filter for the ZaloAccountRelations we want to count
+     *   }
+     * })
+    **/
+    count<T extends ZaloAccountRelationCountArgs>(
+      args?: Subset<T, ZaloAccountRelationCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ZaloAccountRelationCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ZaloAccountRelation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ZaloAccountRelationAggregateArgs>(args: Subset<T, ZaloAccountRelationAggregateArgs>): Prisma.PrismaPromise<GetZaloAccountRelationAggregateType<T>>
+
+    /**
+     * Group by ZaloAccountRelation.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountRelationGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ZaloAccountRelationGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ZaloAccountRelationGroupByArgs['orderBy'] }
+        : { orderBy?: ZaloAccountRelationGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ZaloAccountRelationGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetZaloAccountRelationGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ZaloAccountRelation model
+   */
+  readonly fields: ZaloAccountRelationFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ZaloAccountRelation.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ZaloAccountRelationClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    master<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    child<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ZaloAccountRelation model
+   */
+  interface ZaloAccountRelationFieldRefs {
+    readonly id: FieldRef<"ZaloAccountRelation", 'String'>
+    readonly masterId: FieldRef<"ZaloAccountRelation", 'String'>
+    readonly childId: FieldRef<"ZaloAccountRelation", 'String'>
+    readonly createdAt: FieldRef<"ZaloAccountRelation", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ZaloAccountRelation findUnique
+   */
+  export type ZaloAccountRelationFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountRelation to fetch.
+     */
+    where: ZaloAccountRelationWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountRelation findUniqueOrThrow
+   */
+  export type ZaloAccountRelationFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountRelation to fetch.
+     */
+    where: ZaloAccountRelationWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountRelation findFirst
+   */
+  export type ZaloAccountRelationFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountRelation to fetch.
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountRelations to fetch.
+     */
+    orderBy?: ZaloAccountRelationOrderByWithRelationInput | ZaloAccountRelationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ZaloAccountRelations.
+     */
+    cursor?: ZaloAccountRelationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountRelations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountRelations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloAccountRelations.
+     */
+    distinct?: ZaloAccountRelationScalarFieldEnum | ZaloAccountRelationScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloAccountRelation findFirstOrThrow
+   */
+  export type ZaloAccountRelationFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountRelation to fetch.
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountRelations to fetch.
+     */
+    orderBy?: ZaloAccountRelationOrderByWithRelationInput | ZaloAccountRelationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ZaloAccountRelations.
+     */
+    cursor?: ZaloAccountRelationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountRelations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountRelations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloAccountRelations.
+     */
+    distinct?: ZaloAccountRelationScalarFieldEnum | ZaloAccountRelationScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloAccountRelation findMany
+   */
+  export type ZaloAccountRelationFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountRelations to fetch.
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountRelations to fetch.
+     */
+    orderBy?: ZaloAccountRelationOrderByWithRelationInput | ZaloAccountRelationOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ZaloAccountRelations.
+     */
+    cursor?: ZaloAccountRelationWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountRelations from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountRelations.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloAccountRelations.
+     */
+    distinct?: ZaloAccountRelationScalarFieldEnum | ZaloAccountRelationScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloAccountRelation create
+   */
+  export type ZaloAccountRelationCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ZaloAccountRelation.
+     */
+    data: XOR<ZaloAccountRelationCreateInput, ZaloAccountRelationUncheckedCreateInput>
+  }
+
+  /**
+   * ZaloAccountRelation createMany
+   */
+  export type ZaloAccountRelationCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ZaloAccountRelations.
+     */
+    data: ZaloAccountRelationCreateManyInput | ZaloAccountRelationCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ZaloAccountRelation createManyAndReturn
+   */
+  export type ZaloAccountRelationCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * The data used to create many ZaloAccountRelations.
+     */
+    data: ZaloAccountRelationCreateManyInput | ZaloAccountRelationCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ZaloAccountRelation update
+   */
+  export type ZaloAccountRelationUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ZaloAccountRelation.
+     */
+    data: XOR<ZaloAccountRelationUpdateInput, ZaloAccountRelationUncheckedUpdateInput>
+    /**
+     * Choose, which ZaloAccountRelation to update.
+     */
+    where: ZaloAccountRelationWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountRelation updateMany
+   */
+  export type ZaloAccountRelationUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ZaloAccountRelations.
+     */
+    data: XOR<ZaloAccountRelationUpdateManyMutationInput, ZaloAccountRelationUncheckedUpdateManyInput>
+    /**
+     * Filter which ZaloAccountRelations to update
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * Limit how many ZaloAccountRelations to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ZaloAccountRelation updateManyAndReturn
+   */
+  export type ZaloAccountRelationUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * The data used to update ZaloAccountRelations.
+     */
+    data: XOR<ZaloAccountRelationUpdateManyMutationInput, ZaloAccountRelationUncheckedUpdateManyInput>
+    /**
+     * Filter which ZaloAccountRelations to update
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * Limit how many ZaloAccountRelations to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ZaloAccountRelation upsert
+   */
+  export type ZaloAccountRelationUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ZaloAccountRelation to update in case it exists.
+     */
+    where: ZaloAccountRelationWhereUniqueInput
+    /**
+     * In case the ZaloAccountRelation found by the `where` argument doesn't exist, create a new ZaloAccountRelation with this data.
+     */
+    create: XOR<ZaloAccountRelationCreateInput, ZaloAccountRelationUncheckedCreateInput>
+    /**
+     * In case the ZaloAccountRelation was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ZaloAccountRelationUpdateInput, ZaloAccountRelationUncheckedUpdateInput>
+  }
+
+  /**
+   * ZaloAccountRelation delete
+   */
+  export type ZaloAccountRelationDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    /**
+     * Filter which ZaloAccountRelation to delete.
+     */
+    where: ZaloAccountRelationWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountRelation deleteMany
+   */
+  export type ZaloAccountRelationDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ZaloAccountRelations to delete
+     */
+    where?: ZaloAccountRelationWhereInput
+    /**
+     * Limit how many ZaloAccountRelations to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ZaloAccountRelation without action
+   */
+  export type ZaloAccountRelationDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountRelation
+     */
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountRelation
+     */
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Model ZaloAccount
    */
 
@@ -3781,7 +4939,6 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean | null
-    masterId: string | null
     groupCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3793,7 +4950,6 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean | null
-    masterId: string | null
     groupCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -3805,7 +4961,6 @@ export namespace Prisma {
     phone: number
     name: number
     isMaster: number
-    masterId: number
     groupCount: number
     groupData: number
     createdAt: number
@@ -3828,7 +4983,6 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
-    masterId?: true
     groupCount?: true
     createdAt?: true
     updatedAt?: true
@@ -3840,7 +4994,6 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
-    masterId?: true
     groupCount?: true
     createdAt?: true
     updatedAt?: true
@@ -3852,7 +5005,6 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
-    masterId?: true
     groupCount?: true
     groupData?: true
     createdAt?: true
@@ -3952,7 +5104,6 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean
-    masterId: string | null
     groupCount: number
     groupData: JsonValue | null
     createdAt: Date
@@ -3984,12 +5135,11 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
-    masterId?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    master?: boolean | ZaloAccount$masterArgs<ExtArgs>
+    masters?: boolean | ZaloAccount$mastersArgs<ExtArgs>
     children?: boolean | ZaloAccount$childrenArgs<ExtArgs>
     groupMaps?: boolean | ZaloAccount$groupMapsArgs<ExtArgs>
     messages?: boolean | ZaloAccount$messagesArgs<ExtArgs>
@@ -4004,12 +5154,10 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
-    masterId?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    master?: boolean | ZaloAccount$masterArgs<ExtArgs>
   }, ExtArgs["result"]["zaloAccount"]>
 
   export type ZaloAccountSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -4018,12 +5166,10 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
-    masterId?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
     updatedAt?: boolean
-    master?: boolean | ZaloAccount$masterArgs<ExtArgs>
   }, ExtArgs["result"]["zaloAccount"]>
 
   export type ZaloAccountSelectScalar = {
@@ -4032,16 +5178,15 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
-    masterId?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ZaloAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zaloId" | "phone" | "name" | "isMaster" | "masterId" | "groupCount" | "groupData" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloAccount"]>
+  export type ZaloAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zaloId" | "phone" | "name" | "isMaster" | "groupCount" | "groupData" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloAccount"]>
   export type ZaloAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    master?: boolean | ZaloAccount$masterArgs<ExtArgs>
+    masters?: boolean | ZaloAccount$mastersArgs<ExtArgs>
     children?: boolean | ZaloAccount$childrenArgs<ExtArgs>
     groupMaps?: boolean | ZaloAccount$groupMapsArgs<ExtArgs>
     messages?: boolean | ZaloAccount$messagesArgs<ExtArgs>
@@ -4049,18 +5194,14 @@ export namespace Prisma {
     friendOf?: boolean | ZaloAccount$friendOfArgs<ExtArgs>
     _count?: boolean | ZaloAccountCountOutputTypeDefaultArgs<ExtArgs>
   }
-  export type ZaloAccountIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    master?: boolean | ZaloAccount$masterArgs<ExtArgs>
-  }
-  export type ZaloAccountIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    master?: boolean | ZaloAccount$masterArgs<ExtArgs>
-  }
+  export type ZaloAccountIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type ZaloAccountIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $ZaloAccountPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "ZaloAccount"
     objects: {
-      master: Prisma.$ZaloAccountPayload<ExtArgs> | null
-      children: Prisma.$ZaloAccountPayload<ExtArgs>[]
+      masters: Prisma.$ZaloAccountRelationPayload<ExtArgs>[]
+      children: Prisma.$ZaloAccountRelationPayload<ExtArgs>[]
       groupMaps: Prisma.$ZaloAccountGroupPayload<ExtArgs>[]
       messages: Prisma.$MessagePayload<ExtArgs>[]
       friends: Prisma.$ZaloAccountFriendPayload<ExtArgs>[]
@@ -4072,7 +5213,6 @@ export namespace Prisma {
       phone: string | null
       name: string | null
       isMaster: boolean
-      masterId: string | null
       groupCount: number
       groupData: Prisma.JsonValue | null
       createdAt: Date
@@ -4471,8 +5611,8 @@ export namespace Prisma {
    */
   export interface Prisma__ZaloAccountClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
-    master<T extends ZaloAccount$masterArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$masterArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-    children<T extends ZaloAccount$childrenArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    masters<T extends ZaloAccount$mastersArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$mastersArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    children<T extends ZaloAccount$childrenArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     groupMaps<T extends ZaloAccount$groupMapsArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$groupMapsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     messages<T extends ZaloAccount$messagesArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     friends<T extends ZaloAccount$friendsArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$friendsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -4511,7 +5651,6 @@ export namespace Prisma {
     readonly phone: FieldRef<"ZaloAccount", 'String'>
     readonly name: FieldRef<"ZaloAccount", 'String'>
     readonly isMaster: FieldRef<"ZaloAccount", 'Boolean'>
-    readonly masterId: FieldRef<"ZaloAccount", 'String'>
     readonly groupCount: FieldRef<"ZaloAccount", 'Int'>
     readonly groupData: FieldRef<"ZaloAccount", 'Json'>
     readonly createdAt: FieldRef<"ZaloAccount", 'DateTime'>
@@ -4770,10 +5909,6 @@ export namespace Prisma {
      */
     data: ZaloAccountCreateManyInput | ZaloAccountCreateManyInput[]
     skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountIncludeCreateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -4844,10 +5979,6 @@ export namespace Prisma {
      * Limit how many ZaloAccounts to update.
      */
     limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountIncludeUpdateManyAndReturn<ExtArgs> | null
   }
 
   /**
@@ -4917,22 +6048,27 @@ export namespace Prisma {
   }
 
   /**
-   * ZaloAccount.master
+   * ZaloAccount.masters
    */
-  export type ZaloAccount$masterArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+  export type ZaloAccount$mastersArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ZaloAccount
+     * Select specific fields to fetch from the ZaloAccountRelation
      */
-    select?: ZaloAccountSelect<ExtArgs> | null
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ZaloAccount
+     * Omit specific fields from the ZaloAccountRelation
      */
-    omit?: ZaloAccountOmit<ExtArgs> | null
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ZaloAccountInclude<ExtArgs> | null
-    where?: ZaloAccountWhereInput
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    where?: ZaloAccountRelationWhereInput
+    orderBy?: ZaloAccountRelationOrderByWithRelationInput | ZaloAccountRelationOrderByWithRelationInput[]
+    cursor?: ZaloAccountRelationWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ZaloAccountRelationScalarFieldEnum | ZaloAccountRelationScalarFieldEnum[]
   }
 
   /**
@@ -4940,23 +6076,23 @@ export namespace Prisma {
    */
   export type ZaloAccount$childrenArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     /**
-     * Select specific fields to fetch from the ZaloAccount
+     * Select specific fields to fetch from the ZaloAccountRelation
      */
-    select?: ZaloAccountSelect<ExtArgs> | null
+    select?: ZaloAccountRelationSelect<ExtArgs> | null
     /**
-     * Omit specific fields from the ZaloAccount
+     * Omit specific fields from the ZaloAccountRelation
      */
-    omit?: ZaloAccountOmit<ExtArgs> | null
+    omit?: ZaloAccountRelationOmit<ExtArgs> | null
     /**
      * Choose, which related nodes to fetch as well
      */
-    include?: ZaloAccountInclude<ExtArgs> | null
-    where?: ZaloAccountWhereInput
-    orderBy?: ZaloAccountOrderByWithRelationInput | ZaloAccountOrderByWithRelationInput[]
-    cursor?: ZaloAccountWhereUniqueInput
+    include?: ZaloAccountRelationInclude<ExtArgs> | null
+    where?: ZaloAccountRelationWhereInput
+    orderBy?: ZaloAccountRelationOrderByWithRelationInput | ZaloAccountRelationOrderByWithRelationInput[]
+    cursor?: ZaloAccountRelationWhereUniqueInput
     take?: number
     skip?: number
-    distinct?: ZaloAccountScalarFieldEnum | ZaloAccountScalarFieldEnum[]
+    distinct?: ZaloAccountRelationScalarFieldEnum | ZaloAccountRelationScalarFieldEnum[]
   }
 
   /**
@@ -5071,1064 +6207,6 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ZaloAccountInclude<ExtArgs> | null
-  }
-
-
-  /**
-   * Model ZaloAccountFriend
-   */
-
-  export type AggregateZaloAccountFriend = {
-    _count: ZaloAccountFriendCountAggregateOutputType | null
-    _min: ZaloAccountFriendMinAggregateOutputType | null
-    _max: ZaloAccountFriendMaxAggregateOutputType | null
-  }
-
-  export type ZaloAccountFriendMinAggregateOutputType = {
-    id: string | null
-    masterId: string | null
-    friendId: string | null
-    createdAt: Date | null
-  }
-
-  export type ZaloAccountFriendMaxAggregateOutputType = {
-    id: string | null
-    masterId: string | null
-    friendId: string | null
-    createdAt: Date | null
-  }
-
-  export type ZaloAccountFriendCountAggregateOutputType = {
-    id: number
-    masterId: number
-    friendId: number
-    createdAt: number
-    _all: number
-  }
-
-
-  export type ZaloAccountFriendMinAggregateInputType = {
-    id?: true
-    masterId?: true
-    friendId?: true
-    createdAt?: true
-  }
-
-  export type ZaloAccountFriendMaxAggregateInputType = {
-    id?: true
-    masterId?: true
-    friendId?: true
-    createdAt?: true
-  }
-
-  export type ZaloAccountFriendCountAggregateInputType = {
-    id?: true
-    masterId?: true
-    friendId?: true
-    createdAt?: true
-    _all?: true
-  }
-
-  export type ZaloAccountFriendAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which ZaloAccountFriend to aggregate.
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ZaloAccountFriends to fetch.
-     */
-    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the start position
-     */
-    cursor?: ZaloAccountFriendWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ZaloAccountFriends from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ZaloAccountFriends.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Count returned ZaloAccountFriends
-    **/
-    _count?: true | ZaloAccountFriendCountAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the minimum value
-    **/
-    _min?: ZaloAccountFriendMinAggregateInputType
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
-     * 
-     * Select which fields to find the maximum value
-    **/
-    _max?: ZaloAccountFriendMaxAggregateInputType
-  }
-
-  export type GetZaloAccountFriendAggregateType<T extends ZaloAccountFriendAggregateArgs> = {
-        [P in keyof T & keyof AggregateZaloAccountFriend]: P extends '_count' | 'count'
-      ? T[P] extends true
-        ? number
-        : GetScalarType<T[P], AggregateZaloAccountFriend[P]>
-      : GetScalarType<T[P], AggregateZaloAccountFriend[P]>
-  }
-
-
-
-
-  export type ZaloAccountFriendGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: ZaloAccountFriendWhereInput
-    orderBy?: ZaloAccountFriendOrderByWithAggregationInput | ZaloAccountFriendOrderByWithAggregationInput[]
-    by: ZaloAccountFriendScalarFieldEnum[] | ZaloAccountFriendScalarFieldEnum
-    having?: ZaloAccountFriendScalarWhereWithAggregatesInput
-    take?: number
-    skip?: number
-    _count?: ZaloAccountFriendCountAggregateInputType | true
-    _min?: ZaloAccountFriendMinAggregateInputType
-    _max?: ZaloAccountFriendMaxAggregateInputType
-  }
-
-  export type ZaloAccountFriendGroupByOutputType = {
-    id: string
-    masterId: string
-    friendId: string
-    createdAt: Date
-    _count: ZaloAccountFriendCountAggregateOutputType | null
-    _min: ZaloAccountFriendMinAggregateOutputType | null
-    _max: ZaloAccountFriendMaxAggregateOutputType | null
-  }
-
-  type GetZaloAccountFriendGroupByPayload<T extends ZaloAccountFriendGroupByArgs> = Prisma.PrismaPromise<
-    Array<
-      PickEnumerable<ZaloAccountFriendGroupByOutputType, T['by']> &
-        {
-          [P in ((keyof T) & (keyof ZaloAccountFriendGroupByOutputType))]: P extends '_count'
-            ? T[P] extends boolean
-              ? number
-              : GetScalarType<T[P], ZaloAccountFriendGroupByOutputType[P]>
-            : GetScalarType<T[P], ZaloAccountFriendGroupByOutputType[P]>
-        }
-      >
-    >
-
-
-  export type ZaloAccountFriendSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    masterId?: boolean
-    friendId?: boolean
-    createdAt?: boolean
-    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["zaloAccountFriend"]>
-
-  export type ZaloAccountFriendSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    masterId?: boolean
-    friendId?: boolean
-    createdAt?: boolean
-    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["zaloAccountFriend"]>
-
-  export type ZaloAccountFriendSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
-    id?: boolean
-    masterId?: boolean
-    friendId?: boolean
-    createdAt?: boolean
-    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-  }, ExtArgs["result"]["zaloAccountFriend"]>
-
-  export type ZaloAccountFriendSelectScalar = {
-    id?: boolean
-    masterId?: boolean
-    friendId?: boolean
-    createdAt?: boolean
-  }
-
-  export type ZaloAccountFriendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "masterId" | "friendId" | "createdAt", ExtArgs["result"]["zaloAccountFriend"]>
-  export type ZaloAccountFriendInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-  }
-  export type ZaloAccountFriendIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-  }
-  export type ZaloAccountFriendIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-  }
-
-  export type $ZaloAccountFriendPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    name: "ZaloAccountFriend"
-    objects: {
-      master: Prisma.$ZaloAccountPayload<ExtArgs>
-      friend: Prisma.$ZaloAccountPayload<ExtArgs>
-    }
-    scalars: $Extensions.GetPayloadResult<{
-      id: string
-      masterId: string
-      friendId: string
-      createdAt: Date
-    }, ExtArgs["result"]["zaloAccountFriend"]>
-    composites: {}
-  }
-
-  type ZaloAccountFriendGetPayload<S extends boolean | null | undefined | ZaloAccountFriendDefaultArgs> = $Result.GetResult<Prisma.$ZaloAccountFriendPayload, S>
-
-  type ZaloAccountFriendCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
-    Omit<ZaloAccountFriendFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
-      select?: ZaloAccountFriendCountAggregateInputType | true
-    }
-
-  export interface ZaloAccountFriendDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
-    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ZaloAccountFriend'], meta: { name: 'ZaloAccountFriend' } }
-    /**
-     * Find zero or one ZaloAccountFriend that matches the filter.
-     * @param {ZaloAccountFriendFindUniqueArgs} args - Arguments to find a ZaloAccountFriend
-     * @example
-     * // Get one ZaloAccountFriend
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.findUnique({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUnique<T extends ZaloAccountFriendFindUniqueArgs>(args: SelectSubset<T, ZaloAccountFriendFindUniqueArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find one ZaloAccountFriend that matches the filter or throw an error with `error.code='P2025'`
-     * if no matches were found.
-     * @param {ZaloAccountFriendFindUniqueOrThrowArgs} args - Arguments to find a ZaloAccountFriend
-     * @example
-     * // Get one ZaloAccountFriend
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.findUniqueOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findUniqueOrThrow<T extends ZaloAccountFriendFindUniqueOrThrowArgs>(args: SelectSubset<T, ZaloAccountFriendFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first ZaloAccountFriend that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendFindFirstArgs} args - Arguments to find a ZaloAccountFriend
-     * @example
-     * // Get one ZaloAccountFriend
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.findFirst({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirst<T extends ZaloAccountFriendFindFirstArgs>(args?: SelectSubset<T, ZaloAccountFriendFindFirstArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find the first ZaloAccountFriend that matches the filter or
-     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendFindFirstOrThrowArgs} args - Arguments to find a ZaloAccountFriend
-     * @example
-     * // Get one ZaloAccountFriend
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.findFirstOrThrow({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     */
-    findFirstOrThrow<T extends ZaloAccountFriendFindFirstOrThrowArgs>(args?: SelectSubset<T, ZaloAccountFriendFindFirstOrThrowArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Find zero or more ZaloAccountFriends that matches the filter.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendFindManyArgs} args - Arguments to filter and select certain fields only.
-     * @example
-     * // Get all ZaloAccountFriends
-     * const zaloAccountFriends = await prisma.zaloAccountFriend.findMany()
-     * 
-     * // Get first 10 ZaloAccountFriends
-     * const zaloAccountFriends = await prisma.zaloAccountFriend.findMany({ take: 10 })
-     * 
-     * // Only select the `id`
-     * const zaloAccountFriendWithIdOnly = await prisma.zaloAccountFriend.findMany({ select: { id: true } })
-     * 
-     */
-    findMany<T extends ZaloAccountFriendFindManyArgs>(args?: SelectSubset<T, ZaloAccountFriendFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
-
-    /**
-     * Create a ZaloAccountFriend.
-     * @param {ZaloAccountFriendCreateArgs} args - Arguments to create a ZaloAccountFriend.
-     * @example
-     * // Create one ZaloAccountFriend
-     * const ZaloAccountFriend = await prisma.zaloAccountFriend.create({
-     *   data: {
-     *     // ... data to create a ZaloAccountFriend
-     *   }
-     * })
-     * 
-     */
-    create<T extends ZaloAccountFriendCreateArgs>(args: SelectSubset<T, ZaloAccountFriendCreateArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Create many ZaloAccountFriends.
-     * @param {ZaloAccountFriendCreateManyArgs} args - Arguments to create many ZaloAccountFriends.
-     * @example
-     * // Create many ZaloAccountFriends
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.createMany({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     *     
-     */
-    createMany<T extends ZaloAccountFriendCreateManyArgs>(args?: SelectSubset<T, ZaloAccountFriendCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Create many ZaloAccountFriends and returns the data saved in the database.
-     * @param {ZaloAccountFriendCreateManyAndReturnArgs} args - Arguments to create many ZaloAccountFriends.
-     * @example
-     * // Create many ZaloAccountFriends
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.createManyAndReturn({
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Create many ZaloAccountFriends and only return the `id`
-     * const zaloAccountFriendWithIdOnly = await prisma.zaloAccountFriend.createManyAndReturn({
-     *   select: { id: true },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    createManyAndReturn<T extends ZaloAccountFriendCreateManyAndReturnArgs>(args?: SelectSubset<T, ZaloAccountFriendCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Delete a ZaloAccountFriend.
-     * @param {ZaloAccountFriendDeleteArgs} args - Arguments to delete one ZaloAccountFriend.
-     * @example
-     * // Delete one ZaloAccountFriend
-     * const ZaloAccountFriend = await prisma.zaloAccountFriend.delete({
-     *   where: {
-     *     // ... filter to delete one ZaloAccountFriend
-     *   }
-     * })
-     * 
-     */
-    delete<T extends ZaloAccountFriendDeleteArgs>(args: SelectSubset<T, ZaloAccountFriendDeleteArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Update one ZaloAccountFriend.
-     * @param {ZaloAccountFriendUpdateArgs} args - Arguments to update one ZaloAccountFriend.
-     * @example
-     * // Update one ZaloAccountFriend
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.update({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    update<T extends ZaloAccountFriendUpdateArgs>(args: SelectSubset<T, ZaloAccountFriendUpdateArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-    /**
-     * Delete zero or more ZaloAccountFriends.
-     * @param {ZaloAccountFriendDeleteManyArgs} args - Arguments to filter ZaloAccountFriends to delete.
-     * @example
-     * // Delete a few ZaloAccountFriends
-     * const { count } = await prisma.zaloAccountFriend.deleteMany({
-     *   where: {
-     *     // ... provide filter here
-     *   }
-     * })
-     * 
-     */
-    deleteMany<T extends ZaloAccountFriendDeleteManyArgs>(args?: SelectSubset<T, ZaloAccountFriendDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more ZaloAccountFriends.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendUpdateManyArgs} args - Arguments to update one or more rows.
-     * @example
-     * // Update many ZaloAccountFriends
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.updateMany({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: {
-     *     // ... provide data here
-     *   }
-     * })
-     * 
-     */
-    updateMany<T extends ZaloAccountFriendUpdateManyArgs>(args: SelectSubset<T, ZaloAccountFriendUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
-
-    /**
-     * Update zero or more ZaloAccountFriends and returns the data updated in the database.
-     * @param {ZaloAccountFriendUpdateManyAndReturnArgs} args - Arguments to update many ZaloAccountFriends.
-     * @example
-     * // Update many ZaloAccountFriends
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.updateManyAndReturn({
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * 
-     * // Update zero or more ZaloAccountFriends and only return the `id`
-     * const zaloAccountFriendWithIdOnly = await prisma.zaloAccountFriend.updateManyAndReturn({
-     *   select: { id: true },
-     *   where: {
-     *     // ... provide filter here
-     *   },
-     *   data: [
-     *     // ... provide data here
-     *   ]
-     * })
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * 
-     */
-    updateManyAndReturn<T extends ZaloAccountFriendUpdateManyAndReturnArgs>(args: SelectSubset<T, ZaloAccountFriendUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
-
-    /**
-     * Create or update one ZaloAccountFriend.
-     * @param {ZaloAccountFriendUpsertArgs} args - Arguments to update or create a ZaloAccountFriend.
-     * @example
-     * // Update or create a ZaloAccountFriend
-     * const zaloAccountFriend = await prisma.zaloAccountFriend.upsert({
-     *   create: {
-     *     // ... data to create a ZaloAccountFriend
-     *   },
-     *   update: {
-     *     // ... in case it already exists, update
-     *   },
-     *   where: {
-     *     // ... the filter for the ZaloAccountFriend we want to update
-     *   }
-     * })
-     */
-    upsert<T extends ZaloAccountFriendUpsertArgs>(args: SelectSubset<T, ZaloAccountFriendUpsertArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
-
-
-    /**
-     * Count the number of ZaloAccountFriends.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendCountArgs} args - Arguments to filter ZaloAccountFriends to count.
-     * @example
-     * // Count the number of ZaloAccountFriends
-     * const count = await prisma.zaloAccountFriend.count({
-     *   where: {
-     *     // ... the filter for the ZaloAccountFriends we want to count
-     *   }
-     * })
-    **/
-    count<T extends ZaloAccountFriendCountArgs>(
-      args?: Subset<T, ZaloAccountFriendCountArgs>,
-    ): Prisma.PrismaPromise<
-      T extends $Utils.Record<'select', any>
-        ? T['select'] extends true
-          ? number
-          : GetScalarType<T['select'], ZaloAccountFriendCountAggregateOutputType>
-        : number
-    >
-
-    /**
-     * Allows you to perform aggregations operations on a ZaloAccountFriend.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
-     * @example
-     * // Ordered by age ascending
-     * // Where email contains prisma.io
-     * // Limited to the 10 users
-     * const aggregations = await prisma.user.aggregate({
-     *   _avg: {
-     *     age: true,
-     *   },
-     *   where: {
-     *     email: {
-     *       contains: "prisma.io",
-     *     },
-     *   },
-     *   orderBy: {
-     *     age: "asc",
-     *   },
-     *   take: 10,
-     * })
-    **/
-    aggregate<T extends ZaloAccountFriendAggregateArgs>(args: Subset<T, ZaloAccountFriendAggregateArgs>): Prisma.PrismaPromise<GetZaloAccountFriendAggregateType<T>>
-
-    /**
-     * Group by ZaloAccountFriend.
-     * Note, that providing `undefined` is treated as the value not being there.
-     * Read more here: https://pris.ly/d/null-undefined
-     * @param {ZaloAccountFriendGroupByArgs} args - Group by arguments.
-     * @example
-     * // Group by city, order by createdAt, get count
-     * const result = await prisma.user.groupBy({
-     *   by: ['city', 'createdAt'],
-     *   orderBy: {
-     *     createdAt: true
-     *   },
-     *   _count: {
-     *     _all: true
-     *   },
-     * })
-     * 
-    **/
-    groupBy<
-      T extends ZaloAccountFriendGroupByArgs,
-      HasSelectOrTake extends Or<
-        Extends<'skip', Keys<T>>,
-        Extends<'take', Keys<T>>
-      >,
-      OrderByArg extends True extends HasSelectOrTake
-        ? { orderBy: ZaloAccountFriendGroupByArgs['orderBy'] }
-        : { orderBy?: ZaloAccountFriendGroupByArgs['orderBy'] },
-      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
-      ByFields extends MaybeTupleToUnion<T['by']>,
-      ByValid extends Has<ByFields, OrderFields>,
-      HavingFields extends GetHavingFields<T['having']>,
-      HavingValid extends Has<ByFields, HavingFields>,
-      ByEmpty extends T['by'] extends never[] ? True : False,
-      InputErrors extends ByEmpty extends True
-      ? `Error: "by" must not be empty.`
-      : HavingValid extends False
-      ? {
-          [P in HavingFields]: P extends ByFields
-            ? never
-            : P extends string
-            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
-            : [
-                Error,
-                'Field ',
-                P,
-                ` in "having" needs to be provided in "by"`,
-              ]
-        }[HavingFields]
-      : 'take' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "take", you also need to provide "orderBy"'
-      : 'skip' extends Keys<T>
-      ? 'orderBy' extends Keys<T>
-        ? ByValid extends True
-          ? {}
-          : {
-              [P in OrderFields]: P extends ByFields
-                ? never
-                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-            }[OrderFields]
-        : 'Error: If you provide "skip", you also need to provide "orderBy"'
-      : ByValid extends True
-      ? {}
-      : {
-          [P in OrderFields]: P extends ByFields
-            ? never
-            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
-        }[OrderFields]
-    >(args: SubsetIntersection<T, ZaloAccountFriendGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetZaloAccountFriendGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
-  /**
-   * Fields of the ZaloAccountFriend model
-   */
-  readonly fields: ZaloAccountFriendFieldRefs;
-  }
-
-  /**
-   * The delegate class that acts as a "Promise-like" for ZaloAccountFriend.
-   * Why is this prefixed with `Prisma__`?
-   * Because we want to prevent naming conflicts as mentioned in
-   * https://github.com/prisma/prisma-client-js/issues/707
-   */
-  export interface Prisma__ZaloAccountFriendClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
-    readonly [Symbol.toStringTag]: "PrismaPromise"
-    master<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    friend<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    /**
-     * Attaches callbacks for the resolution and/or rejection of the Promise.
-     * @param onfulfilled The callback to execute when the Promise is resolved.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of which ever callback is executed.
-     */
-    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
-    /**
-     * Attaches a callback for only the rejection of the Promise.
-     * @param onrejected The callback to execute when the Promise is rejected.
-     * @returns A Promise for the completion of the callback.
-     */
-    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
-    /**
-     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
-     * resolved value cannot be modified from the callback.
-     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
-     * @returns A Promise for the completion of the callback.
-     */
-    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
-  }
-
-
-
-
-  /**
-   * Fields of the ZaloAccountFriend model
-   */
-  interface ZaloAccountFriendFieldRefs {
-    readonly id: FieldRef<"ZaloAccountFriend", 'String'>
-    readonly masterId: FieldRef<"ZaloAccountFriend", 'String'>
-    readonly friendId: FieldRef<"ZaloAccountFriend", 'String'>
-    readonly createdAt: FieldRef<"ZaloAccountFriend", 'DateTime'>
-  }
-    
-
-  // Custom InputTypes
-  /**
-   * ZaloAccountFriend findUnique
-   */
-  export type ZaloAccountFriendFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * Filter, which ZaloAccountFriend to fetch.
-     */
-    where: ZaloAccountFriendWhereUniqueInput
-  }
-
-  /**
-   * ZaloAccountFriend findUniqueOrThrow
-   */
-  export type ZaloAccountFriendFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * Filter, which ZaloAccountFriend to fetch.
-     */
-    where: ZaloAccountFriendWhereUniqueInput
-  }
-
-  /**
-   * ZaloAccountFriend findFirst
-   */
-  export type ZaloAccountFriendFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * Filter, which ZaloAccountFriend to fetch.
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ZaloAccountFriends to fetch.
-     */
-    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for ZaloAccountFriends.
-     */
-    cursor?: ZaloAccountFriendWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ZaloAccountFriends from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ZaloAccountFriends.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of ZaloAccountFriends.
-     */
-    distinct?: ZaloAccountFriendScalarFieldEnum | ZaloAccountFriendScalarFieldEnum[]
-  }
-
-  /**
-   * ZaloAccountFriend findFirstOrThrow
-   */
-  export type ZaloAccountFriendFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * Filter, which ZaloAccountFriend to fetch.
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ZaloAccountFriends to fetch.
-     */
-    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for searching for ZaloAccountFriends.
-     */
-    cursor?: ZaloAccountFriendWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ZaloAccountFriends from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ZaloAccountFriends.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of ZaloAccountFriends.
-     */
-    distinct?: ZaloAccountFriendScalarFieldEnum | ZaloAccountFriendScalarFieldEnum[]
-  }
-
-  /**
-   * ZaloAccountFriend findMany
-   */
-  export type ZaloAccountFriendFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * Filter, which ZaloAccountFriends to fetch.
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
-     * 
-     * Determine the order of ZaloAccountFriends to fetch.
-     */
-    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
-     * 
-     * Sets the position for listing ZaloAccountFriends.
-     */
-    cursor?: ZaloAccountFriendWhereUniqueInput
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Take `±n` ZaloAccountFriends from the position of the cursor.
-     */
-    take?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
-     * 
-     * Skip the first `n` ZaloAccountFriends.
-     */
-    skip?: number
-    /**
-     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
-     * 
-     * Filter by unique combinations of ZaloAccountFriends.
-     */
-    distinct?: ZaloAccountFriendScalarFieldEnum | ZaloAccountFriendScalarFieldEnum[]
-  }
-
-  /**
-   * ZaloAccountFriend create
-   */
-  export type ZaloAccountFriendCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * The data needed to create a ZaloAccountFriend.
-     */
-    data: XOR<ZaloAccountFriendCreateInput, ZaloAccountFriendUncheckedCreateInput>
-  }
-
-  /**
-   * ZaloAccountFriend createMany
-   */
-  export type ZaloAccountFriendCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to create many ZaloAccountFriends.
-     */
-    data: ZaloAccountFriendCreateManyInput | ZaloAccountFriendCreateManyInput[]
-    skipDuplicates?: boolean
-  }
-
-  /**
-   * ZaloAccountFriend createManyAndReturn
-   */
-  export type ZaloAccountFriendCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelectCreateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * The data used to create many ZaloAccountFriends.
-     */
-    data: ZaloAccountFriendCreateManyInput | ZaloAccountFriendCreateManyInput[]
-    skipDuplicates?: boolean
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendIncludeCreateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * ZaloAccountFriend update
-   */
-  export type ZaloAccountFriendUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * The data needed to update a ZaloAccountFriend.
-     */
-    data: XOR<ZaloAccountFriendUpdateInput, ZaloAccountFriendUncheckedUpdateInput>
-    /**
-     * Choose, which ZaloAccountFriend to update.
-     */
-    where: ZaloAccountFriendWhereUniqueInput
-  }
-
-  /**
-   * ZaloAccountFriend updateMany
-   */
-  export type ZaloAccountFriendUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * The data used to update ZaloAccountFriends.
-     */
-    data: XOR<ZaloAccountFriendUpdateManyMutationInput, ZaloAccountFriendUncheckedUpdateManyInput>
-    /**
-     * Filter which ZaloAccountFriends to update
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * Limit how many ZaloAccountFriends to update.
-     */
-    limit?: number
-  }
-
-  /**
-   * ZaloAccountFriend updateManyAndReturn
-   */
-  export type ZaloAccountFriendUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelectUpdateManyAndReturn<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * The data used to update ZaloAccountFriends.
-     */
-    data: XOR<ZaloAccountFriendUpdateManyMutationInput, ZaloAccountFriendUncheckedUpdateManyInput>
-    /**
-     * Filter which ZaloAccountFriends to update
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * Limit how many ZaloAccountFriends to update.
-     */
-    limit?: number
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendIncludeUpdateManyAndReturn<ExtArgs> | null
-  }
-
-  /**
-   * ZaloAccountFriend upsert
-   */
-  export type ZaloAccountFriendUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * The filter to search for the ZaloAccountFriend to update in case it exists.
-     */
-    where: ZaloAccountFriendWhereUniqueInput
-    /**
-     * In case the ZaloAccountFriend found by the `where` argument doesn't exist, create a new ZaloAccountFriend with this data.
-     */
-    create: XOR<ZaloAccountFriendCreateInput, ZaloAccountFriendUncheckedCreateInput>
-    /**
-     * In case the ZaloAccountFriend was found with the provided `where` argument, update it with this data.
-     */
-    update: XOR<ZaloAccountFriendUpdateInput, ZaloAccountFriendUncheckedUpdateInput>
-  }
-
-  /**
-   * ZaloAccountFriend delete
-   */
-  export type ZaloAccountFriendDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
-    /**
-     * Filter which ZaloAccountFriend to delete.
-     */
-    where: ZaloAccountFriendWhereUniqueInput
-  }
-
-  /**
-   * ZaloAccountFriend deleteMany
-   */
-  export type ZaloAccountFriendDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Filter which ZaloAccountFriends to delete
-     */
-    where?: ZaloAccountFriendWhereInput
-    /**
-     * Limit how many ZaloAccountFriends to delete.
-     */
-    limit?: number
-  }
-
-  /**
-   * ZaloAccountFriend without action
-   */
-  export type ZaloAccountFriendDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the ZaloAccountFriend
-     */
-    select?: ZaloAccountFriendSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the ZaloAccountFriend
-     */
-    omit?: ZaloAccountFriendOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: ZaloAccountFriendInclude<ExtArgs> | null
   }
 
 
@@ -7200,6 +7278,1064 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ZaloAccountGroupInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ZaloAccountFriend
+   */
+
+  export type AggregateZaloAccountFriend = {
+    _count: ZaloAccountFriendCountAggregateOutputType | null
+    _min: ZaloAccountFriendMinAggregateOutputType | null
+    _max: ZaloAccountFriendMaxAggregateOutputType | null
+  }
+
+  export type ZaloAccountFriendMinAggregateOutputType = {
+    id: string | null
+    masterId: string | null
+    friendId: string | null
+    createdAt: Date | null
+  }
+
+  export type ZaloAccountFriendMaxAggregateOutputType = {
+    id: string | null
+    masterId: string | null
+    friendId: string | null
+    createdAt: Date | null
+  }
+
+  export type ZaloAccountFriendCountAggregateOutputType = {
+    id: number
+    masterId: number
+    friendId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type ZaloAccountFriendMinAggregateInputType = {
+    id?: true
+    masterId?: true
+    friendId?: true
+    createdAt?: true
+  }
+
+  export type ZaloAccountFriendMaxAggregateInputType = {
+    id?: true
+    masterId?: true
+    friendId?: true
+    createdAt?: true
+  }
+
+  export type ZaloAccountFriendCountAggregateInputType = {
+    id?: true
+    masterId?: true
+    friendId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type ZaloAccountFriendAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ZaloAccountFriend to aggregate.
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountFriends to fetch.
+     */
+    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ZaloAccountFriendWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountFriends from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountFriends.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ZaloAccountFriends
+    **/
+    _count?: true | ZaloAccountFriendCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ZaloAccountFriendMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ZaloAccountFriendMaxAggregateInputType
+  }
+
+  export type GetZaloAccountFriendAggregateType<T extends ZaloAccountFriendAggregateArgs> = {
+        [P in keyof T & keyof AggregateZaloAccountFriend]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateZaloAccountFriend[P]>
+      : GetScalarType<T[P], AggregateZaloAccountFriend[P]>
+  }
+
+
+
+
+  export type ZaloAccountFriendGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ZaloAccountFriendWhereInput
+    orderBy?: ZaloAccountFriendOrderByWithAggregationInput | ZaloAccountFriendOrderByWithAggregationInput[]
+    by: ZaloAccountFriendScalarFieldEnum[] | ZaloAccountFriendScalarFieldEnum
+    having?: ZaloAccountFriendScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ZaloAccountFriendCountAggregateInputType | true
+    _min?: ZaloAccountFriendMinAggregateInputType
+    _max?: ZaloAccountFriendMaxAggregateInputType
+  }
+
+  export type ZaloAccountFriendGroupByOutputType = {
+    id: string
+    masterId: string
+    friendId: string
+    createdAt: Date
+    _count: ZaloAccountFriendCountAggregateOutputType | null
+    _min: ZaloAccountFriendMinAggregateOutputType | null
+    _max: ZaloAccountFriendMaxAggregateOutputType | null
+  }
+
+  type GetZaloAccountFriendGroupByPayload<T extends ZaloAccountFriendGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ZaloAccountFriendGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ZaloAccountFriendGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ZaloAccountFriendGroupByOutputType[P]>
+            : GetScalarType<T[P], ZaloAccountFriendGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ZaloAccountFriendSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    masterId?: boolean
+    friendId?: boolean
+    createdAt?: boolean
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloAccountFriend"]>
+
+  export type ZaloAccountFriendSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    masterId?: boolean
+    friendId?: boolean
+    createdAt?: boolean
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloAccountFriend"]>
+
+  export type ZaloAccountFriendSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    masterId?: boolean
+    friendId?: boolean
+    createdAt?: boolean
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloAccountFriend"]>
+
+  export type ZaloAccountFriendSelectScalar = {
+    id?: boolean
+    masterId?: boolean
+    friendId?: boolean
+    createdAt?: boolean
+  }
+
+  export type ZaloAccountFriendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "masterId" | "friendId" | "createdAt", ExtArgs["result"]["zaloAccountFriend"]>
+  export type ZaloAccountFriendInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }
+  export type ZaloAccountFriendIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }
+  export type ZaloAccountFriendIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+    friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
+  }
+
+  export type $ZaloAccountFriendPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ZaloAccountFriend"
+    objects: {
+      master: Prisma.$ZaloAccountPayload<ExtArgs>
+      friend: Prisma.$ZaloAccountPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      masterId: string
+      friendId: string
+      createdAt: Date
+    }, ExtArgs["result"]["zaloAccountFriend"]>
+    composites: {}
+  }
+
+  type ZaloAccountFriendGetPayload<S extends boolean | null | undefined | ZaloAccountFriendDefaultArgs> = $Result.GetResult<Prisma.$ZaloAccountFriendPayload, S>
+
+  type ZaloAccountFriendCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ZaloAccountFriendFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ZaloAccountFriendCountAggregateInputType | true
+    }
+
+  export interface ZaloAccountFriendDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ZaloAccountFriend'], meta: { name: 'ZaloAccountFriend' } }
+    /**
+     * Find zero or one ZaloAccountFriend that matches the filter.
+     * @param {ZaloAccountFriendFindUniqueArgs} args - Arguments to find a ZaloAccountFriend
+     * @example
+     * // Get one ZaloAccountFriend
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ZaloAccountFriendFindUniqueArgs>(args: SelectSubset<T, ZaloAccountFriendFindUniqueArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ZaloAccountFriend that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ZaloAccountFriendFindUniqueOrThrowArgs} args - Arguments to find a ZaloAccountFriend
+     * @example
+     * // Get one ZaloAccountFriend
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ZaloAccountFriendFindUniqueOrThrowArgs>(args: SelectSubset<T, ZaloAccountFriendFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ZaloAccountFriend that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendFindFirstArgs} args - Arguments to find a ZaloAccountFriend
+     * @example
+     * // Get one ZaloAccountFriend
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ZaloAccountFriendFindFirstArgs>(args?: SelectSubset<T, ZaloAccountFriendFindFirstArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ZaloAccountFriend that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendFindFirstOrThrowArgs} args - Arguments to find a ZaloAccountFriend
+     * @example
+     * // Get one ZaloAccountFriend
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ZaloAccountFriendFindFirstOrThrowArgs>(args?: SelectSubset<T, ZaloAccountFriendFindFirstOrThrowArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ZaloAccountFriends that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ZaloAccountFriends
+     * const zaloAccountFriends = await prisma.zaloAccountFriend.findMany()
+     * 
+     * // Get first 10 ZaloAccountFriends
+     * const zaloAccountFriends = await prisma.zaloAccountFriend.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const zaloAccountFriendWithIdOnly = await prisma.zaloAccountFriend.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ZaloAccountFriendFindManyArgs>(args?: SelectSubset<T, ZaloAccountFriendFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ZaloAccountFriend.
+     * @param {ZaloAccountFriendCreateArgs} args - Arguments to create a ZaloAccountFriend.
+     * @example
+     * // Create one ZaloAccountFriend
+     * const ZaloAccountFriend = await prisma.zaloAccountFriend.create({
+     *   data: {
+     *     // ... data to create a ZaloAccountFriend
+     *   }
+     * })
+     * 
+     */
+    create<T extends ZaloAccountFriendCreateArgs>(args: SelectSubset<T, ZaloAccountFriendCreateArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ZaloAccountFriends.
+     * @param {ZaloAccountFriendCreateManyArgs} args - Arguments to create many ZaloAccountFriends.
+     * @example
+     * // Create many ZaloAccountFriends
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ZaloAccountFriendCreateManyArgs>(args?: SelectSubset<T, ZaloAccountFriendCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ZaloAccountFriends and returns the data saved in the database.
+     * @param {ZaloAccountFriendCreateManyAndReturnArgs} args - Arguments to create many ZaloAccountFriends.
+     * @example
+     * // Create many ZaloAccountFriends
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ZaloAccountFriends and only return the `id`
+     * const zaloAccountFriendWithIdOnly = await prisma.zaloAccountFriend.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ZaloAccountFriendCreateManyAndReturnArgs>(args?: SelectSubset<T, ZaloAccountFriendCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ZaloAccountFriend.
+     * @param {ZaloAccountFriendDeleteArgs} args - Arguments to delete one ZaloAccountFriend.
+     * @example
+     * // Delete one ZaloAccountFriend
+     * const ZaloAccountFriend = await prisma.zaloAccountFriend.delete({
+     *   where: {
+     *     // ... filter to delete one ZaloAccountFriend
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ZaloAccountFriendDeleteArgs>(args: SelectSubset<T, ZaloAccountFriendDeleteArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ZaloAccountFriend.
+     * @param {ZaloAccountFriendUpdateArgs} args - Arguments to update one ZaloAccountFriend.
+     * @example
+     * // Update one ZaloAccountFriend
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ZaloAccountFriendUpdateArgs>(args: SelectSubset<T, ZaloAccountFriendUpdateArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ZaloAccountFriends.
+     * @param {ZaloAccountFriendDeleteManyArgs} args - Arguments to filter ZaloAccountFriends to delete.
+     * @example
+     * // Delete a few ZaloAccountFriends
+     * const { count } = await prisma.zaloAccountFriend.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ZaloAccountFriendDeleteManyArgs>(args?: SelectSubset<T, ZaloAccountFriendDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ZaloAccountFriends.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ZaloAccountFriends
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ZaloAccountFriendUpdateManyArgs>(args: SelectSubset<T, ZaloAccountFriendUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ZaloAccountFriends and returns the data updated in the database.
+     * @param {ZaloAccountFriendUpdateManyAndReturnArgs} args - Arguments to update many ZaloAccountFriends.
+     * @example
+     * // Update many ZaloAccountFriends
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ZaloAccountFriends and only return the `id`
+     * const zaloAccountFriendWithIdOnly = await prisma.zaloAccountFriend.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ZaloAccountFriendUpdateManyAndReturnArgs>(args: SelectSubset<T, ZaloAccountFriendUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ZaloAccountFriend.
+     * @param {ZaloAccountFriendUpsertArgs} args - Arguments to update or create a ZaloAccountFriend.
+     * @example
+     * // Update or create a ZaloAccountFriend
+     * const zaloAccountFriend = await prisma.zaloAccountFriend.upsert({
+     *   create: {
+     *     // ... data to create a ZaloAccountFriend
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ZaloAccountFriend we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ZaloAccountFriendUpsertArgs>(args: SelectSubset<T, ZaloAccountFriendUpsertArgs<ExtArgs>>): Prisma__ZaloAccountFriendClient<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ZaloAccountFriends.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendCountArgs} args - Arguments to filter ZaloAccountFriends to count.
+     * @example
+     * // Count the number of ZaloAccountFriends
+     * const count = await prisma.zaloAccountFriend.count({
+     *   where: {
+     *     // ... the filter for the ZaloAccountFriends we want to count
+     *   }
+     * })
+    **/
+    count<T extends ZaloAccountFriendCountArgs>(
+      args?: Subset<T, ZaloAccountFriendCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ZaloAccountFriendCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ZaloAccountFriend.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ZaloAccountFriendAggregateArgs>(args: Subset<T, ZaloAccountFriendAggregateArgs>): Prisma.PrismaPromise<GetZaloAccountFriendAggregateType<T>>
+
+    /**
+     * Group by ZaloAccountFriend.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloAccountFriendGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ZaloAccountFriendGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ZaloAccountFriendGroupByArgs['orderBy'] }
+        : { orderBy?: ZaloAccountFriendGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ZaloAccountFriendGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetZaloAccountFriendGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ZaloAccountFriend model
+   */
+  readonly fields: ZaloAccountFriendFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ZaloAccountFriend.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ZaloAccountFriendClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    master<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    friend<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ZaloAccountFriend model
+   */
+  interface ZaloAccountFriendFieldRefs {
+    readonly id: FieldRef<"ZaloAccountFriend", 'String'>
+    readonly masterId: FieldRef<"ZaloAccountFriend", 'String'>
+    readonly friendId: FieldRef<"ZaloAccountFriend", 'String'>
+    readonly createdAt: FieldRef<"ZaloAccountFriend", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ZaloAccountFriend findUnique
+   */
+  export type ZaloAccountFriendFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountFriend to fetch.
+     */
+    where: ZaloAccountFriendWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountFriend findUniqueOrThrow
+   */
+  export type ZaloAccountFriendFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountFriend to fetch.
+     */
+    where: ZaloAccountFriendWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountFriend findFirst
+   */
+  export type ZaloAccountFriendFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountFriend to fetch.
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountFriends to fetch.
+     */
+    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ZaloAccountFriends.
+     */
+    cursor?: ZaloAccountFriendWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountFriends from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountFriends.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloAccountFriends.
+     */
+    distinct?: ZaloAccountFriendScalarFieldEnum | ZaloAccountFriendScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloAccountFriend findFirstOrThrow
+   */
+  export type ZaloAccountFriendFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountFriend to fetch.
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountFriends to fetch.
+     */
+    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ZaloAccountFriends.
+     */
+    cursor?: ZaloAccountFriendWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountFriends from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountFriends.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloAccountFriends.
+     */
+    distinct?: ZaloAccountFriendScalarFieldEnum | ZaloAccountFriendScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloAccountFriend findMany
+   */
+  export type ZaloAccountFriendFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloAccountFriends to fetch.
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloAccountFriends to fetch.
+     */
+    orderBy?: ZaloAccountFriendOrderByWithRelationInput | ZaloAccountFriendOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ZaloAccountFriends.
+     */
+    cursor?: ZaloAccountFriendWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloAccountFriends from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloAccountFriends.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloAccountFriends.
+     */
+    distinct?: ZaloAccountFriendScalarFieldEnum | ZaloAccountFriendScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloAccountFriend create
+   */
+  export type ZaloAccountFriendCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ZaloAccountFriend.
+     */
+    data: XOR<ZaloAccountFriendCreateInput, ZaloAccountFriendUncheckedCreateInput>
+  }
+
+  /**
+   * ZaloAccountFriend createMany
+   */
+  export type ZaloAccountFriendCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ZaloAccountFriends.
+     */
+    data: ZaloAccountFriendCreateManyInput | ZaloAccountFriendCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ZaloAccountFriend createManyAndReturn
+   */
+  export type ZaloAccountFriendCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * The data used to create many ZaloAccountFriends.
+     */
+    data: ZaloAccountFriendCreateManyInput | ZaloAccountFriendCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ZaloAccountFriend update
+   */
+  export type ZaloAccountFriendUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ZaloAccountFriend.
+     */
+    data: XOR<ZaloAccountFriendUpdateInput, ZaloAccountFriendUncheckedUpdateInput>
+    /**
+     * Choose, which ZaloAccountFriend to update.
+     */
+    where: ZaloAccountFriendWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountFriend updateMany
+   */
+  export type ZaloAccountFriendUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ZaloAccountFriends.
+     */
+    data: XOR<ZaloAccountFriendUpdateManyMutationInput, ZaloAccountFriendUncheckedUpdateManyInput>
+    /**
+     * Filter which ZaloAccountFriends to update
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * Limit how many ZaloAccountFriends to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ZaloAccountFriend updateManyAndReturn
+   */
+  export type ZaloAccountFriendUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * The data used to update ZaloAccountFriends.
+     */
+    data: XOR<ZaloAccountFriendUpdateManyMutationInput, ZaloAccountFriendUncheckedUpdateManyInput>
+    /**
+     * Filter which ZaloAccountFriends to update
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * Limit how many ZaloAccountFriends to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ZaloAccountFriend upsert
+   */
+  export type ZaloAccountFriendUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ZaloAccountFriend to update in case it exists.
+     */
+    where: ZaloAccountFriendWhereUniqueInput
+    /**
+     * In case the ZaloAccountFriend found by the `where` argument doesn't exist, create a new ZaloAccountFriend with this data.
+     */
+    create: XOR<ZaloAccountFriendCreateInput, ZaloAccountFriendUncheckedCreateInput>
+    /**
+     * In case the ZaloAccountFriend was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ZaloAccountFriendUpdateInput, ZaloAccountFriendUncheckedUpdateInput>
+  }
+
+  /**
+   * ZaloAccountFriend delete
+   */
+  export type ZaloAccountFriendDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
+    /**
+     * Filter which ZaloAccountFriend to delete.
+     */
+    where: ZaloAccountFriendWhereUniqueInput
+  }
+
+  /**
+   * ZaloAccountFriend deleteMany
+   */
+  export type ZaloAccountFriendDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ZaloAccountFriends to delete
+     */
+    where?: ZaloAccountFriendWhereInput
+    /**
+     * Limit how many ZaloAccountFriends to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ZaloAccountFriend without action
+   */
+  export type ZaloAccountFriendDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccountFriend
+     */
+    select?: ZaloAccountFriendSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccountFriend
+     */
+    omit?: ZaloAccountFriendOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountFriendInclude<ExtArgs> | null
   }
 
 
@@ -10363,13 +11499,22 @@ export namespace Prisma {
   export type ZaloGroupScalarFieldEnum = (typeof ZaloGroupScalarFieldEnum)[keyof typeof ZaloGroupScalarFieldEnum]
 
 
+  export const ZaloAccountRelationScalarFieldEnum: {
+    id: 'id',
+    masterId: 'masterId',
+    childId: 'childId',
+    createdAt: 'createdAt'
+  };
+
+  export type ZaloAccountRelationScalarFieldEnum = (typeof ZaloAccountRelationScalarFieldEnum)[keyof typeof ZaloAccountRelationScalarFieldEnum]
+
+
   export const ZaloAccountScalarFieldEnum: {
     id: 'id',
     zaloId: 'zaloId',
     phone: 'phone',
     name: 'name',
     isMaster: 'isMaster',
-    masterId: 'masterId',
     groupCount: 'groupCount',
     groupData: 'groupData',
     createdAt: 'createdAt',
@@ -10377,16 +11522,6 @@ export namespace Prisma {
   };
 
   export type ZaloAccountScalarFieldEnum = (typeof ZaloAccountScalarFieldEnum)[keyof typeof ZaloAccountScalarFieldEnum]
-
-
-  export const ZaloAccountFriendScalarFieldEnum: {
-    id: 'id',
-    masterId: 'masterId',
-    friendId: 'friendId',
-    createdAt: 'createdAt'
-  };
-
-  export type ZaloAccountFriendScalarFieldEnum = (typeof ZaloAccountFriendScalarFieldEnum)[keyof typeof ZaloAccountFriendScalarFieldEnum]
 
 
   export const ZaloAccountGroupScalarFieldEnum: {
@@ -10398,6 +11533,16 @@ export namespace Prisma {
   };
 
   export type ZaloAccountGroupScalarFieldEnum = (typeof ZaloAccountGroupScalarFieldEnum)[keyof typeof ZaloAccountGroupScalarFieldEnum]
+
+
+  export const ZaloAccountFriendScalarFieldEnum: {
+    id: 'id',
+    masterId: 'masterId',
+    friendId: 'friendId',
+    createdAt: 'createdAt'
+  };
+
+  export type ZaloAccountFriendScalarFieldEnum = (typeof ZaloAccountFriendScalarFieldEnum)[keyof typeof ZaloAccountFriendScalarFieldEnum]
 
 
   export const MessageScalarFieldEnum: {
@@ -10706,6 +11851,60 @@ export namespace Prisma {
     updatedAt?: DateTimeWithAggregatesFilter<"ZaloGroup"> | Date | string
   }
 
+  export type ZaloAccountRelationWhereInput = {
+    AND?: ZaloAccountRelationWhereInput | ZaloAccountRelationWhereInput[]
+    OR?: ZaloAccountRelationWhereInput[]
+    NOT?: ZaloAccountRelationWhereInput | ZaloAccountRelationWhereInput[]
+    id?: UuidFilter<"ZaloAccountRelation"> | string
+    masterId?: UuidFilter<"ZaloAccountRelation"> | string
+    childId?: UuidFilter<"ZaloAccountRelation"> | string
+    createdAt?: DateTimeFilter<"ZaloAccountRelation"> | Date | string
+    master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+    child?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+  }
+
+  export type ZaloAccountRelationOrderByWithRelationInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    childId?: SortOrder
+    createdAt?: SortOrder
+    master?: ZaloAccountOrderByWithRelationInput
+    child?: ZaloAccountOrderByWithRelationInput
+  }
+
+  export type ZaloAccountRelationWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    masterId_childId?: ZaloAccountRelationMasterIdChildIdCompoundUniqueInput
+    AND?: ZaloAccountRelationWhereInput | ZaloAccountRelationWhereInput[]
+    OR?: ZaloAccountRelationWhereInput[]
+    NOT?: ZaloAccountRelationWhereInput | ZaloAccountRelationWhereInput[]
+    masterId?: UuidFilter<"ZaloAccountRelation"> | string
+    childId?: UuidFilter<"ZaloAccountRelation"> | string
+    createdAt?: DateTimeFilter<"ZaloAccountRelation"> | Date | string
+    master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+    child?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+  }, "id" | "masterId_childId">
+
+  export type ZaloAccountRelationOrderByWithAggregationInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    childId?: SortOrder
+    createdAt?: SortOrder
+    _count?: ZaloAccountRelationCountOrderByAggregateInput
+    _max?: ZaloAccountRelationMaxOrderByAggregateInput
+    _min?: ZaloAccountRelationMinOrderByAggregateInput
+  }
+
+  export type ZaloAccountRelationScalarWhereWithAggregatesInput = {
+    AND?: ZaloAccountRelationScalarWhereWithAggregatesInput | ZaloAccountRelationScalarWhereWithAggregatesInput[]
+    OR?: ZaloAccountRelationScalarWhereWithAggregatesInput[]
+    NOT?: ZaloAccountRelationScalarWhereWithAggregatesInput | ZaloAccountRelationScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ZaloAccountRelation"> | string
+    masterId?: UuidWithAggregatesFilter<"ZaloAccountRelation"> | string
+    childId?: UuidWithAggregatesFilter<"ZaloAccountRelation"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ZaloAccountRelation"> | Date | string
+  }
+
   export type ZaloAccountWhereInput = {
     AND?: ZaloAccountWhereInput | ZaloAccountWhereInput[]
     OR?: ZaloAccountWhereInput[]
@@ -10715,13 +11914,12 @@ export namespace Prisma {
     phone?: StringNullableFilter<"ZaloAccount"> | string | null
     name?: StringNullableFilter<"ZaloAccount"> | string | null
     isMaster?: BoolFilter<"ZaloAccount"> | boolean
-    masterId?: UuidNullableFilter<"ZaloAccount"> | string | null
     groupCount?: IntFilter<"ZaloAccount"> | number
     groupData?: JsonNullableFilter<"ZaloAccount">
     createdAt?: DateTimeFilter<"ZaloAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ZaloAccount"> | Date | string
-    master?: XOR<ZaloAccountNullableScalarRelationFilter, ZaloAccountWhereInput> | null
-    children?: ZaloAccountListRelationFilter
+    masters?: ZaloAccountRelationListRelationFilter
+    children?: ZaloAccountRelationListRelationFilter
     groupMaps?: ZaloAccountGroupListRelationFilter
     messages?: MessageListRelationFilter
     friends?: ZaloAccountFriendListRelationFilter
@@ -10734,13 +11932,12 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     isMaster?: SortOrder
-    masterId?: SortOrderInput | SortOrder
     groupCount?: SortOrder
     groupData?: SortOrderInput | SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
-    master?: ZaloAccountOrderByWithRelationInput
-    children?: ZaloAccountOrderByRelationAggregateInput
+    masters?: ZaloAccountRelationOrderByRelationAggregateInput
+    children?: ZaloAccountRelationOrderByRelationAggregateInput
     groupMaps?: ZaloAccountGroupOrderByRelationAggregateInput
     messages?: MessageOrderByRelationAggregateInput
     friends?: ZaloAccountFriendOrderByRelationAggregateInput
@@ -10756,13 +11953,12 @@ export namespace Prisma {
     phone?: StringNullableFilter<"ZaloAccount"> | string | null
     name?: StringNullableFilter<"ZaloAccount"> | string | null
     isMaster?: BoolFilter<"ZaloAccount"> | boolean
-    masterId?: UuidNullableFilter<"ZaloAccount"> | string | null
     groupCount?: IntFilter<"ZaloAccount"> | number
     groupData?: JsonNullableFilter<"ZaloAccount">
     createdAt?: DateTimeFilter<"ZaloAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ZaloAccount"> | Date | string
-    master?: XOR<ZaloAccountNullableScalarRelationFilter, ZaloAccountWhereInput> | null
-    children?: ZaloAccountListRelationFilter
+    masters?: ZaloAccountRelationListRelationFilter
+    children?: ZaloAccountRelationListRelationFilter
     groupMaps?: ZaloAccountGroupListRelationFilter
     messages?: MessageListRelationFilter
     friends?: ZaloAccountFriendListRelationFilter
@@ -10775,7 +11971,6 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     isMaster?: SortOrder
-    masterId?: SortOrderInput | SortOrder
     groupCount?: SortOrder
     groupData?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -10796,65 +11991,10 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     name?: StringNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     isMaster?: BoolWithAggregatesFilter<"ZaloAccount"> | boolean
-    masterId?: UuidNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     groupCount?: IntWithAggregatesFilter<"ZaloAccount"> | number
     groupData?: JsonNullableWithAggregatesFilter<"ZaloAccount">
     createdAt?: DateTimeWithAggregatesFilter<"ZaloAccount"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ZaloAccount"> | Date | string
-  }
-
-  export type ZaloAccountFriendWhereInput = {
-    AND?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
-    OR?: ZaloAccountFriendWhereInput[]
-    NOT?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
-    id?: UuidFilter<"ZaloAccountFriend"> | string
-    masterId?: UuidFilter<"ZaloAccountFriend"> | string
-    friendId?: UuidFilter<"ZaloAccountFriend"> | string
-    createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
-    master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
-    friend?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
-  }
-
-  export type ZaloAccountFriendOrderByWithRelationInput = {
-    id?: SortOrder
-    masterId?: SortOrder
-    friendId?: SortOrder
-    createdAt?: SortOrder
-    master?: ZaloAccountOrderByWithRelationInput
-    friend?: ZaloAccountOrderByWithRelationInput
-  }
-
-  export type ZaloAccountFriendWhereUniqueInput = Prisma.AtLeast<{
-    id?: string
-    masterId_friendId?: ZaloAccountFriendMasterIdFriendIdCompoundUniqueInput
-    AND?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
-    OR?: ZaloAccountFriendWhereInput[]
-    NOT?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
-    masterId?: UuidFilter<"ZaloAccountFriend"> | string
-    friendId?: UuidFilter<"ZaloAccountFriend"> | string
-    createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
-    master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
-    friend?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
-  }, "id" | "masterId_friendId">
-
-  export type ZaloAccountFriendOrderByWithAggregationInput = {
-    id?: SortOrder
-    masterId?: SortOrder
-    friendId?: SortOrder
-    createdAt?: SortOrder
-    _count?: ZaloAccountFriendCountOrderByAggregateInput
-    _max?: ZaloAccountFriendMaxOrderByAggregateInput
-    _min?: ZaloAccountFriendMinOrderByAggregateInput
-  }
-
-  export type ZaloAccountFriendScalarWhereWithAggregatesInput = {
-    AND?: ZaloAccountFriendScalarWhereWithAggregatesInput | ZaloAccountFriendScalarWhereWithAggregatesInput[]
-    OR?: ZaloAccountFriendScalarWhereWithAggregatesInput[]
-    NOT?: ZaloAccountFriendScalarWhereWithAggregatesInput | ZaloAccountFriendScalarWhereWithAggregatesInput[]
-    id?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
-    masterId?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
-    friendId?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
-    createdAt?: DateTimeWithAggregatesFilter<"ZaloAccountFriend"> | Date | string
   }
 
   export type ZaloAccountGroupWhereInput = {
@@ -10913,6 +12053,60 @@ export namespace Prisma {
     zaloAccountId?: UuidWithAggregatesFilter<"ZaloAccountGroup"> | string
     groupId?: UuidWithAggregatesFilter<"ZaloAccountGroup"> | string
     joinedAt?: DateTimeWithAggregatesFilter<"ZaloAccountGroup"> | Date | string
+  }
+
+  export type ZaloAccountFriendWhereInput = {
+    AND?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
+    OR?: ZaloAccountFriendWhereInput[]
+    NOT?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
+    id?: UuidFilter<"ZaloAccountFriend"> | string
+    masterId?: UuidFilter<"ZaloAccountFriend"> | string
+    friendId?: UuidFilter<"ZaloAccountFriend"> | string
+    createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
+    master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+    friend?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+  }
+
+  export type ZaloAccountFriendOrderByWithRelationInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    friendId?: SortOrder
+    createdAt?: SortOrder
+    master?: ZaloAccountOrderByWithRelationInput
+    friend?: ZaloAccountOrderByWithRelationInput
+  }
+
+  export type ZaloAccountFriendWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    masterId_friendId?: ZaloAccountFriendMasterIdFriendIdCompoundUniqueInput
+    AND?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
+    OR?: ZaloAccountFriendWhereInput[]
+    NOT?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
+    masterId?: UuidFilter<"ZaloAccountFriend"> | string
+    friendId?: UuidFilter<"ZaloAccountFriend"> | string
+    createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
+    master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+    friend?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
+  }, "id" | "masterId_friendId">
+
+  export type ZaloAccountFriendOrderByWithAggregationInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    friendId?: SortOrder
+    createdAt?: SortOrder
+    _count?: ZaloAccountFriendCountOrderByAggregateInput
+    _max?: ZaloAccountFriendMaxOrderByAggregateInput
+    _min?: ZaloAccountFriendMinOrderByAggregateInput
+  }
+
+  export type ZaloAccountFriendScalarWhereWithAggregatesInput = {
+    AND?: ZaloAccountFriendScalarWhereWithAggregatesInput | ZaloAccountFriendScalarWhereWithAggregatesInput[]
+    OR?: ZaloAccountFriendScalarWhereWithAggregatesInput[]
+    NOT?: ZaloAccountFriendScalarWhereWithAggregatesInput | ZaloAccountFriendScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
+    masterId?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
+    friendId?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
+    createdAt?: DateTimeWithAggregatesFilter<"ZaloAccountFriend"> | Date | string
   }
 
   export type MessageWhereInput = {
@@ -11224,6 +12418,53 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type ZaloAccountRelationCreateInput = {
+    id?: string
+    createdAt?: Date | string
+    master: ZaloAccountCreateNestedOneWithoutChildrenInput
+    child: ZaloAccountCreateNestedOneWithoutMastersInput
+  }
+
+  export type ZaloAccountRelationUncheckedCreateInput = {
+    id?: string
+    masterId: string
+    childId: string
+    createdAt?: Date | string
+  }
+
+  export type ZaloAccountRelationUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    master?: ZaloAccountUpdateOneRequiredWithoutChildrenNestedInput
+    child?: ZaloAccountUpdateOneRequiredWithoutMastersNestedInput
+  }
+
+  export type ZaloAccountRelationUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masterId?: StringFieldUpdateOperationsInput | string
+    childId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountRelationCreateManyInput = {
+    id?: string
+    masterId: string
+    childId: string
+    createdAt?: Date | string
+  }
+
+  export type ZaloAccountRelationUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountRelationUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masterId?: StringFieldUpdateOperationsInput | string
+    childId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type ZaloAccountCreateInput = {
     id?: string
     zaloId?: string | null
@@ -11234,8 +12475,8 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    master?: ZaloAccountCreateNestedOneWithoutChildrenInput
-    children?: ZaloAccountCreateNestedManyWithoutMasterInput
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
@@ -11248,12 +12489,12 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
-    masterId?: string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    children?: ZaloAccountUncheckedCreateNestedManyWithoutMasterInput
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
@@ -11270,8 +12511,8 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneWithoutChildrenNestedInput
-    children?: ZaloAccountUpdateManyWithoutMasterNestedInput
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
@@ -11284,12 +12525,12 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
@@ -11302,7 +12543,6 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
-    masterId?: string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -11327,58 +12567,10 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ZaloAccountFriendCreateInput = {
-    id?: string
-    createdAt?: Date | string
-    master: ZaloAccountCreateNestedOneWithoutFriendsInput
-    friend: ZaloAccountCreateNestedOneWithoutFriendOfInput
-  }
-
-  export type ZaloAccountFriendUncheckedCreateInput = {
-    id?: string
-    masterId: string
-    friendId: string
-    createdAt?: Date | string
-  }
-
-  export type ZaloAccountFriendUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput
-    friend?: ZaloAccountUpdateOneRequiredWithoutFriendOfNestedInput
-  }
-
-  export type ZaloAccountFriendUncheckedUpdateInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    masterId?: StringFieldUpdateOperationsInput | string
-    friendId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ZaloAccountFriendCreateManyInput = {
-    id?: string
-    masterId: string
-    friendId: string
-    createdAt?: Date | string
-  }
-
-  export type ZaloAccountFriendUpdateManyMutationInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-  }
-
-  export type ZaloAccountFriendUncheckedUpdateManyInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    masterId?: StringFieldUpdateOperationsInput | string
-    friendId?: StringFieldUpdateOperationsInput | string
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountGroupCreateInput = {
@@ -11433,6 +12625,53 @@ export namespace Prisma {
     zaloAccountId?: StringFieldUpdateOperationsInput | string
     groupId?: StringFieldUpdateOperationsInput | string
     joinedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountFriendCreateInput = {
+    id?: string
+    createdAt?: Date | string
+    master: ZaloAccountCreateNestedOneWithoutFriendsInput
+    friend: ZaloAccountCreateNestedOneWithoutFriendOfInput
+  }
+
+  export type ZaloAccountFriendUncheckedCreateInput = {
+    id?: string
+    masterId: string
+    friendId: string
+    createdAt?: Date | string
+  }
+
+  export type ZaloAccountFriendUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    master?: ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput
+    friend?: ZaloAccountUpdateOneRequiredWithoutFriendOfNestedInput
+  }
+
+  export type ZaloAccountFriendUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masterId?: StringFieldUpdateOperationsInput | string
+    friendId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountFriendCreateManyInput = {
+    id?: string
+    masterId: string
+    friendId: string
+    createdAt?: Date | string
+  }
+
+  export type ZaloAccountFriendUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountFriendUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    masterId?: StringFieldUpdateOperationsInput | string
+    friendId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type MessageCreateInput = {
@@ -11815,6 +13054,37 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type ZaloAccountScalarRelationFilter = {
+    is?: ZaloAccountWhereInput
+    isNot?: ZaloAccountWhereInput
+  }
+
+  export type ZaloAccountRelationMasterIdChildIdCompoundUniqueInput = {
+    masterId: string
+    childId: string
+  }
+
+  export type ZaloAccountRelationCountOrderByAggregateInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    childId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ZaloAccountRelationMaxOrderByAggregateInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    childId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ZaloAccountRelationMinOrderByAggregateInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    childId?: SortOrder
+    createdAt?: SortOrder
+  }
+
   export type StringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -11828,18 +13098,6 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
-  }
-
-  export type UuidNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -11876,15 +13134,10 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
-  export type ZaloAccountNullableScalarRelationFilter = {
-    is?: ZaloAccountWhereInput | null
-    isNot?: ZaloAccountWhereInput | null
-  }
-
-  export type ZaloAccountListRelationFilter = {
-    every?: ZaloAccountWhereInput
-    some?: ZaloAccountWhereInput
-    none?: ZaloAccountWhereInput
+  export type ZaloAccountRelationListRelationFilter = {
+    every?: ZaloAccountRelationWhereInput
+    some?: ZaloAccountRelationWhereInput
+    none?: ZaloAccountRelationWhereInput
   }
 
   export type ZaloAccountFriendListRelationFilter = {
@@ -11898,7 +13151,7 @@ export namespace Prisma {
     nulls?: NullsOrder
   }
 
-  export type ZaloAccountOrderByRelationAggregateInput = {
+  export type ZaloAccountRelationOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -11912,7 +13165,6 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
-    masterId?: SortOrder
     groupCount?: SortOrder
     groupData?: SortOrder
     createdAt?: SortOrder
@@ -11929,7 +13181,6 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
-    masterId?: SortOrder
     groupCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11941,7 +13192,6 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
-    masterId?: SortOrder
     groupCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -11964,21 +13214,6 @@ export namespace Prisma {
     endsWith?: string | StringFieldRefInput<$PrismaModel>
     mode?: QueryMode
     not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
-  }
-
-  export type UuidNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
     _count?: NestedIntNullableFilter<$PrismaModel>
     _min?: NestedStringNullableFilter<$PrismaModel>
     _max?: NestedStringNullableFilter<$PrismaModel>
@@ -12026,37 +13261,6 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
-  export type ZaloAccountScalarRelationFilter = {
-    is?: ZaloAccountWhereInput
-    isNot?: ZaloAccountWhereInput
-  }
-
-  export type ZaloAccountFriendMasterIdFriendIdCompoundUniqueInput = {
-    masterId: string
-    friendId: string
-  }
-
-  export type ZaloAccountFriendCountOrderByAggregateInput = {
-    id?: SortOrder
-    masterId?: SortOrder
-    friendId?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type ZaloAccountFriendMaxOrderByAggregateInput = {
-    id?: SortOrder
-    masterId?: SortOrder
-    friendId?: SortOrder
-    createdAt?: SortOrder
-  }
-
-  export type ZaloAccountFriendMinOrderByAggregateInput = {
-    id?: SortOrder
-    masterId?: SortOrder
-    friendId?: SortOrder
-    createdAt?: SortOrder
-  }
-
   export type ZaloGroupScalarRelationFilter = {
     is?: ZaloGroupWhereInput
     isNot?: ZaloGroupWhereInput
@@ -12084,6 +13288,32 @@ export namespace Prisma {
     zaloAccountId?: SortOrder
     groupId?: SortOrder
     joinedAt?: SortOrder
+  }
+
+  export type ZaloAccountFriendMasterIdFriendIdCompoundUniqueInput = {
+    masterId: string
+    friendId: string
+  }
+
+  export type ZaloAccountFriendCountOrderByAggregateInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    friendId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ZaloAccountFriendMaxOrderByAggregateInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    friendId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type ZaloAccountFriendMinOrderByAggregateInput = {
+    id?: SortOrder
+    masterId?: SortOrder
+    friendId?: SortOrder
+    createdAt?: SortOrder
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -12318,11 +13548,40 @@ export namespace Prisma {
     connect?: ZaloAccountWhereUniqueInput
   }
 
-  export type ZaloAccountCreateNestedManyWithoutMasterInput = {
-    create?: XOR<ZaloAccountCreateWithoutMasterInput, ZaloAccountUncheckedCreateWithoutMasterInput> | ZaloAccountCreateWithoutMasterInput[] | ZaloAccountUncheckedCreateWithoutMasterInput[]
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutMasterInput | ZaloAccountCreateOrConnectWithoutMasterInput[]
-    createMany?: ZaloAccountCreateManyMasterInputEnvelope
-    connect?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
+  export type ZaloAccountCreateNestedOneWithoutMastersInput = {
+    create?: XOR<ZaloAccountCreateWithoutMastersInput, ZaloAccountUncheckedCreateWithoutMastersInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutMastersInput
+    connect?: ZaloAccountWhereUniqueInput
+  }
+
+  export type ZaloAccountUpdateOneRequiredWithoutChildrenNestedInput = {
+    create?: XOR<ZaloAccountCreateWithoutChildrenInput, ZaloAccountUncheckedCreateWithoutChildrenInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutChildrenInput
+    upsert?: ZaloAccountUpsertWithoutChildrenInput
+    connect?: ZaloAccountWhereUniqueInput
+    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutChildrenInput, ZaloAccountUpdateWithoutChildrenInput>, ZaloAccountUncheckedUpdateWithoutChildrenInput>
+  }
+
+  export type ZaloAccountUpdateOneRequiredWithoutMastersNestedInput = {
+    create?: XOR<ZaloAccountCreateWithoutMastersInput, ZaloAccountUncheckedCreateWithoutMastersInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutMastersInput
+    upsert?: ZaloAccountUpsertWithoutMastersInput
+    connect?: ZaloAccountWhereUniqueInput
+    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutMastersInput, ZaloAccountUpdateWithoutMastersInput>, ZaloAccountUncheckedUpdateWithoutMastersInput>
+  }
+
+  export type ZaloAccountRelationCreateNestedManyWithoutChildInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutChildInput, ZaloAccountRelationUncheckedCreateWithoutChildInput> | ZaloAccountRelationCreateWithoutChildInput[] | ZaloAccountRelationUncheckedCreateWithoutChildInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutChildInput | ZaloAccountRelationCreateOrConnectWithoutChildInput[]
+    createMany?: ZaloAccountRelationCreateManyChildInputEnvelope
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+  }
+
+  export type ZaloAccountRelationCreateNestedManyWithoutMasterInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutMasterInput, ZaloAccountRelationUncheckedCreateWithoutMasterInput> | ZaloAccountRelationCreateWithoutMasterInput[] | ZaloAccountRelationUncheckedCreateWithoutMasterInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutMasterInput | ZaloAccountRelationCreateOrConnectWithoutMasterInput[]
+    createMany?: ZaloAccountRelationCreateManyMasterInputEnvelope
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
   }
 
   export type ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput = {
@@ -12353,11 +13612,18 @@ export namespace Prisma {
     connect?: ZaloAccountFriendWhereUniqueInput | ZaloAccountFriendWhereUniqueInput[]
   }
 
-  export type ZaloAccountUncheckedCreateNestedManyWithoutMasterInput = {
-    create?: XOR<ZaloAccountCreateWithoutMasterInput, ZaloAccountUncheckedCreateWithoutMasterInput> | ZaloAccountCreateWithoutMasterInput[] | ZaloAccountUncheckedCreateWithoutMasterInput[]
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutMasterInput | ZaloAccountCreateOrConnectWithoutMasterInput[]
-    createMany?: ZaloAccountCreateManyMasterInputEnvelope
-    connect?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
+  export type ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutChildInput, ZaloAccountRelationUncheckedCreateWithoutChildInput> | ZaloAccountRelationCreateWithoutChildInput[] | ZaloAccountRelationUncheckedCreateWithoutChildInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutChildInput | ZaloAccountRelationCreateOrConnectWithoutChildInput[]
+    createMany?: ZaloAccountRelationCreateManyChildInputEnvelope
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+  }
+
+  export type ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutMasterInput, ZaloAccountRelationUncheckedCreateWithoutMasterInput> | ZaloAccountRelationCreateWithoutMasterInput[] | ZaloAccountRelationUncheckedCreateWithoutMasterInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutMasterInput | ZaloAccountRelationCreateOrConnectWithoutMasterInput[]
+    createMany?: ZaloAccountRelationCreateManyMasterInputEnvelope
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
   }
 
   export type ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput = {
@@ -12400,28 +13666,32 @@ export namespace Prisma {
     divide?: number
   }
 
-  export type ZaloAccountUpdateOneWithoutChildrenNestedInput = {
-    create?: XOR<ZaloAccountCreateWithoutChildrenInput, ZaloAccountUncheckedCreateWithoutChildrenInput>
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutChildrenInput
-    upsert?: ZaloAccountUpsertWithoutChildrenInput
-    disconnect?: ZaloAccountWhereInput | boolean
-    delete?: ZaloAccountWhereInput | boolean
-    connect?: ZaloAccountWhereUniqueInput
-    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutChildrenInput, ZaloAccountUpdateWithoutChildrenInput>, ZaloAccountUncheckedUpdateWithoutChildrenInput>
+  export type ZaloAccountRelationUpdateManyWithoutChildNestedInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutChildInput, ZaloAccountRelationUncheckedCreateWithoutChildInput> | ZaloAccountRelationCreateWithoutChildInput[] | ZaloAccountRelationUncheckedCreateWithoutChildInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutChildInput | ZaloAccountRelationCreateOrConnectWithoutChildInput[]
+    upsert?: ZaloAccountRelationUpsertWithWhereUniqueWithoutChildInput | ZaloAccountRelationUpsertWithWhereUniqueWithoutChildInput[]
+    createMany?: ZaloAccountRelationCreateManyChildInputEnvelope
+    set?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    disconnect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    delete?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    update?: ZaloAccountRelationUpdateWithWhereUniqueWithoutChildInput | ZaloAccountRelationUpdateWithWhereUniqueWithoutChildInput[]
+    updateMany?: ZaloAccountRelationUpdateManyWithWhereWithoutChildInput | ZaloAccountRelationUpdateManyWithWhereWithoutChildInput[]
+    deleteMany?: ZaloAccountRelationScalarWhereInput | ZaloAccountRelationScalarWhereInput[]
   }
 
-  export type ZaloAccountUpdateManyWithoutMasterNestedInput = {
-    create?: XOR<ZaloAccountCreateWithoutMasterInput, ZaloAccountUncheckedCreateWithoutMasterInput> | ZaloAccountCreateWithoutMasterInput[] | ZaloAccountUncheckedCreateWithoutMasterInput[]
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutMasterInput | ZaloAccountCreateOrConnectWithoutMasterInput[]
-    upsert?: ZaloAccountUpsertWithWhereUniqueWithoutMasterInput | ZaloAccountUpsertWithWhereUniqueWithoutMasterInput[]
-    createMany?: ZaloAccountCreateManyMasterInputEnvelope
-    set?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    disconnect?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    delete?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    connect?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    update?: ZaloAccountUpdateWithWhereUniqueWithoutMasterInput | ZaloAccountUpdateWithWhereUniqueWithoutMasterInput[]
-    updateMany?: ZaloAccountUpdateManyWithWhereWithoutMasterInput | ZaloAccountUpdateManyWithWhereWithoutMasterInput[]
-    deleteMany?: ZaloAccountScalarWhereInput | ZaloAccountScalarWhereInput[]
+  export type ZaloAccountRelationUpdateManyWithoutMasterNestedInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutMasterInput, ZaloAccountRelationUncheckedCreateWithoutMasterInput> | ZaloAccountRelationCreateWithoutMasterInput[] | ZaloAccountRelationUncheckedCreateWithoutMasterInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutMasterInput | ZaloAccountRelationCreateOrConnectWithoutMasterInput[]
+    upsert?: ZaloAccountRelationUpsertWithWhereUniqueWithoutMasterInput | ZaloAccountRelationUpsertWithWhereUniqueWithoutMasterInput[]
+    createMany?: ZaloAccountRelationCreateManyMasterInputEnvelope
+    set?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    disconnect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    delete?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    update?: ZaloAccountRelationUpdateWithWhereUniqueWithoutMasterInput | ZaloAccountRelationUpdateWithWhereUniqueWithoutMasterInput[]
+    updateMany?: ZaloAccountRelationUpdateManyWithWhereWithoutMasterInput | ZaloAccountRelationUpdateManyWithWhereWithoutMasterInput[]
+    deleteMany?: ZaloAccountRelationScalarWhereInput | ZaloAccountRelationScalarWhereInput[]
   }
 
   export type ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput = {
@@ -12480,18 +13750,32 @@ export namespace Prisma {
     deleteMany?: ZaloAccountFriendScalarWhereInput | ZaloAccountFriendScalarWhereInput[]
   }
 
-  export type ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput = {
-    create?: XOR<ZaloAccountCreateWithoutMasterInput, ZaloAccountUncheckedCreateWithoutMasterInput> | ZaloAccountCreateWithoutMasterInput[] | ZaloAccountUncheckedCreateWithoutMasterInput[]
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutMasterInput | ZaloAccountCreateOrConnectWithoutMasterInput[]
-    upsert?: ZaloAccountUpsertWithWhereUniqueWithoutMasterInput | ZaloAccountUpsertWithWhereUniqueWithoutMasterInput[]
-    createMany?: ZaloAccountCreateManyMasterInputEnvelope
-    set?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    disconnect?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    delete?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    connect?: ZaloAccountWhereUniqueInput | ZaloAccountWhereUniqueInput[]
-    update?: ZaloAccountUpdateWithWhereUniqueWithoutMasterInput | ZaloAccountUpdateWithWhereUniqueWithoutMasterInput[]
-    updateMany?: ZaloAccountUpdateManyWithWhereWithoutMasterInput | ZaloAccountUpdateManyWithWhereWithoutMasterInput[]
-    deleteMany?: ZaloAccountScalarWhereInput | ZaloAccountScalarWhereInput[]
+  export type ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutChildInput, ZaloAccountRelationUncheckedCreateWithoutChildInput> | ZaloAccountRelationCreateWithoutChildInput[] | ZaloAccountRelationUncheckedCreateWithoutChildInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutChildInput | ZaloAccountRelationCreateOrConnectWithoutChildInput[]
+    upsert?: ZaloAccountRelationUpsertWithWhereUniqueWithoutChildInput | ZaloAccountRelationUpsertWithWhereUniqueWithoutChildInput[]
+    createMany?: ZaloAccountRelationCreateManyChildInputEnvelope
+    set?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    disconnect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    delete?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    update?: ZaloAccountRelationUpdateWithWhereUniqueWithoutChildInput | ZaloAccountRelationUpdateWithWhereUniqueWithoutChildInput[]
+    updateMany?: ZaloAccountRelationUpdateManyWithWhereWithoutChildInput | ZaloAccountRelationUpdateManyWithWhereWithoutChildInput[]
+    deleteMany?: ZaloAccountRelationScalarWhereInput | ZaloAccountRelationScalarWhereInput[]
+  }
+
+  export type ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput = {
+    create?: XOR<ZaloAccountRelationCreateWithoutMasterInput, ZaloAccountRelationUncheckedCreateWithoutMasterInput> | ZaloAccountRelationCreateWithoutMasterInput[] | ZaloAccountRelationUncheckedCreateWithoutMasterInput[]
+    connectOrCreate?: ZaloAccountRelationCreateOrConnectWithoutMasterInput | ZaloAccountRelationCreateOrConnectWithoutMasterInput[]
+    upsert?: ZaloAccountRelationUpsertWithWhereUniqueWithoutMasterInput | ZaloAccountRelationUpsertWithWhereUniqueWithoutMasterInput[]
+    createMany?: ZaloAccountRelationCreateManyMasterInputEnvelope
+    set?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    disconnect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    delete?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    connect?: ZaloAccountRelationWhereUniqueInput | ZaloAccountRelationWhereUniqueInput[]
+    update?: ZaloAccountRelationUpdateWithWhereUniqueWithoutMasterInput | ZaloAccountRelationUpdateWithWhereUniqueWithoutMasterInput[]
+    updateMany?: ZaloAccountRelationUpdateManyWithWhereWithoutMasterInput | ZaloAccountRelationUpdateManyWithWhereWithoutMasterInput[]
+    deleteMany?: ZaloAccountRelationScalarWhereInput | ZaloAccountRelationScalarWhereInput[]
   }
 
   export type ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput = {
@@ -12550,34 +13834,6 @@ export namespace Prisma {
     deleteMany?: ZaloAccountFriendScalarWhereInput | ZaloAccountFriendScalarWhereInput[]
   }
 
-  export type ZaloAccountCreateNestedOneWithoutFriendsInput = {
-    create?: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendsInput
-    connect?: ZaloAccountWhereUniqueInput
-  }
-
-  export type ZaloAccountCreateNestedOneWithoutFriendOfInput = {
-    create?: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendOfInput
-    connect?: ZaloAccountWhereUniqueInput
-  }
-
-  export type ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput = {
-    create?: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendsInput
-    upsert?: ZaloAccountUpsertWithoutFriendsInput
-    connect?: ZaloAccountWhereUniqueInput
-    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutFriendsInput, ZaloAccountUpdateWithoutFriendsInput>, ZaloAccountUncheckedUpdateWithoutFriendsInput>
-  }
-
-  export type ZaloAccountUpdateOneRequiredWithoutFriendOfNestedInput = {
-    create?: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
-    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendOfInput
-    upsert?: ZaloAccountUpsertWithoutFriendOfInput
-    connect?: ZaloAccountWhereUniqueInput
-    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutFriendOfInput, ZaloAccountUpdateWithoutFriendOfInput>, ZaloAccountUncheckedUpdateWithoutFriendOfInput>
-  }
-
   export type ZaloAccountCreateNestedOneWithoutGroupMapsInput = {
     create?: XOR<ZaloAccountCreateWithoutGroupMapsInput, ZaloAccountUncheckedCreateWithoutGroupMapsInput>
     connectOrCreate?: ZaloAccountCreateOrConnectWithoutGroupMapsInput
@@ -12604,6 +13860,34 @@ export namespace Prisma {
     upsert?: ZaloGroupUpsertWithoutAccountMapsInput
     connect?: ZaloGroupWhereUniqueInput
     update?: XOR<XOR<ZaloGroupUpdateToOneWithWhereWithoutAccountMapsInput, ZaloGroupUpdateWithoutAccountMapsInput>, ZaloGroupUncheckedUpdateWithoutAccountMapsInput>
+  }
+
+  export type ZaloAccountCreateNestedOneWithoutFriendsInput = {
+    create?: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendsInput
+    connect?: ZaloAccountWhereUniqueInput
+  }
+
+  export type ZaloAccountCreateNestedOneWithoutFriendOfInput = {
+    create?: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendOfInput
+    connect?: ZaloAccountWhereUniqueInput
+  }
+
+  export type ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput = {
+    create?: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendsInput
+    upsert?: ZaloAccountUpsertWithoutFriendsInput
+    connect?: ZaloAccountWhereUniqueInput
+    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutFriendsInput, ZaloAccountUpdateWithoutFriendsInput>, ZaloAccountUncheckedUpdateWithoutFriendsInput>
+  }
+
+  export type ZaloAccountUpdateOneRequiredWithoutFriendOfNestedInput = {
+    create?: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendOfInput
+    upsert?: ZaloAccountUpsertWithoutFriendOfInput
+    connect?: ZaloAccountWhereUniqueInput
+    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutFriendOfInput, ZaloAccountUpdateWithoutFriendOfInput>, ZaloAccountUncheckedUpdateWithoutFriendOfInput>
   }
 
   export type ZaloAccountCreateNestedOneWithoutMessagesInput = {
@@ -12778,17 +14062,6 @@ export namespace Prisma {
     not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
-  export type NestedUuidNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
-  }
-
   export type NestedStringNullableWithAggregatesFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -12815,20 +14088,6 @@ export namespace Prisma {
     gt?: number | IntFieldRefInput<$PrismaModel>
     gte?: number | IntFieldRefInput<$PrismaModel>
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
-  }
-
-  export type NestedUuidNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
@@ -13050,7 +14309,7 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    master?: ZaloAccountCreateNestedOneWithoutChildrenInput
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
@@ -13063,11 +14322,11 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
-    masterId?: string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
@@ -13079,7 +14338,7 @@ export namespace Prisma {
     create: XOR<ZaloAccountCreateWithoutChildrenInput, ZaloAccountUncheckedCreateWithoutChildrenInput>
   }
 
-  export type ZaloAccountCreateWithoutMasterInput = {
+  export type ZaloAccountCreateWithoutMastersInput = {
     id?: string
     zaloId?: string | null
     phone?: string | null
@@ -13089,14 +14348,14 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    children?: ZaloAccountCreateNestedManyWithoutMasterInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
 
-  export type ZaloAccountUncheckedCreateWithoutMasterInput = {
+  export type ZaloAccountUncheckedCreateWithoutMastersInput = {
     id?: string
     zaloId?: string | null
     phone?: string | null
@@ -13106,20 +14365,149 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    children?: ZaloAccountUncheckedCreateNestedManyWithoutMasterInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
 
-  export type ZaloAccountCreateOrConnectWithoutMasterInput = {
+  export type ZaloAccountCreateOrConnectWithoutMastersInput = {
     where: ZaloAccountWhereUniqueInput
-    create: XOR<ZaloAccountCreateWithoutMasterInput, ZaloAccountUncheckedCreateWithoutMasterInput>
+    create: XOR<ZaloAccountCreateWithoutMastersInput, ZaloAccountUncheckedCreateWithoutMastersInput>
   }
 
-  export type ZaloAccountCreateManyMasterInputEnvelope = {
-    data: ZaloAccountCreateManyMasterInput | ZaloAccountCreateManyMasterInput[]
+  export type ZaloAccountUpsertWithoutChildrenInput = {
+    update: XOR<ZaloAccountUpdateWithoutChildrenInput, ZaloAccountUncheckedUpdateWithoutChildrenInput>
+    create: XOR<ZaloAccountCreateWithoutChildrenInput, ZaloAccountUncheckedCreateWithoutChildrenInput>
+    where?: ZaloAccountWhereInput
+  }
+
+  export type ZaloAccountUpdateToOneWithWhereWithoutChildrenInput = {
+    where?: ZaloAccountWhereInput
+    data: XOR<ZaloAccountUpdateWithoutChildrenInput, ZaloAccountUncheckedUpdateWithoutChildrenInput>
+  }
+
+  export type ZaloAccountUpdateWithoutChildrenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
+    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountUncheckedUpdateWithoutChildrenInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
+    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountUpsertWithoutMastersInput = {
+    update: XOR<ZaloAccountUpdateWithoutMastersInput, ZaloAccountUncheckedUpdateWithoutMastersInput>
+    create: XOR<ZaloAccountCreateWithoutMastersInput, ZaloAccountUncheckedCreateWithoutMastersInput>
+    where?: ZaloAccountWhereInput
+  }
+
+  export type ZaloAccountUpdateToOneWithWhereWithoutMastersInput = {
+    where?: ZaloAccountWhereInput
+    data: XOR<ZaloAccountUpdateWithoutMastersInput, ZaloAccountUncheckedUpdateWithoutMastersInput>
+  }
+
+  export type ZaloAccountUpdateWithoutMastersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
+    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountUncheckedUpdateWithoutMastersInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
+    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountRelationCreateWithoutChildInput = {
+    id?: string
+    createdAt?: Date | string
+    master: ZaloAccountCreateNestedOneWithoutChildrenInput
+  }
+
+  export type ZaloAccountRelationUncheckedCreateWithoutChildInput = {
+    id?: string
+    masterId: string
+    createdAt?: Date | string
+  }
+
+  export type ZaloAccountRelationCreateOrConnectWithoutChildInput = {
+    where: ZaloAccountRelationWhereUniqueInput
+    create: XOR<ZaloAccountRelationCreateWithoutChildInput, ZaloAccountRelationUncheckedCreateWithoutChildInput>
+  }
+
+  export type ZaloAccountRelationCreateManyChildInputEnvelope = {
+    data: ZaloAccountRelationCreateManyChildInput | ZaloAccountRelationCreateManyChildInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ZaloAccountRelationCreateWithoutMasterInput = {
+    id?: string
+    createdAt?: Date | string
+    child: ZaloAccountCreateNestedOneWithoutMastersInput
+  }
+
+  export type ZaloAccountRelationUncheckedCreateWithoutMasterInput = {
+    id?: string
+    childId: string
+    createdAt?: Date | string
+  }
+
+  export type ZaloAccountRelationCreateOrConnectWithoutMasterInput = {
+    where: ZaloAccountRelationWhereUniqueInput
+    create: XOR<ZaloAccountRelationCreateWithoutMasterInput, ZaloAccountRelationUncheckedCreateWithoutMasterInput>
+  }
+
+  export type ZaloAccountRelationCreateManyMasterInputEnvelope = {
+    data: ZaloAccountRelationCreateManyMasterInput | ZaloAccountRelationCreateManyMasterInput[]
     skipDuplicates?: boolean
   }
 
@@ -13225,81 +14613,46 @@ export namespace Prisma {
     skipDuplicates?: boolean
   }
 
-  export type ZaloAccountUpsertWithoutChildrenInput = {
-    update: XOR<ZaloAccountUpdateWithoutChildrenInput, ZaloAccountUncheckedUpdateWithoutChildrenInput>
-    create: XOR<ZaloAccountCreateWithoutChildrenInput, ZaloAccountUncheckedCreateWithoutChildrenInput>
-    where?: ZaloAccountWhereInput
+  export type ZaloAccountRelationUpsertWithWhereUniqueWithoutChildInput = {
+    where: ZaloAccountRelationWhereUniqueInput
+    update: XOR<ZaloAccountRelationUpdateWithoutChildInput, ZaloAccountRelationUncheckedUpdateWithoutChildInput>
+    create: XOR<ZaloAccountRelationCreateWithoutChildInput, ZaloAccountRelationUncheckedCreateWithoutChildInput>
   }
 
-  export type ZaloAccountUpdateToOneWithWhereWithoutChildrenInput = {
-    where?: ZaloAccountWhereInput
-    data: XOR<ZaloAccountUpdateWithoutChildrenInput, ZaloAccountUncheckedUpdateWithoutChildrenInput>
+  export type ZaloAccountRelationUpdateWithWhereUniqueWithoutChildInput = {
+    where: ZaloAccountRelationWhereUniqueInput
+    data: XOR<ZaloAccountRelationUpdateWithoutChildInput, ZaloAccountRelationUncheckedUpdateWithoutChildInput>
   }
 
-  export type ZaloAccountUpdateWithoutChildrenInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneWithoutChildrenNestedInput
-    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUpdateManyWithoutSenderNestedInput
-    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
-    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
+  export type ZaloAccountRelationUpdateManyWithWhereWithoutChildInput = {
+    where: ZaloAccountRelationScalarWhereInput
+    data: XOR<ZaloAccountRelationUpdateManyMutationInput, ZaloAccountRelationUncheckedUpdateManyWithoutChildInput>
   }
 
-  export type ZaloAccountUncheckedUpdateWithoutChildrenInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
-    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
+  export type ZaloAccountRelationScalarWhereInput = {
+    AND?: ZaloAccountRelationScalarWhereInput | ZaloAccountRelationScalarWhereInput[]
+    OR?: ZaloAccountRelationScalarWhereInput[]
+    NOT?: ZaloAccountRelationScalarWhereInput | ZaloAccountRelationScalarWhereInput[]
+    id?: UuidFilter<"ZaloAccountRelation"> | string
+    masterId?: UuidFilter<"ZaloAccountRelation"> | string
+    childId?: UuidFilter<"ZaloAccountRelation"> | string
+    createdAt?: DateTimeFilter<"ZaloAccountRelation"> | Date | string
   }
 
-  export type ZaloAccountUpsertWithWhereUniqueWithoutMasterInput = {
-    where: ZaloAccountWhereUniqueInput
-    update: XOR<ZaloAccountUpdateWithoutMasterInput, ZaloAccountUncheckedUpdateWithoutMasterInput>
-    create: XOR<ZaloAccountCreateWithoutMasterInput, ZaloAccountUncheckedCreateWithoutMasterInput>
+  export type ZaloAccountRelationUpsertWithWhereUniqueWithoutMasterInput = {
+    where: ZaloAccountRelationWhereUniqueInput
+    update: XOR<ZaloAccountRelationUpdateWithoutMasterInput, ZaloAccountRelationUncheckedUpdateWithoutMasterInput>
+    create: XOR<ZaloAccountRelationCreateWithoutMasterInput, ZaloAccountRelationUncheckedCreateWithoutMasterInput>
   }
 
-  export type ZaloAccountUpdateWithWhereUniqueWithoutMasterInput = {
-    where: ZaloAccountWhereUniqueInput
-    data: XOR<ZaloAccountUpdateWithoutMasterInput, ZaloAccountUncheckedUpdateWithoutMasterInput>
+  export type ZaloAccountRelationUpdateWithWhereUniqueWithoutMasterInput = {
+    where: ZaloAccountRelationWhereUniqueInput
+    data: XOR<ZaloAccountRelationUpdateWithoutMasterInput, ZaloAccountRelationUncheckedUpdateWithoutMasterInput>
   }
 
-  export type ZaloAccountUpdateManyWithWhereWithoutMasterInput = {
-    where: ZaloAccountScalarWhereInput
-    data: XOR<ZaloAccountUpdateManyMutationInput, ZaloAccountUncheckedUpdateManyWithoutMasterInput>
-  }
-
-  export type ZaloAccountScalarWhereInput = {
-    AND?: ZaloAccountScalarWhereInput | ZaloAccountScalarWhereInput[]
-    OR?: ZaloAccountScalarWhereInput[]
-    NOT?: ZaloAccountScalarWhereInput | ZaloAccountScalarWhereInput[]
-    id?: UuidFilter<"ZaloAccount"> | string
-    zaloId?: StringNullableFilter<"ZaloAccount"> | string | null
-    phone?: StringNullableFilter<"ZaloAccount"> | string | null
-    name?: StringNullableFilter<"ZaloAccount"> | string | null
-    isMaster?: BoolFilter<"ZaloAccount"> | boolean
-    masterId?: UuidNullableFilter<"ZaloAccount"> | string | null
-    groupCount?: IntFilter<"ZaloAccount"> | number
-    groupData?: JsonNullableFilter<"ZaloAccount">
-    createdAt?: DateTimeFilter<"ZaloAccount"> | Date | string
-    updatedAt?: DateTimeFilter<"ZaloAccount"> | Date | string
+  export type ZaloAccountRelationUpdateManyWithWhereWithoutMasterInput = {
+    where: ZaloAccountRelationScalarWhereInput
+    data: XOR<ZaloAccountRelationUpdateManyMutationInput, ZaloAccountRelationUncheckedUpdateManyWithoutMasterInput>
   }
 
   export type ZaloAccountGroupUpsertWithWhereUniqueWithoutZaloAccountInput = {
@@ -13376,174 +14729,6 @@ export namespace Prisma {
     data: XOR<ZaloAccountFriendUpdateManyMutationInput, ZaloAccountFriendUncheckedUpdateManyWithoutFriendInput>
   }
 
-  export type ZaloAccountCreateWithoutFriendsInput = {
-    id?: string
-    zaloId?: string | null
-    phone?: string | null
-    name?: string | null
-    isMaster?: boolean
-    groupCount?: number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    master?: ZaloAccountCreateNestedOneWithoutChildrenInput
-    children?: ZaloAccountCreateNestedManyWithoutMasterInput
-    groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
-    messages?: MessageCreateNestedManyWithoutSenderInput
-    friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
-  }
-
-  export type ZaloAccountUncheckedCreateWithoutFriendsInput = {
-    id?: string
-    zaloId?: string | null
-    phone?: string | null
-    name?: string | null
-    isMaster?: boolean
-    masterId?: string | null
-    groupCount?: number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    children?: ZaloAccountUncheckedCreateNestedManyWithoutMasterInput
-    groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
-    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
-  }
-
-  export type ZaloAccountCreateOrConnectWithoutFriendsInput = {
-    where: ZaloAccountWhereUniqueInput
-    create: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
-  }
-
-  export type ZaloAccountCreateWithoutFriendOfInput = {
-    id?: string
-    zaloId?: string | null
-    phone?: string | null
-    name?: string | null
-    isMaster?: boolean
-    groupCount?: number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    master?: ZaloAccountCreateNestedOneWithoutChildrenInput
-    children?: ZaloAccountCreateNestedManyWithoutMasterInput
-    groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
-    messages?: MessageCreateNestedManyWithoutSenderInput
-    friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
-  }
-
-  export type ZaloAccountUncheckedCreateWithoutFriendOfInput = {
-    id?: string
-    zaloId?: string | null
-    phone?: string | null
-    name?: string | null
-    isMaster?: boolean
-    masterId?: string | null
-    groupCount?: number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: Date | string
-    updatedAt?: Date | string
-    children?: ZaloAccountUncheckedCreateNestedManyWithoutMasterInput
-    groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
-    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
-    friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
-  }
-
-  export type ZaloAccountCreateOrConnectWithoutFriendOfInput = {
-    where: ZaloAccountWhereUniqueInput
-    create: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
-  }
-
-  export type ZaloAccountUpsertWithoutFriendsInput = {
-    update: XOR<ZaloAccountUpdateWithoutFriendsInput, ZaloAccountUncheckedUpdateWithoutFriendsInput>
-    create: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
-    where?: ZaloAccountWhereInput
-  }
-
-  export type ZaloAccountUpdateToOneWithWhereWithoutFriendsInput = {
-    where?: ZaloAccountWhereInput
-    data: XOR<ZaloAccountUpdateWithoutFriendsInput, ZaloAccountUncheckedUpdateWithoutFriendsInput>
-  }
-
-  export type ZaloAccountUpdateWithoutFriendsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneWithoutChildrenNestedInput
-    children?: ZaloAccountUpdateManyWithoutMasterNestedInput
-    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUpdateManyWithoutSenderNestedInput
-    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
-  }
-
-  export type ZaloAccountUncheckedUpdateWithoutFriendsInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput
-    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
-  }
-
-  export type ZaloAccountUpsertWithoutFriendOfInput = {
-    update: XOR<ZaloAccountUpdateWithoutFriendOfInput, ZaloAccountUncheckedUpdateWithoutFriendOfInput>
-    create: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
-    where?: ZaloAccountWhereInput
-  }
-
-  export type ZaloAccountUpdateToOneWithWhereWithoutFriendOfInput = {
-    where?: ZaloAccountWhereInput
-    data: XOR<ZaloAccountUpdateWithoutFriendOfInput, ZaloAccountUncheckedUpdateWithoutFriendOfInput>
-  }
-
-  export type ZaloAccountUpdateWithoutFriendOfInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneWithoutChildrenNestedInput
-    children?: ZaloAccountUpdateManyWithoutMasterNestedInput
-    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUpdateManyWithoutSenderNestedInput
-    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
-  }
-
-  export type ZaloAccountUncheckedUpdateWithoutFriendOfInput = {
-    id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
-    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput
-    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
-  }
-
   export type ZaloAccountCreateWithoutGroupMapsInput = {
     id?: string
     zaloId?: string | null
@@ -13554,8 +14739,8 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    master?: ZaloAccountCreateNestedOneWithoutChildrenInput
-    children?: ZaloAccountCreateNestedManyWithoutMasterInput
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     messages?: MessageCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
@@ -13567,12 +14752,12 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
-    masterId?: string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    children?: ZaloAccountUncheckedCreateNestedManyWithoutMasterInput
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
@@ -13625,8 +14810,8 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneWithoutChildrenNestedInput
-    children?: ZaloAccountUpdateManyWithoutMasterNestedInput
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
@@ -13638,12 +14823,12 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
@@ -13676,6 +14861,174 @@ export namespace Prisma {
     messages?: MessageUncheckedUpdateManyWithoutGroupNestedInput
   }
 
+  export type ZaloAccountCreateWithoutFriendsInput = {
+    id?: string
+    zaloId?: string | null
+    phone?: string | null
+    name?: string | null
+    isMaster?: boolean
+    groupCount?: number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
+    groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
+    messages?: MessageCreateNestedManyWithoutSenderInput
+    friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
+  }
+
+  export type ZaloAccountUncheckedCreateWithoutFriendsInput = {
+    id?: string
+    zaloId?: string | null
+    phone?: string | null
+    name?: string | null
+    isMaster?: boolean
+    groupCount?: number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
+    groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
+    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
+  }
+
+  export type ZaloAccountCreateOrConnectWithoutFriendsInput = {
+    where: ZaloAccountWhereUniqueInput
+    create: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
+  }
+
+  export type ZaloAccountCreateWithoutFriendOfInput = {
+    id?: string
+    zaloId?: string | null
+    phone?: string | null
+    name?: string | null
+    isMaster?: boolean
+    groupCount?: number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
+    groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
+    messages?: MessageCreateNestedManyWithoutSenderInput
+    friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
+  }
+
+  export type ZaloAccountUncheckedCreateWithoutFriendOfInput = {
+    id?: string
+    zaloId?: string | null
+    phone?: string | null
+    name?: string | null
+    isMaster?: boolean
+    groupCount?: number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
+    groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
+    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
+  }
+
+  export type ZaloAccountCreateOrConnectWithoutFriendOfInput = {
+    where: ZaloAccountWhereUniqueInput
+    create: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
+  }
+
+  export type ZaloAccountUpsertWithoutFriendsInput = {
+    update: XOR<ZaloAccountUpdateWithoutFriendsInput, ZaloAccountUncheckedUpdateWithoutFriendsInput>
+    create: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
+    where?: ZaloAccountWhereInput
+  }
+
+  export type ZaloAccountUpdateToOneWithWhereWithoutFriendsInput = {
+    where?: ZaloAccountWhereInput
+    data: XOR<ZaloAccountUpdateWithoutFriendsInput, ZaloAccountUncheckedUpdateWithoutFriendsInput>
+  }
+
+  export type ZaloAccountUpdateWithoutFriendsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountUncheckedUpdateWithoutFriendsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountUpsertWithoutFriendOfInput = {
+    update: XOR<ZaloAccountUpdateWithoutFriendOfInput, ZaloAccountUncheckedUpdateWithoutFriendOfInput>
+    create: XOR<ZaloAccountCreateWithoutFriendOfInput, ZaloAccountUncheckedCreateWithoutFriendOfInput>
+    where?: ZaloAccountWhereInput
+  }
+
+  export type ZaloAccountUpdateToOneWithWhereWithoutFriendOfInput = {
+    where?: ZaloAccountWhereInput
+    data: XOR<ZaloAccountUpdateWithoutFriendOfInput, ZaloAccountUncheckedUpdateWithoutFriendOfInput>
+  }
+
+  export type ZaloAccountUpdateWithoutFriendOfInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
+  }
+
+  export type ZaloAccountUncheckedUpdateWithoutFriendOfInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
+  }
+
   export type ZaloAccountCreateWithoutMessagesInput = {
     id?: string
     zaloId?: string | null
@@ -13686,8 +15039,8 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    master?: ZaloAccountCreateNestedOneWithoutChildrenInput
-    children?: ZaloAccountCreateNestedManyWithoutMasterInput
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
@@ -13699,12 +15052,12 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
-    masterId?: string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
     updatedAt?: Date | string
-    children?: ZaloAccountUncheckedCreateNestedManyWithoutMasterInput
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
@@ -13757,8 +15110,8 @@ export namespace Prisma {
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    master?: ZaloAccountUpdateOneWithoutChildrenNestedInput
-    children?: ZaloAccountUpdateManyWithoutMasterNestedInput
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
@@ -13770,12 +15123,12 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
-    masterId?: NullableStringFieldUpdateOperationsInput | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
@@ -13884,16 +15237,16 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
-  export type ZaloAccountCreateManyMasterInput = {
+  export type ZaloAccountRelationCreateManyChildInput = {
     id?: string
-    zaloId?: string | null
-    phone?: string | null
-    name?: string | null
-    isMaster?: boolean
-    groupCount?: number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
+    masterId: string
     createdAt?: Date | string
-    updatedAt?: Date | string
+  }
+
+  export type ZaloAccountRelationCreateManyMasterInput = {
+    id?: string
+    childId: string
+    createdAt?: Date | string
   }
 
   export type ZaloAccountGroupCreateManyZaloAccountInput = {
@@ -13927,50 +15280,40 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
-  export type ZaloAccountUpdateWithoutMasterInput = {
+  export type ZaloAccountRelationUpdateWithoutChildInput = {
     id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUpdateManyWithoutMasterNestedInput
-    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUpdateManyWithoutSenderNestedInput
-    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
-    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
+    master?: ZaloAccountUpdateOneRequiredWithoutChildrenNestedInput
   }
 
-  export type ZaloAccountUncheckedUpdateWithoutMasterInput = {
+  export type ZaloAccountRelationUncheckedUpdateWithoutChildInput = {
     id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
+    masterId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    children?: ZaloAccountUncheckedUpdateManyWithoutMasterNestedInput
-    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
-    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
-    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
-    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
 
-  export type ZaloAccountUncheckedUpdateManyWithoutMasterInput = {
+  export type ZaloAccountRelationUncheckedUpdateManyWithoutChildInput = {
     id?: StringFieldUpdateOperationsInput | string
-    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
-    phone?: NullableStringFieldUpdateOperationsInput | string | null
-    name?: NullableStringFieldUpdateOperationsInput | string | null
-    isMaster?: BoolFieldUpdateOperationsInput | boolean
-    groupCount?: IntFieldUpdateOperationsInput | number
-    groupData?: NullableJsonNullValueInput | InputJsonValue
+    masterId?: StringFieldUpdateOperationsInput | string
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountRelationUpdateWithoutMasterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    child?: ZaloAccountUpdateOneRequiredWithoutMastersNestedInput
+  }
+
+  export type ZaloAccountRelationUncheckedUpdateWithoutMasterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    childId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloAccountRelationUncheckedUpdateManyWithoutMasterInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    childId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountGroupUpdateWithoutZaloAccountInput = {
