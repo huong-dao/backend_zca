@@ -15,7 +15,4 @@ export default () => ({
     cookieSecure: process.env.AUTH_COOKIE_SECURE === 'true',
     cookieSameSite: process.env.AUTH_COOKIE_SAME_SITE ?? 'lax',
   },
-  security: {
-    sessionEncryptionKey: process.env.SESSION_ENCRYPTION_KEY,
-  },
 });

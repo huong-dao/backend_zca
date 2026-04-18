@@ -12,10 +12,8 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { ApiKeysModule } from './modules/api-keys/api-keys.module';
 import { UsersModule } from './modules/users/users.module';
 import { MessagesModule } from './modules/messages/messages.module';
-import { PublicApiModule } from './modules/public-api/public-api.module';
 import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module';
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
-import { ZaloModule } from './modules/zalo/zalo.module';
 
 @Module({
   imports: [
@@ -31,8 +29,6 @@ import { ZaloModule } from './modules/zalo/zalo.module';
     ConfigsModule,
     UsersModule,
     MessagesModule,
-    PublicApiModule,
-    ZaloModule,
     ZaloAccountsModule,
     ZaloGroupsModule,
   ],

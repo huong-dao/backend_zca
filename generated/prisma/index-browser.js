@@ -133,7 +133,6 @@ exports.Prisma.UserScalarFieldEnum = {
 exports.Prisma.ZaloGroupScalarFieldEnum = {
   id: 'id',
   groupName: 'groupName',
-  groupZaloId: 'groupZaloId',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -146,24 +145,21 @@ exports.Prisma.ZaloAccountScalarFieldEnum = {
   isMaster: 'isMaster',
   masterId: 'masterId',
   groupCount: 'groupCount',
+  groupData: 'groupData',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
 
-exports.Prisma.ZaloSessionScalarFieldEnum = {
+exports.Prisma.ZaloAccountFriendScalarFieldEnum = {
   id: 'id',
-  zaloAccountId: 'zaloAccountId',
-  encryptedCredentials: 'encryptedCredentials',
-  status: 'status',
-  lastValidatedAt: 'lastValidatedAt',
-  expiresAt: 'expiresAt',
-  invalidReason: 'invalidReason',
-  createdAt: 'createdAt',
-  updatedAt: 'updatedAt'
+  masterId: 'masterId',
+  friendId: 'friendId',
+  createdAt: 'createdAt'
 };
 
 exports.Prisma.ZaloAccountGroupScalarFieldEnum = {
   id: 'id',
+  groupZaloId: 'groupZaloId',
   zaloAccountId: 'zaloAccountId',
   groupId: 'groupId',
   joinedAt: 'joinedAt'
@@ -202,9 +198,20 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.NullableJsonNullValueInput = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.QueryMode = {
   default: 'default',
   insensitive: 'insensitive'
+};
+
+exports.Prisma.JsonNullValueFilter = {
+  DbNull: Prisma.DbNull,
+  JsonNull: Prisma.JsonNull,
+  AnyNull: Prisma.AnyNull
 };
 
 exports.Prisma.NullsOrder = {
@@ -214,13 +221,6 @@ exports.Prisma.NullsOrder = {
 exports.UserRole = exports.$Enums.UserRole = {
   ADMIN: 'ADMIN',
   USER: 'USER'
-};
-
-exports.ZaloSessionStatus = exports.$Enums.ZaloSessionStatus = {
-  ACTIVE: 'ACTIVE',
-  EXPIRED: 'EXPIRED',
-  INVALID: 'INVALID',
-  PENDING_RELOGIN: 'PENDING_RELOGIN'
 };
 
 exports.MessageStatus = exports.$Enums.MessageStatus = {
@@ -233,7 +233,7 @@ exports.Prisma.ModelName = {
   User: 'User',
   ZaloGroup: 'ZaloGroup',
   ZaloAccount: 'ZaloAccount',
-  ZaloSession: 'ZaloSession',
+  ZaloAccountFriend: 'ZaloAccountFriend',
   ZaloAccountGroup: 'ZaloAccountGroup',
   Message: 'Message',
   ApiKey: 'ApiKey',

@@ -4,4 +4,8 @@ export class UpsertZaloGroupDto {
   @IsString()
   @MinLength(1)
   group_name!: string;
+
+  @IsString()
+  @MinLength(1)
+  group_zalo_id!: string;
 }

@@ -1,4 +1,5 @@
 import {
+  Patch,
   Body,
   Controller,
   Get,
@@ -11,6 +12,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { AddChildAccountDto } from './dto/add-child-account.dto';
 import { ConfirmLoginDto } from './dto/confirm-login.dto';
 import { CreateZaloAccountDto } from './dto/create-zalo-account.dto';
+import { UpdateGroupDataDto } from './dto/update-zalo-account-group-data';
 import { ZaloAccountsService } from './zalo-accounts.service';
 
 @Roles('ADMIN')
@@ -34,19 +36,17 @@ export class ZaloAccountsController {
     return this.zaloAccountsService.findOne(id);
   }
 
-  @Post('sync-from-groups')
-  syncFromGroups() {
-    return this.zaloAccountsService.syncFromGroups();
+  @Patch(':id/group-data')
+  updateGroupDataById(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateGroupDataDto,
+  ) {
+    return this.zaloAccountsService.updateGroupDataById(id, dto);
   }
 
   @Post('add-child')
   addChild(@Body() dto: AddChildAccountDto) {
     return this.zaloAccountsService.addChild(dto);
-  }
-
-  @Post('confirm-login')
-  confirmLogin(@Body() dto: ConfirmLoginDto) {
-    return this.zaloAccountsService.confirmLogin(dto);
   }
 
   @Put('set-master/:id')

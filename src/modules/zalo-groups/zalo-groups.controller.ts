@@ -10,11 +10,14 @@ import {
   Query,
 } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
+import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
+import type { CreateMultipleZaloGroupsResult } from './dto/create-multiple-zalo-groups-result.dto';
 import { FindZaloGroupsDto } from './dto/find-zalo-groups.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 import { ZaloGroupsService } from './zalo-groups.service';
 
-@Roles('ADMIN')
+// role both ADMIN and USER
+@Roles('ADMIN', 'USER')
 @Controller('zalo-groups')
 export class ZaloGroupsController {
   constructor(private readonly zaloGroupsService: ZaloGroupsService) {}
@@ -27,6 +30,18 @@ export class ZaloGroupsController {
   @Post()
   create(@Body() dto: UpsertZaloGroupDto) {
     return this.zaloGroupsService.create(dto);
+  }
+
+  @Post('bulk')
+  async createMultiple(
+    @Body() dto: CreateMultipleZaloGroupsDto,
+  ): Promise<CreateMultipleZaloGroupsResult> {
+    /* eslint-disable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+    const result: CreateMultipleZaloGroupsResult =
+      await this.zaloGroupsService.createMultiple(dto);
+    /* eslint-enable @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-call */
+
+    return result;
   }
 
   @Put(':id')

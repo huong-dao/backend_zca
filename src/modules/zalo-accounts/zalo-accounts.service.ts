@@ -5,10 +5,10 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { ZaloService } from '../zalo/zalo.service';
 import { AddChildAccountDto } from './dto/add-child-account.dto';
 import { ConfirmLoginDto } from './dto/confirm-login.dto';
 import { CreateZaloAccountDto } from './dto/create-zalo-account.dto';
+import { UpdateGroupDataDto } from './dto/update-zalo-account-group-data';
 
 const zaloAccountSelect = {
   id: true,
@@ -18,16 +18,14 @@ const zaloAccountSelect = {
   isMaster: true,
   masterId: true,
   groupCount: true,
+  groupData: true,
   createdAt: true,
   updatedAt: true,
 } as const;
 
 @Injectable()
 export class ZaloAccountsService {
-  constructor(
-    private readonly prismaService: PrismaService,
-    private readonly zaloService: ZaloService,
-  ) {}
+  constructor(private readonly prismaService: PrismaService) {}
 
   async findAll() {
     return this.prismaService.zaloAccount.findMany({
@@ -112,10 +110,6 @@ export class ZaloAccountsService {
     return account;
   }
 
-  async syncFromGroups() {
-    return this.zaloService.syncAccountsFromGroups();
-  }
-
   async create(dto: CreateZaloAccountDto) {
     const existingAccount = await this.prismaService.zaloAccount.findUnique({
       where: { zaloId: dto.zaloId },
@@ -157,15 +151,9 @@ export class ZaloAccountsService {
       );
     }
 
-    return this.zaloService.loginQR(dto.masterId, dto.phone);
-  }
-
-  async confirmLogin(dto: ConfirmLoginDto) {
-    if (!dto.sessionId.trim()) {
-      throw new BadRequestException('sessionId is required.');
-    }
-
-    return this.zaloService.confirmLogin(dto.sessionId);
+    throw new BadRequestException(
+      'QR login for adding child accounts is now handled in the frontend.',
+    );
   }
 
   async setMaster(id: string) {
@@ -194,6 +182,14 @@ export class ZaloAccountsService {
         isMaster: true,
         masterId: null,
       },
+      select: zaloAccountSelect,
+    });
+  }
+
+  async updateGroupDataById(id: string, dto: UpdateGroupDataDto) {
+    return this.prismaService.zaloAccount.update({
+      where: { id },
+      data: { groupData: dto.groupData },
       select: zaloAccountSelect,
     });
   }

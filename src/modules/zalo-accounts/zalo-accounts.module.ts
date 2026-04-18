@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { PrismaModule } from '../../database/prisma/prisma.module';
-import { ZaloModule } from '../zalo/zalo.module';
 import { ZaloAccountsController } from './zalo-accounts.controller';
 import { ZaloAccountsService } from './zalo-accounts.service';
 
 @Module({
-  imports: [PrismaModule, ZaloModule],
+  imports: [PrismaModule],
   controllers: [ZaloAccountsController],
   providers: [ZaloAccountsService],
   exports: [ZaloAccountsService],
