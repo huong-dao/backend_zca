@@ -79,6 +79,15 @@ export const MessageStatus: {
 
 export type MessageStatus = (typeof MessageStatus)[keyof typeof MessageStatus]
 
+
+export const ZaloAccountFriendStatus: {
+  PENDING: 'PENDING',
+  APPROVE: 'APPROVE',
+  CANCEL: 'CANCEL'
+};
+
+export type ZaloAccountFriendStatus = (typeof ZaloAccountFriendStatus)[keyof typeof ZaloAccountFriendStatus]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -88,6 +97,10 @@ export const UserRole: typeof $Enums.UserRole
 export type MessageStatus = $Enums.MessageStatus
 
 export const MessageStatus: typeof $Enums.MessageStatus
+
+export type ZaloAccountFriendStatus = $Enums.ZaloAccountFriendStatus
+
+export const ZaloAccountFriendStatus: typeof $Enums.ZaloAccountFriendStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -2778,6 +2791,7 @@ export namespace Prisma {
   export type ZaloGroupMinAggregateOutputType = {
     id: string | null
     groupName: string | null
+    isUpdateName: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2785,6 +2799,7 @@ export namespace Prisma {
   export type ZaloGroupMaxAggregateOutputType = {
     id: string | null
     groupName: string | null
+    isUpdateName: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -2792,6 +2807,7 @@ export namespace Prisma {
   export type ZaloGroupCountAggregateOutputType = {
     id: number
     groupName: number
+    isUpdateName: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -2801,6 +2817,7 @@ export namespace Prisma {
   export type ZaloGroupMinAggregateInputType = {
     id?: true
     groupName?: true
+    isUpdateName?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2808,6 +2825,7 @@ export namespace Prisma {
   export type ZaloGroupMaxAggregateInputType = {
     id?: true
     groupName?: true
+    isUpdateName?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -2815,6 +2833,7 @@ export namespace Prisma {
   export type ZaloGroupCountAggregateInputType = {
     id?: true
     groupName?: true
+    isUpdateName?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -2895,6 +2914,7 @@ export namespace Prisma {
   export type ZaloGroupGroupByOutputType = {
     id: string
     groupName: string
+    isUpdateName: boolean
     createdAt: Date
     updatedAt: Date
     _count: ZaloGroupCountAggregateOutputType | null
@@ -2919,6 +2939,7 @@ export namespace Prisma {
   export type ZaloGroupSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     groupName?: boolean
+    isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     accountMaps?: boolean | ZaloGroup$accountMapsArgs<ExtArgs>
@@ -2929,6 +2950,7 @@ export namespace Prisma {
   export type ZaloGroupSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     groupName?: boolean
+    isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["zaloGroup"]>
@@ -2936,6 +2958,7 @@ export namespace Prisma {
   export type ZaloGroupSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     groupName?: boolean
+    isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }, ExtArgs["result"]["zaloGroup"]>
@@ -2943,11 +2966,12 @@ export namespace Prisma {
   export type ZaloGroupSelectScalar = {
     id?: boolean
     groupName?: boolean
+    isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ZaloGroupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "groupName" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloGroup"]>
+  export type ZaloGroupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "groupName" | "isUpdateName" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloGroup"]>
   export type ZaloGroupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accountMaps?: boolean | ZaloGroup$accountMapsArgs<ExtArgs>
     messages?: boolean | ZaloGroup$messagesArgs<ExtArgs>
@@ -2965,6 +2989,7 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       groupName: string
+      isUpdateName: boolean
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["zaloGroup"]>
@@ -3394,6 +3419,7 @@ export namespace Prisma {
   interface ZaloGroupFieldRefs {
     readonly id: FieldRef<"ZaloGroup", 'String'>
     readonly groupName: FieldRef<"ZaloGroup", 'String'>
+    readonly isUpdateName: FieldRef<"ZaloGroup", 'Boolean'>
     readonly createdAt: FieldRef<"ZaloGroup", 'DateTime'>
     readonly updatedAt: FieldRef<"ZaloGroup", 'DateTime'>
   }
@@ -7295,6 +7321,7 @@ export namespace Prisma {
     id: string | null
     masterId: string | null
     friendId: string | null
+    status: $Enums.ZaloAccountFriendStatus | null
     createdAt: Date | null
   }
 
@@ -7302,6 +7329,7 @@ export namespace Prisma {
     id: string | null
     masterId: string | null
     friendId: string | null
+    status: $Enums.ZaloAccountFriendStatus | null
     createdAt: Date | null
   }
 
@@ -7309,6 +7337,7 @@ export namespace Prisma {
     id: number
     masterId: number
     friendId: number
+    status: number
     createdAt: number
     _all: number
   }
@@ -7318,6 +7347,7 @@ export namespace Prisma {
     id?: true
     masterId?: true
     friendId?: true
+    status?: true
     createdAt?: true
   }
 
@@ -7325,6 +7355,7 @@ export namespace Prisma {
     id?: true
     masterId?: true
     friendId?: true
+    status?: true
     createdAt?: true
   }
 
@@ -7332,6 +7363,7 @@ export namespace Prisma {
     id?: true
     masterId?: true
     friendId?: true
+    status?: true
     createdAt?: true
     _all?: true
   }
@@ -7412,6 +7444,7 @@ export namespace Prisma {
     id: string
     masterId: string
     friendId: string
+    status: $Enums.ZaloAccountFriendStatus
     createdAt: Date
     _count: ZaloAccountFriendCountAggregateOutputType | null
     _min: ZaloAccountFriendMinAggregateOutputType | null
@@ -7436,6 +7469,7 @@ export namespace Prisma {
     id?: boolean
     masterId?: boolean
     friendId?: boolean
+    status?: boolean
     createdAt?: boolean
     master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
     friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
@@ -7445,6 +7479,7 @@ export namespace Prisma {
     id?: boolean
     masterId?: boolean
     friendId?: boolean
+    status?: boolean
     createdAt?: boolean
     master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
     friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
@@ -7454,6 +7489,7 @@ export namespace Prisma {
     id?: boolean
     masterId?: boolean
     friendId?: boolean
+    status?: boolean
     createdAt?: boolean
     master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
     friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
@@ -7463,10 +7499,11 @@ export namespace Prisma {
     id?: boolean
     masterId?: boolean
     friendId?: boolean
+    status?: boolean
     createdAt?: boolean
   }
 
-  export type ZaloAccountFriendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "masterId" | "friendId" | "createdAt", ExtArgs["result"]["zaloAccountFriend"]>
+  export type ZaloAccountFriendOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "masterId" | "friendId" | "status" | "createdAt", ExtArgs["result"]["zaloAccountFriend"]>
   export type ZaloAccountFriendInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     master?: boolean | ZaloAccountDefaultArgs<ExtArgs>
     friend?: boolean | ZaloAccountDefaultArgs<ExtArgs>
@@ -7490,6 +7527,7 @@ export namespace Prisma {
       id: string
       masterId: string
       friendId: string
+      status: $Enums.ZaloAccountFriendStatus
       createdAt: Date
     }, ExtArgs["result"]["zaloAccountFriend"]>
     composites: {}
@@ -7919,6 +7957,7 @@ export namespace Prisma {
     readonly id: FieldRef<"ZaloAccountFriend", 'String'>
     readonly masterId: FieldRef<"ZaloAccountFriend", 'String'>
     readonly friendId: FieldRef<"ZaloAccountFriend", 'String'>
+    readonly status: FieldRef<"ZaloAccountFriend", 'ZaloAccountFriendStatus'>
     readonly createdAt: FieldRef<"ZaloAccountFriend", 'DateTime'>
   }
     
@@ -11492,6 +11531,7 @@ export namespace Prisma {
   export const ZaloGroupScalarFieldEnum: {
     id: 'id',
     groupName: 'groupName',
+    isUpdateName: 'isUpdateName',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -11539,6 +11579,7 @@ export namespace Prisma {
     id: 'id',
     masterId: 'masterId',
     friendId: 'friendId',
+    status: 'status',
     createdAt: 'createdAt'
   };
 
@@ -11706,6 +11747,20 @@ export namespace Prisma {
 
 
   /**
+   * Reference to a field of type 'ZaloAccountFriendStatus'
+   */
+  export type EnumZaloAccountFriendStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ZaloAccountFriendStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ZaloAccountFriendStatus[]'
+   */
+  export type ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ZaloAccountFriendStatus[]'>
+    
+
+
+  /**
    * Reference to a field of type 'MessageStatus'
    */
   export type EnumMessageStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'MessageStatus'>
@@ -11804,6 +11859,7 @@ export namespace Prisma {
     NOT?: ZaloGroupWhereInput | ZaloGroupWhereInput[]
     id?: UuidFilter<"ZaloGroup"> | string
     groupName?: StringFilter<"ZaloGroup"> | string
+    isUpdateName?: BoolFilter<"ZaloGroup"> | boolean
     createdAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     updatedAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     accountMaps?: ZaloAccountGroupListRelationFilter
@@ -11813,6 +11869,7 @@ export namespace Prisma {
   export type ZaloGroupOrderByWithRelationInput = {
     id?: SortOrder
     groupName?: SortOrder
+    isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     accountMaps?: ZaloAccountGroupOrderByRelationAggregateInput
@@ -11825,6 +11882,7 @@ export namespace Prisma {
     OR?: ZaloGroupWhereInput[]
     NOT?: ZaloGroupWhereInput | ZaloGroupWhereInput[]
     groupName?: StringFilter<"ZaloGroup"> | string
+    isUpdateName?: BoolFilter<"ZaloGroup"> | boolean
     createdAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     updatedAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     accountMaps?: ZaloAccountGroupListRelationFilter
@@ -11834,6 +11892,7 @@ export namespace Prisma {
   export type ZaloGroupOrderByWithAggregationInput = {
     id?: SortOrder
     groupName?: SortOrder
+    isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: ZaloGroupCountOrderByAggregateInput
@@ -11847,6 +11906,7 @@ export namespace Prisma {
     NOT?: ZaloGroupScalarWhereWithAggregatesInput | ZaloGroupScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ZaloGroup"> | string
     groupName?: StringWithAggregatesFilter<"ZaloGroup"> | string
+    isUpdateName?: BoolWithAggregatesFilter<"ZaloGroup"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"ZaloGroup"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ZaloGroup"> | Date | string
   }
@@ -12062,6 +12122,7 @@ export namespace Prisma {
     id?: UuidFilter<"ZaloAccountFriend"> | string
     masterId?: UuidFilter<"ZaloAccountFriend"> | string
     friendId?: UuidFilter<"ZaloAccountFriend"> | string
+    status?: EnumZaloAccountFriendStatusFilter<"ZaloAccountFriend"> | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
     master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
     friend?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
@@ -12071,6 +12132,7 @@ export namespace Prisma {
     id?: SortOrder
     masterId?: SortOrder
     friendId?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     master?: ZaloAccountOrderByWithRelationInput
     friend?: ZaloAccountOrderByWithRelationInput
@@ -12084,6 +12146,7 @@ export namespace Prisma {
     NOT?: ZaloAccountFriendWhereInput | ZaloAccountFriendWhereInput[]
     masterId?: UuidFilter<"ZaloAccountFriend"> | string
     friendId?: UuidFilter<"ZaloAccountFriend"> | string
+    status?: EnumZaloAccountFriendStatusFilter<"ZaloAccountFriend"> | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
     master?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
     friend?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
@@ -12093,6 +12156,7 @@ export namespace Prisma {
     id?: SortOrder
     masterId?: SortOrder
     friendId?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
     _count?: ZaloAccountFriendCountOrderByAggregateInput
     _max?: ZaloAccountFriendMaxOrderByAggregateInput
@@ -12106,6 +12170,7 @@ export namespace Prisma {
     id?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
     masterId?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
     friendId?: UuidWithAggregatesFilter<"ZaloAccountFriend"> | string
+    status?: EnumZaloAccountFriendStatusWithAggregatesFilter<"ZaloAccountFriend"> | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeWithAggregatesFilter<"ZaloAccountFriend"> | Date | string
   }
 
@@ -12364,6 +12429,7 @@ export namespace Prisma {
   export type ZaloGroupCreateInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     accountMaps?: ZaloAccountGroupCreateNestedManyWithoutGroupInput
@@ -12373,6 +12439,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedCreateInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     accountMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutGroupInput
@@ -12382,6 +12449,7 @@ export namespace Prisma {
   export type ZaloGroupUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accountMaps?: ZaloAccountGroupUpdateManyWithoutGroupNestedInput
@@ -12391,6 +12459,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accountMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutGroupNestedInput
@@ -12400,6 +12469,7 @@ export namespace Prisma {
   export type ZaloGroupCreateManyInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -12407,6 +12477,7 @@ export namespace Prisma {
   export type ZaloGroupUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12414,6 +12485,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12629,6 +12701,7 @@ export namespace Prisma {
 
   export type ZaloAccountFriendCreateInput = {
     id?: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
     master: ZaloAccountCreateNestedOneWithoutFriendsInput
     friend: ZaloAccountCreateNestedOneWithoutFriendOfInput
@@ -12638,11 +12711,13 @@ export namespace Prisma {
     id?: string
     masterId: string
     friendId: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
   }
 
   export type ZaloAccountFriendUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     master?: ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput
     friend?: ZaloAccountUpdateOneRequiredWithoutFriendOfNestedInput
@@ -12652,6 +12727,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     masterId?: StringFieldUpdateOperationsInput | string
     friendId?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -12659,11 +12735,13 @@ export namespace Prisma {
     id?: string
     masterId: string
     friendId: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
   }
 
   export type ZaloAccountFriendUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -12671,6 +12749,7 @@ export namespace Prisma {
     id?: StringFieldUpdateOperationsInput | string
     masterId?: StringFieldUpdateOperationsInput | string
     friendId?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -13036,6 +13115,7 @@ export namespace Prisma {
   export type ZaloGroupCountOrderByAggregateInput = {
     id?: SortOrder
     groupName?: SortOrder
+    isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13043,6 +13123,7 @@ export namespace Prisma {
   export type ZaloGroupMaxOrderByAggregateInput = {
     id?: SortOrder
     groupName?: SortOrder
+    isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13050,6 +13131,7 @@ export namespace Prisma {
   export type ZaloGroupMinOrderByAggregateInput = {
     id?: SortOrder
     groupName?: SortOrder
+    isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -13290,6 +13372,13 @@ export namespace Prisma {
     joinedAt?: SortOrder
   }
 
+  export type EnumZaloAccountFriendStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountFriendStatus | EnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel> | $Enums.ZaloAccountFriendStatus
+  }
+
   export type ZaloAccountFriendMasterIdFriendIdCompoundUniqueInput = {
     masterId: string
     friendId: string
@@ -13299,6 +13388,7 @@ export namespace Prisma {
     id?: SortOrder
     masterId?: SortOrder
     friendId?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -13306,6 +13396,7 @@ export namespace Prisma {
     id?: SortOrder
     masterId?: SortOrder
     friendId?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
   }
 
@@ -13313,7 +13404,18 @@ export namespace Prisma {
     id?: SortOrder
     masterId?: SortOrder
     friendId?: SortOrder
+    status?: SortOrder
     createdAt?: SortOrder
+  }
+
+  export type EnumZaloAccountFriendStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountFriendStatus | EnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountFriendStatusWithAggregatesFilter<$PrismaModel> | $Enums.ZaloAccountFriendStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
+    _max?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
   }
 
   export type DateTimeNullableFilter<$PrismaModel = never> = {
@@ -13874,6 +13976,10 @@ export namespace Prisma {
     connect?: ZaloAccountWhereUniqueInput
   }
 
+  export type EnumZaloAccountFriendStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ZaloAccountFriendStatus
+  }
+
   export type ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput = {
     create?: XOR<ZaloAccountCreateWithoutFriendsInput, ZaloAccountUncheckedCreateWithoutFriendsInput>
     connectOrCreate?: ZaloAccountCreateOrConnectWithoutFriendsInput
@@ -14138,6 +14244,23 @@ export namespace Prisma {
     gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedEnumZaloAccountFriendStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountFriendStatus | EnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel> | $Enums.ZaloAccountFriendStatus
+  }
+
+  export type NestedEnumZaloAccountFriendStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountFriendStatus | EnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountFriendStatusWithAggregatesFilter<$PrismaModel> | $Enums.ZaloAccountFriendStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
+    _max?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
@@ -14571,6 +14694,7 @@ export namespace Prisma {
 
   export type ZaloAccountFriendCreateWithoutMasterInput = {
     id?: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
     friend: ZaloAccountCreateNestedOneWithoutFriendOfInput
   }
@@ -14578,6 +14702,7 @@ export namespace Prisma {
   export type ZaloAccountFriendUncheckedCreateWithoutMasterInput = {
     id?: string
     friendId: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
   }
 
@@ -14593,6 +14718,7 @@ export namespace Prisma {
 
   export type ZaloAccountFriendCreateWithoutFriendInput = {
     id?: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
     master: ZaloAccountCreateNestedOneWithoutFriendsInput
   }
@@ -14600,6 +14726,7 @@ export namespace Prisma {
   export type ZaloAccountFriendUncheckedCreateWithoutFriendInput = {
     id?: string
     masterId: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
   }
 
@@ -14710,6 +14837,7 @@ export namespace Prisma {
     id?: UuidFilter<"ZaloAccountFriend"> | string
     masterId?: UuidFilter<"ZaloAccountFriend"> | string
     friendId?: UuidFilter<"ZaloAccountFriend"> | string
+    status?: EnumZaloAccountFriendStatusFilter<"ZaloAccountFriend"> | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFilter<"ZaloAccountFriend"> | Date | string
   }
 
@@ -14771,6 +14899,7 @@ export namespace Prisma {
   export type ZaloGroupCreateWithoutAccountMapsInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: MessageCreateNestedManyWithoutGroupInput
@@ -14779,6 +14908,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedCreateWithoutAccountMapsInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     messages?: MessageUncheckedCreateNestedManyWithoutGroupInput
@@ -14848,6 +14978,7 @@ export namespace Prisma {
   export type ZaloGroupUpdateWithoutAccountMapsInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: MessageUpdateManyWithoutGroupNestedInput
@@ -14856,6 +14987,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateWithoutAccountMapsInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     messages?: MessageUncheckedUpdateManyWithoutGroupNestedInput
@@ -15071,6 +15203,7 @@ export namespace Prisma {
   export type ZaloGroupCreateWithoutMessagesInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     accountMaps?: ZaloAccountGroupCreateNestedManyWithoutGroupInput
@@ -15079,6 +15212,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedCreateWithoutMessagesInput = {
     id?: string
     groupName: string
+    isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
     accountMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutGroupInput
@@ -15148,6 +15282,7 @@ export namespace Prisma {
   export type ZaloGroupUpdateWithoutMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accountMaps?: ZaloAccountGroupUpdateManyWithoutGroupNestedInput
@@ -15156,6 +15291,7 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateWithoutMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accountMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutGroupNestedInput
@@ -15271,12 +15407,14 @@ export namespace Prisma {
   export type ZaloAccountFriendCreateManyMasterInput = {
     id?: string
     friendId: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
   }
 
   export type ZaloAccountFriendCreateManyFriendInput = {
     id?: string
     masterId: string
+    status?: $Enums.ZaloAccountFriendStatus
     createdAt?: Date | string
   }
 
@@ -15375,6 +15513,7 @@ export namespace Prisma {
 
   export type ZaloAccountFriendUpdateWithoutMasterInput = {
     id?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     friend?: ZaloAccountUpdateOneRequiredWithoutFriendOfNestedInput
   }
@@ -15382,17 +15521,20 @@ export namespace Prisma {
   export type ZaloAccountFriendUncheckedUpdateWithoutMasterInput = {
     id?: StringFieldUpdateOperationsInput | string
     friendId?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountFriendUncheckedUpdateManyWithoutMasterInput = {
     id?: StringFieldUpdateOperationsInput | string
     friendId?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountFriendUpdateWithoutFriendInput = {
     id?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     master?: ZaloAccountUpdateOneRequiredWithoutFriendsNestedInput
   }
@@ -15400,12 +15542,14 @@ export namespace Prisma {
   export type ZaloAccountFriendUncheckedUpdateWithoutFriendInput = {
     id?: StringFieldUpdateOperationsInput | string
     masterId?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountFriendUncheckedUpdateManyWithoutFriendInput = {
     id?: StringFieldUpdateOperationsInput | string
     masterId?: StringFieldUpdateOperationsInput | string
+    status?: EnumZaloAccountFriendStatusFieldUpdateOperationsInput | $Enums.ZaloAccountFriendStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 

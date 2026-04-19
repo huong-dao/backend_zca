@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import type { Prisma } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
 import type {
@@ -11,9 +12,72 @@ import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 const zaloGroupSelect = {
   id: true,
   groupName: true,
+  isUpdateName: true,
   createdAt: true,
   updatedAt: true,
 } as const;
+
+const pendingNameUpdateSelect = {
+  ...zaloGroupSelect,
+  accountMaps: {
+    select: {
+      groupZaloId: true,
+    },
+    take: 1,
+  },
+  _count: {
+    select: {
+      accountMaps: true,
+      messages: true,
+    },
+  },
+} as const;
+
+type PendingNameUpdateGroup = Prisma.ZaloGroupGetPayload<{
+  select: typeof pendingNameUpdateSelect;
+}>;
+
+const zaloAccountGroupSelect = {
+  groupZaloId: true,
+  group: {
+    select: {
+      ...zaloGroupSelect,
+      _count: {
+        select: {
+          accountMaps: true,
+          messages: true,
+        },
+      },
+    },
+  },
+} as const;
+
+type ZaloAccountGroupRecord = Prisma.ZaloAccountGroupGetPayload<{
+  select: typeof zaloAccountGroupSelect;
+}>;
+
+type ZaloGroupByAccountItem = {
+  id: string;
+  groupName: string;
+  groupZaloId: string;
+  isUpdateName: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  _count: {
+    accountMaps: number;
+    messages: number;
+  };
+};
+
+type PaginatedZaloGroupByAccountResult = {
+  data: ZaloGroupByAccountItem[];
+  meta: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+};
 
 @Injectable()
 export class ZaloGroupsService {
@@ -45,6 +109,63 @@ export class ZaloGroupsService {
 
     return {
       data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: total === 0 ? 0 : Math.ceil(total / limit),
+      },
+    };
+  }
+
+  async findAllPendingNameUpdate() {
+    const groups: PendingNameUpdateGroup[] =
+      await this.prismaService.zaloGroup.findMany({
+        where: {
+          isUpdateName: false,
+        },
+        select: pendingNameUpdateSelect,
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
+
+    return groups.map(({ accountMaps, ...group }) => ({
+      ...group,
+      groupZaloId: accountMaps[0]?.groupZaloId ?? null,
+    }));
+  }
+
+  async findAllByZaloAccountId(
+    zaloAccountId: string,
+    query: FindZaloGroupsDto,
+  ): Promise<PaginatedZaloGroupByAccountResult> {
+    const { page = 1, limit = 20 } = query;
+    const skip = (page - 1) * limit;
+
+    await this.ensureZaloAccountExists(zaloAccountId);
+
+    const [total, data]: [number, ZaloAccountGroupRecord[]] =
+      await this.prismaService.$transaction([
+        this.prismaService.zaloAccountGroup.count({
+          where: { zaloAccountId },
+        }),
+        this.prismaService.zaloAccountGroup.findMany({
+          where: { zaloAccountId },
+          skip,
+          take: limit,
+          select: zaloAccountGroupSelect,
+          orderBy: {
+            joinedAt: 'desc',
+          },
+        }),
+      ]);
+
+    return {
+      data: data.map(({ groupZaloId, group }) => ({
+        ...group,
+        groupZaloId,
+      })),
       meta: {
         page,
         limit,
@@ -191,12 +312,24 @@ export class ZaloGroupsService {
     }
   }
 
+  private async ensureZaloAccountExists(id: string) {
+    const zaloAccount = await this.prismaService.zaloAccount.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+
+    if (!zaloAccount) {
+      throw new NotFoundException('Zalo account not found.');
+    }
+  }
+
   private async createOrUpdate(dto: UpsertZaloGroupDto, id?: string) {
     if (id) {
       return this.prismaService.zaloGroup.update({
         where: { id },
         data: {
           groupName: dto.group_name,
+          isUpdateName: true,
         },
         select: zaloGroupSelect,
       });

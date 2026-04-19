@@ -1,6 +1,7 @@
 export type ZaloGroupRecord = {
   id: string;
   groupName: string;
+  isUpdateName: boolean;
   createdAt: Date;
   updatedAt: Date;
 };

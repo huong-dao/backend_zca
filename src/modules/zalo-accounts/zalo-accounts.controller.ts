@@ -1,19 +1,27 @@
 import {
-  Patch,
   Body,
   Controller,
+  Delete,
   Get,
   Param,
+  Patch,
   ParseUUIDPipe,
   Post,
   Put,
+  Query,
 } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { AddChildAccountDto } from './dto/add-child-account.dto';
 import { CreateZaloAccountDto } from './dto/create-zalo-account.dto';
-import { UpdateGroupDataDto } from './dto/update-zalo-account-group-data';
+import { CreateZaloAccountFriendDto } from './dto/create-zalo-account-friend.dto';
+import { FilterZaloAccountsDto } from './dto/filter-zalo-accounts.dto';
+import type {
+  RemovedZaloAccountFriendResult,
+  UpdatedZaloAccountFriendStatusResult,
+} from './zalo-accounts.service';
 import { ZaloAccountsService } from './zalo-accounts.service';
 import { SearchZaloAccountsDto } from './dto/search.dto';
+import { UpdateGroupDataDto } from './dto/update-zalo-account-group-data';
 
 @Roles('ADMIN', 'USER')
 @Controller('zalo-accounts')
@@ -30,9 +38,40 @@ export class ZaloAccountsController {
     return this.zaloAccountsService.findAll();
   }
 
+  @Get('filter')
+  filterByType(@Query() dto: FilterZaloAccountsDto) {
+    return this.zaloAccountsService.filterByType(dto);
+  }
+
   @Post('search')
   search(@Body() dto: SearchZaloAccountsDto) {
     return this.zaloAccountsService.search(dto);
+  }
+
+  @Post('make-friend')
+  createFriend(@Body() dto: CreateZaloAccountFriendDto) {
+    return this.zaloAccountsService.createFriend(dto);
+  }
+
+  @Patch('approve-friend')
+  async approveFriend(
+    @Body() dto: CreateZaloAccountFriendDto,
+  ): Promise<UpdatedZaloAccountFriendStatusResult> {
+    return await this.zaloAccountsService.approveFriend(dto);
+  }
+
+  @Patch('cancel-friend')
+  async cancelFriend(
+    @Body() dto: CreateZaloAccountFriendDto,
+  ): Promise<UpdatedZaloAccountFriendStatusResult> {
+    return await this.zaloAccountsService.cancelFriend(dto);
+  }
+
+  @Delete('un-friend')
+  async removeFriend(
+    @Body() dto: CreateZaloAccountFriendDto,
+  ): Promise<RemovedZaloAccountFriendResult> {
+    return await this.zaloAccountsService.removeFriend(dto);
   }
 
   @Get(':id')

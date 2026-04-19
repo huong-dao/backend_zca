@@ -1,12 +1,11 @@
-import { IsString, MinLength } from 'class-validator';
+import { ArrayMinSize, IsArray, IsUUID } from 'class-validator';
 
 export class AddChildAccountDto {
-  @IsString()
-  @MinLength(1)
+  @IsUUID()
   masterId!: string;
 
-  // unique zalo id
-  @IsString()
-  @MinLength(1)
-  zaloId!: string;
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsUUID(undefined, { each: true })
+  childIds: string[] = [];
 }

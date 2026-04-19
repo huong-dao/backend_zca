@@ -27,6 +27,19 @@ export class ZaloGroupsController {
     return this.zaloGroupsService.findAll(query);
   }
 
+  @Get('pending-name-update')
+  findAllPendingNameUpdate() {
+    return this.zaloGroupsService.findAllPendingNameUpdate();
+  }
+
+  @Get('account/:id')
+  findAllByZaloAccountId(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Query() query: FindZaloGroupsDto,
+  ) {
+    return this.zaloGroupsService.findAllByZaloAccountId(id, query);
+  }
+
   @Post()
   create(@Body() dto: UpsertZaloGroupDto) {
     return this.zaloGroupsService.create(dto);

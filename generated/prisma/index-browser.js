@@ -133,6 +133,7 @@ exports.Prisma.UserScalarFieldEnum = {
 exports.Prisma.ZaloGroupScalarFieldEnum = {
   id: 'id',
   groupName: 'groupName',
+  isUpdateName: 'isUpdateName',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'
 };
@@ -168,6 +169,7 @@ exports.Prisma.ZaloAccountFriendScalarFieldEnum = {
   id: 'id',
   masterId: 'masterId',
   friendId: 'friendId',
+  status: 'status',
   createdAt: 'createdAt'
 };
 
@@ -227,6 +229,12 @@ exports.Prisma.NullsOrder = {
 exports.UserRole = exports.$Enums.UserRole = {
   ADMIN: 'ADMIN',
   USER: 'USER'
+};
+
+exports.ZaloAccountFriendStatus = exports.$Enums.ZaloAccountFriendStatus = {
+  PENDING: 'PENDING',
+  APPROVE: 'APPROVE',
+  CANCEL: 'CANCEL'
 };
 
 exports.MessageStatus = exports.$Enums.MessageStatus = {
