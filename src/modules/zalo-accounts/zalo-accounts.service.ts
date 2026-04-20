@@ -1,11 +1,22 @@
 import {
   BadRequestException,
   ConflictException,
+  HttpException,
   Injectable,
+  InternalServerErrorException,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
+import { isDeepStrictEqual } from 'node:util';
+import type { API } from 'zca-js';
+import { ZaloApiError } from 'zca-js';
 import type { Prisma } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { createZcaApiFromCredentials } from '../../zalo/create-zca-api';
+import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
+import { ZcaApiHelper } from '../../zalo/zca-api.helper';
+import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
+import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { AddChildAccountDto } from './dto/add-child-account.dto';
 import { CreateZaloAccountDto } from './dto/create-zalo-account.dto';
 import { CreateZaloAccountFriendDto } from './dto/create-zalo-account-friend.dto';
@@ -263,9 +274,44 @@ type FindOneAccountRecord = ZaloAccountBaseRecord & {
   }>;
 };
 
+/** zca-js `sendFriendRequest`: already friends or reciprocal accept. */
+const ZALO_SENDREQ_ALREADY_LINKED_CODES = new Set([222, 225]);
+
+/** Zalo may reject empty `msg` with a generic invalid-params error. */
+const DEFAULT_FRIEND_REQUEST_MESSAGE = 'Xin kết bạn với tôi nhé';
+
+const friendRelationSelect = {
+  id: true,
+  createdAt: true,
+  status: true,
+  master: {
+    select: {
+      id: true,
+      zaloId: true,
+      phone: true,
+      name: true,
+      isMaster: true,
+    },
+  },
+  friend: {
+    select: {
+      id: true,
+      zaloId: true,
+      phone: true,
+      name: true,
+      isMaster: true,
+    },
+  },
+} as const;
+
 @Injectable()
 export class ZaloAccountsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  private readonly logger = new Logger(ZaloAccountsService.name);
+
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly loginSessions: ZaloLoginSessionsService,
+  ) {}
 
   async search(dto: SearchZaloAccountsDto): Promise<ListedZaloAccount[]> {
     return this.findAccounts({
@@ -298,11 +344,11 @@ export class ZaloAccountsService {
     const [masterAccount, friendAccount, existingRelation] = await Promise.all([
       this.prismaService.zaloAccount.findUnique({
         where: { id: dto.masterId },
-        select: { id: true, zaloId: true, name: true },
+        select: { id: true, zaloId: true, name: true, phone: true },
       }),
       this.prismaService.zaloAccount.findUnique({
         where: { id: dto.friendId },
-        select: { id: true, zaloId: true, name: true },
+        select: { id: true, zaloId: true, name: true, phone: true },
       }),
       this.prismaService.zaloAccountFriend.findFirst({
         where: {
@@ -332,71 +378,42 @@ export class ZaloAccountsService {
       throw new NotFoundException('Friend Zalo account not found.');
     }
 
-    if (existingRelation) {
-      if (existingRelation.status === 'CANCEL') {
-        return this.prismaService.zaloAccountFriend.update({
-          where: { id: existingRelation.id },
-          data: {
-            status: 'PENDING',
-          },
-          select: {
-            id: true,
-            createdAt: true,
-            status: true,
-            master: {
-              select: {
-                id: true,
-                zaloId: true,
-                phone: true,
-                name: true,
-                isMaster: true,
-              },
-            },
-            friend: {
-              select: {
-                id: true,
-                zaloId: true,
-                phone: true,
-                name: true,
-                isMaster: true,
-              },
-            },
-          },
-        });
-      }
+    if (!masterAccount.zaloId || !friendAccount.zaloId) {
+      throw new BadRequestException(
+        'Both Zalo accounts must have a zaloId (link QR session / sync profile) before making friends.',
+      );
+    }
 
-      throw new ConflictException('Friend relationship already exists.');
+    if (existingRelation?.status === 'APPROVE') {
+      throw new ConflictException('Friend relationship already approved.');
+    }
+
+    await this.pairZaloAccountsAsFriends(
+      {
+        zaloId: masterAccount.zaloId,
+        phone: masterAccount.phone,
+      },
+      {
+        zaloId: friendAccount.zaloId,
+        phone: friendAccount.phone,
+      },
+    );
+
+    if (existingRelation) {
+      return this.prismaService.zaloAccountFriend.update({
+        where: { id: existingRelation.id },
+        data: { status: 'APPROVE' },
+        select: friendRelationSelect,
+      });
     }
 
     return this.prismaService.zaloAccountFriend.create({
       data: {
         masterId: dto.masterId,
         friendId: dto.friendId,
-        status: 'PENDING',
+        status: 'APPROVE',
       },
-      select: {
-        id: true,
-        createdAt: true,
-        status: true,
-        master: {
-          select: {
-            id: true,
-            zaloId: true,
-            phone: true,
-            name: true,
-            isMaster: true,
-          },
-        },
-        friend: {
-          select: {
-            id: true,
-            zaloId: true,
-            phone: true,
-            name: true,
-            isMaster: true,
-          },
-        },
-      },
+      select: friendRelationSelect,
     });
   }
 
@@ -949,6 +966,177 @@ export class ZaloAccountsService {
         },
       },
     });
+  }
+
+  /**
+   * Master Zalo session sends `sendFriendRequest` to the friend's uid; the friend's
+   * session then `acceptFriendRequest` from the master uid. If Zalo reports the pair
+   * is already linked (sendFriendRequest codes 222 / 225), accept is skipped.
+   */
+  private async pairZaloAccountsAsFriends(
+    master: { zaloId: string; phone: string | null },
+    friend: { zaloId: string; phone: string | null },
+  ): Promise<void> {
+    let skipAccept = false;
+
+    await this.withZaloUidSession(master.zaloId, async (zca) => {
+      const friendToid = await this.resolvePeerZaloUserIdForFriendApi(
+        zca,
+        friend,
+        'friend account',
+      );
+      try {
+        await zca.sendFriendRequest(DEFAULT_FRIEND_REQUEST_MESSAGE, friendToid);
+      } catch (err) {
+        if (
+          err instanceof ZaloApiError &&
+          err.code != null &&
+          ZALO_SENDREQ_ALREADY_LINKED_CODES.has(err.code)
+        ) {
+          skipAccept = true;
+          return;
+        }
+        throw err;
+      }
+    });
+
+    if (skipAccept) {
+      return;
+    }
+
+    await this.withZaloUidSession(friend.zaloId, async (zca) => {
+      const masterToid = await this.resolvePeerZaloUserIdForFriendApi(
+        zca,
+        master,
+        'master account',
+      );
+      try {
+        await zca.acceptFriendRequest(masterToid);
+      } catch (err) {
+        if (
+          err instanceof ZaloApiError &&
+          err.code != null &&
+          ZALO_SENDREQ_ALREADY_LINKED_CODES.has(err.code)
+        ) {
+          return;
+        }
+        throw err;
+      }
+    });
+  }
+
+  /**
+   * Friend APIs expect the same uid shape as `findUser` / `getOwnId` (not necessarily
+   * `globalId` or other profile fields). Prefer resolving by phone when available.
+   */
+  private async resolvePeerZaloUserIdForFriendApi(
+    zca: ZcaApiHelper,
+    account: { zaloId: string | null; phone: string | null },
+    label: string,
+  ): Promise<string> {
+    const phone = account.phone?.replace(/\s+/g, '').trim() ?? '';
+    if (phone) {
+      try {
+        const info = await zca.findUser(phone);
+        const uid = info?.uid != null ? String(info.uid).trim() : '';
+        if (uid) {
+          return uid;
+        }
+      } catch {
+        // fall through to zaloId
+      }
+    }
+
+    const rawId = account.zaloId?.trim();
+    if (rawId) {
+      try {
+        const info = await zca.getUserInfo(rawId);
+        const merged = {
+          ...info.unchanged_profiles,
+          ...info.changed_profiles,
+        } as Record<string, { userId?: string }>;
+        for (const p of Object.values(merged)) {
+          const uid = p?.userId != null ? String(p.userId).trim() : '';
+          if (uid) {
+            return uid;
+          }
+        }
+      } catch {
+        // use raw id below
+      }
+      return rawId;
+    }
+
+    throw new BadRequestException(
+      `Cannot resolve Zalo user id for ${label}: add a phone number or valid zaloId (profile userId / uid).`,
+    );
+  }
+
+  private async withZaloUidSession<T>(
+    zaloUid: string,
+    run: (zca: ZcaApiHelper, api: API) => Promise<T>,
+  ): Promise<T> {
+    const full = await this.loginSessions.findLatestByZaloUid(zaloUid);
+    const sessionId = full.id;
+    const prevCreds: ZaloSessionCredentialsPayload = full.credentials;
+
+    let api: API;
+    try {
+      api = await createZcaApiFromCredentials(prevCreds);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Zalo login failed for zaloUid=${zaloUid} sessionId=${sessionId}: ${detail}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new InternalServerErrorException(
+        `Failed to start Zalo client for account (zaloUid ${zaloUid}). ${detail}`,
+      );
+    }
+
+    const zca = new ZcaApiHelper(api);
+    try {
+      const out = await run(zca, api);
+      await this.persistRefreshedZaloSession(sessionId, api, prevCreds);
+      await this.loginSessions.touchBySessionId(sessionId);
+      return out;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      if (err instanceof ZaloApiError) {
+        const code = err.code != null ? `[${err.code}] ` : '';
+        throw new BadRequestException(
+          `${code}${err.message || 'Zalo API rejected the friend operation.'}`,
+        );
+      }
+      throw new InternalServerErrorException(
+        err instanceof Error ? err.message : 'Zalo API error.',
+      );
+    }
+  }
+
+  private async persistRefreshedZaloSession(
+    sessionId: string,
+    api: API,
+    prev: ZaloSessionCredentialsPayload,
+  ): Promise<void> {
+    let nextCookies: Record<string, unknown>[];
+    try {
+      nextCookies = await snapshotSerializedCookiesFromApi(api, prev.cookies);
+    } catch {
+      return;
+    }
+
+    const next: ZaloSessionCredentialsPayload = {
+      imei: prev.imei,
+      userAgent: prev.userAgent,
+      cookies: nextCookies,
+    };
+
+    if (!isDeepStrictEqual(next, prev)) {
+      await this.loginSessions.updateCredentialsForSessionById(sessionId, next);
+    }
   }
 
   private buildFriendSummaries(account: {
