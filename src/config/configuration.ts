@@ -15,4 +15,10 @@ export default () => ({
     cookieSecure: process.env.AUTH_COOKIE_SECURE === 'true',
     cookieSameSite: process.env.AUTH_COOKIE_SAME_SITE ?? 'lax',
   },
+  zaloSession: {
+    /** 64 hex chars = 32-byte AES-256 key. Override in production via env. */
+    encryptionKeyHex:
+      process.env.ZALO_SESSION_ENCRYPTION_KEY ??
+      '0000000000000000000000000000000000000000000000000000000000000000',
+  },
 });

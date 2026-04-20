@@ -130,6 +130,16 @@ exports.Prisma.UserScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.ZaloLoginSessionScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  zaloUid: 'zaloUid',
+  userProfile: 'userProfile',
+  credentialsEncrypted: 'credentialsEncrypted',
+  createdAt: 'createdAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ZaloGroupScalarFieldEnum = {
   id: 'id',
   groupName: 'groupName',
@@ -206,6 +216,10 @@ exports.Prisma.SortOrder = {
   desc: 'desc'
 };
 
+exports.Prisma.JsonNullValueInput = {
+  JsonNull: Prisma.JsonNull
+};
+
 exports.Prisma.NullableJsonNullValueInput = {
   DbNull: Prisma.DbNull,
   JsonNull: Prisma.JsonNull
@@ -245,6 +259,7 @@ exports.MessageStatus = exports.$Enums.MessageStatus = {
 
 exports.Prisma.ModelName = {
   User: 'User',
+  ZaloLoginSession: 'ZaloLoginSession',
   ZaloGroup: 'ZaloGroup',
   ZaloAccountRelation: 'ZaloAccountRelation',
   ZaloAccount: 'ZaloAccount',

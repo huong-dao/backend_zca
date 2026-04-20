@@ -19,6 +19,11 @@ export type PrismaPromise<T> = $Public.PrismaPromise<T>
  */
 export type User = $Result.DefaultSelection<Prisma.$UserPayload>
 /**
+ * Model ZaloLoginSession
+ * Persisted Zalo QR session for zca-js (credentials encrypted at rest).
+ */
+export type ZaloLoginSession = $Result.DefaultSelection<Prisma.$ZaloLoginSessionPayload>
+/**
  * Model ZaloGroup
  * 
  */
@@ -232,6 +237,16 @@ export class PrismaClient<
     * ```
     */
   get user(): Prisma.UserDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.zaloLoginSession`: Exposes CRUD operations for the **ZaloLoginSession** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more ZaloLoginSessions
+    * const zaloLoginSessions = await prisma.zaloLoginSession.findMany()
+    * ```
+    */
+  get zaloLoginSession(): Prisma.ZaloLoginSessionDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.zaloGroup`: Exposes CRUD operations for the **ZaloGroup** model.
@@ -747,6 +762,7 @@ export namespace Prisma {
 
   export const ModelName: {
     User: 'User',
+    ZaloLoginSession: 'ZaloLoginSession',
     ZaloGroup: 'ZaloGroup',
     ZaloAccountRelation: 'ZaloAccountRelation',
     ZaloAccount: 'ZaloAccount',
@@ -770,7 +786,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "zaloGroup" | "zaloAccountRelation" | "zaloAccount" | "zaloAccountGroup" | "zaloAccountFriend" | "message" | "apiKey" | "configuration"
+      modelProps: "user" | "zaloLoginSession" | "zaloGroup" | "zaloAccountRelation" | "zaloAccount" | "zaloAccountGroup" | "zaloAccountFriend" | "message" | "apiKey" | "configuration"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -845,6 +861,80 @@ export namespace Prisma {
           count: {
             args: Prisma.UserCountArgs<ExtArgs>
             result: $Utils.Optional<UserCountAggregateOutputType> | number
+          }
+        }
+      }
+      ZaloLoginSession: {
+        payload: Prisma.$ZaloLoginSessionPayload<ExtArgs>
+        fields: Prisma.ZaloLoginSessionFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.ZaloLoginSessionFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.ZaloLoginSessionFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>
+          }
+          findFirst: {
+            args: Prisma.ZaloLoginSessionFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.ZaloLoginSessionFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>
+          }
+          findMany: {
+            args: Prisma.ZaloLoginSessionFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>[]
+          }
+          create: {
+            args: Prisma.ZaloLoginSessionCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>
+          }
+          createMany: {
+            args: Prisma.ZaloLoginSessionCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.ZaloLoginSessionCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>[]
+          }
+          delete: {
+            args: Prisma.ZaloLoginSessionDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>
+          }
+          update: {
+            args: Prisma.ZaloLoginSessionUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>
+          }
+          deleteMany: {
+            args: Prisma.ZaloLoginSessionDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.ZaloLoginSessionUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.ZaloLoginSessionUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>[]
+          }
+          upsert: {
+            args: Prisma.ZaloLoginSessionUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$ZaloLoginSessionPayload>
+          }
+          aggregate: {
+            args: Prisma.ZaloLoginSessionAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateZaloLoginSession>
+          }
+          groupBy: {
+            args: Prisma.ZaloLoginSessionGroupByArgs<ExtArgs>
+            result: $Utils.Optional<ZaloLoginSessionGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.ZaloLoginSessionCountArgs<ExtArgs>
+            result: $Utils.Optional<ZaloLoginSessionCountAggregateOutputType> | number
           }
         }
       }
@@ -1549,6 +1639,7 @@ export namespace Prisma {
   }
   export type GlobalOmitConfig = {
     user?: UserOmit
+    zaloLoginSession?: ZaloLoginSessionOmit
     zaloGroup?: ZaloGroupOmit
     zaloAccountRelation?: ZaloAccountRelationOmit
     zaloAccount?: ZaloAccountOmit
@@ -1630,6 +1721,37 @@ export namespace Prisma {
   /**
    * Count Types
    */
+
+
+  /**
+   * Count Type UserCountOutputType
+   */
+
+  export type UserCountOutputType = {
+    zaloLoginSessions: number
+  }
+
+  export type UserCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    zaloLoginSessions?: boolean | UserCountOutputTypeCountZaloLoginSessionsArgs
+  }
+
+  // Custom InputTypes
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the UserCountOutputType
+     */
+    select?: UserCountOutputTypeSelect<ExtArgs> | null
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountZaloLoginSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ZaloLoginSessionWhereInput
+  }
 
 
   /**
@@ -1932,6 +2054,8 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: boolean
     updatedAt?: boolean
+    zaloLoginSessions?: boolean | User$zaloLoginSessionsArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["user"]>
 
   export type UserSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
@@ -1965,10 +2089,18 @@ export namespace Prisma {
   }
 
   export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "email" | "password" | "role" | "isActive" | "createdAt" | "updatedAt", ExtArgs["result"]["user"]>
+  export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    zaloLoginSessions?: boolean | User$zaloLoginSessionsArgs<ExtArgs>
+    _count?: boolean | UserCountOutputTypeDefaultArgs<ExtArgs>
+  }
+  export type UserIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
+  export type UserIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {}
 
   export type $UserPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "User"
-    objects: {}
+    objects: {
+      zaloLoginSessions: Prisma.$ZaloLoginSessionPayload<ExtArgs>[]
+    }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       email: string
@@ -2371,6 +2503,7 @@ export namespace Prisma {
    */
   export interface Prisma__UserClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
+    zaloLoginSessions<T extends User$zaloLoginSessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$zaloLoginSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -2424,6 +2557,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which User to fetch.
      */
     where: UserWhereUniqueInput
@@ -2442,6 +2579,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which User to fetch.
      */
     where: UserWhereUniqueInput
@@ -2459,6 +2600,10 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
     /**
      * Filter, which User to fetch.
      */
@@ -2508,6 +2653,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter, which User to fetch.
      */
     where?: UserWhereInput
@@ -2555,6 +2704,10 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
     /**
      * Filter, which Users to fetch.
      */
@@ -2604,6 +2757,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * The data needed to create a User.
      */
     data: XOR<UserCreateInput, UserUncheckedCreateInput>
@@ -2651,6 +2808,10 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
     /**
      * The data needed to update a User.
      */
@@ -2718,6 +2879,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * The filter to search for the User to update in case it exists.
      */
     where: UserWhereUniqueInput
@@ -2744,6 +2909,10 @@ export namespace Prisma {
      */
     omit?: UserOmit<ExtArgs> | null
     /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+    /**
      * Filter which User to delete.
      */
     where: UserWhereUniqueInput
@@ -2764,6 +2933,30 @@ export namespace Prisma {
   }
 
   /**
+   * User.zaloLoginSessions
+   */
+  export type User$zaloLoginSessionsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    where?: ZaloLoginSessionWhereInput
+    orderBy?: ZaloLoginSessionOrderByWithRelationInput | ZaloLoginSessionOrderByWithRelationInput[]
+    cursor?: ZaloLoginSessionWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: ZaloLoginSessionScalarFieldEnum | ZaloLoginSessionScalarFieldEnum[]
+  }
+
+  /**
    * User without action
    */
   export type UserDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -2775,6 +2968,1095 @@ export namespace Prisma {
      * Omit specific fields from the User
      */
     omit?: UserOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: UserInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model ZaloLoginSession
+   */
+
+  export type AggregateZaloLoginSession = {
+    _count: ZaloLoginSessionCountAggregateOutputType | null
+    _min: ZaloLoginSessionMinAggregateOutputType | null
+    _max: ZaloLoginSessionMaxAggregateOutputType | null
+  }
+
+  export type ZaloLoginSessionMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    zaloUid: string | null
+    credentialsEncrypted: Bytes | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ZaloLoginSessionMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    zaloUid: string | null
+    credentialsEncrypted: Bytes | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type ZaloLoginSessionCountAggregateOutputType = {
+    id: number
+    userId: number
+    zaloUid: number
+    userProfile: number
+    credentialsEncrypted: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type ZaloLoginSessionMinAggregateInputType = {
+    id?: true
+    userId?: true
+    zaloUid?: true
+    credentialsEncrypted?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ZaloLoginSessionMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    zaloUid?: true
+    credentialsEncrypted?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type ZaloLoginSessionCountAggregateInputType = {
+    id?: true
+    userId?: true
+    zaloUid?: true
+    userProfile?: true
+    credentialsEncrypted?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type ZaloLoginSessionAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ZaloLoginSession to aggregate.
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloLoginSessions to fetch.
+     */
+    orderBy?: ZaloLoginSessionOrderByWithRelationInput | ZaloLoginSessionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: ZaloLoginSessionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloLoginSessions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloLoginSessions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned ZaloLoginSessions
+    **/
+    _count?: true | ZaloLoginSessionCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: ZaloLoginSessionMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: ZaloLoginSessionMaxAggregateInputType
+  }
+
+  export type GetZaloLoginSessionAggregateType<T extends ZaloLoginSessionAggregateArgs> = {
+        [P in keyof T & keyof AggregateZaloLoginSession]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateZaloLoginSession[P]>
+      : GetScalarType<T[P], AggregateZaloLoginSession[P]>
+  }
+
+
+
+
+  export type ZaloLoginSessionGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: ZaloLoginSessionWhereInput
+    orderBy?: ZaloLoginSessionOrderByWithAggregationInput | ZaloLoginSessionOrderByWithAggregationInput[]
+    by: ZaloLoginSessionScalarFieldEnum[] | ZaloLoginSessionScalarFieldEnum
+    having?: ZaloLoginSessionScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: ZaloLoginSessionCountAggregateInputType | true
+    _min?: ZaloLoginSessionMinAggregateInputType
+    _max?: ZaloLoginSessionMaxAggregateInputType
+  }
+
+  export type ZaloLoginSessionGroupByOutputType = {
+    id: string
+    userId: string
+    zaloUid: string
+    userProfile: JsonValue
+    credentialsEncrypted: Bytes
+    createdAt: Date
+    updatedAt: Date
+    _count: ZaloLoginSessionCountAggregateOutputType | null
+    _min: ZaloLoginSessionMinAggregateOutputType | null
+    _max: ZaloLoginSessionMaxAggregateOutputType | null
+  }
+
+  type GetZaloLoginSessionGroupByPayload<T extends ZaloLoginSessionGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<ZaloLoginSessionGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof ZaloLoginSessionGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], ZaloLoginSessionGroupByOutputType[P]>
+            : GetScalarType<T[P], ZaloLoginSessionGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type ZaloLoginSessionSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    zaloUid?: boolean
+    userProfile?: boolean
+    credentialsEncrypted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloLoginSession"]>
+
+  export type ZaloLoginSessionSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    zaloUid?: boolean
+    userProfile?: boolean
+    credentialsEncrypted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloLoginSession"]>
+
+  export type ZaloLoginSessionSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    zaloUid?: boolean
+    userProfile?: boolean
+    credentialsEncrypted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["zaloLoginSession"]>
+
+  export type ZaloLoginSessionSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    zaloUid?: boolean
+    userProfile?: boolean
+    credentialsEncrypted?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type ZaloLoginSessionOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "zaloUid" | "userProfile" | "credentialsEncrypted" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloLoginSession"]>
+  export type ZaloLoginSessionInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ZaloLoginSessionIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+  export type ZaloLoginSessionIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    user?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $ZaloLoginSessionPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "ZaloLoginSession"
+    objects: {
+      user: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      zaloUid: string
+      userProfile: Prisma.JsonValue
+      credentialsEncrypted: Prisma.Bytes
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["zaloLoginSession"]>
+    composites: {}
+  }
+
+  type ZaloLoginSessionGetPayload<S extends boolean | null | undefined | ZaloLoginSessionDefaultArgs> = $Result.GetResult<Prisma.$ZaloLoginSessionPayload, S>
+
+  type ZaloLoginSessionCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<ZaloLoginSessionFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: ZaloLoginSessionCountAggregateInputType | true
+    }
+
+  export interface ZaloLoginSessionDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['ZaloLoginSession'], meta: { name: 'ZaloLoginSession' } }
+    /**
+     * Find zero or one ZaloLoginSession that matches the filter.
+     * @param {ZaloLoginSessionFindUniqueArgs} args - Arguments to find a ZaloLoginSession
+     * @example
+     * // Get one ZaloLoginSession
+     * const zaloLoginSession = await prisma.zaloLoginSession.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends ZaloLoginSessionFindUniqueArgs>(args: SelectSubset<T, ZaloLoginSessionFindUniqueArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one ZaloLoginSession that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {ZaloLoginSessionFindUniqueOrThrowArgs} args - Arguments to find a ZaloLoginSession
+     * @example
+     * // Get one ZaloLoginSession
+     * const zaloLoginSession = await prisma.zaloLoginSession.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends ZaloLoginSessionFindUniqueOrThrowArgs>(args: SelectSubset<T, ZaloLoginSessionFindUniqueOrThrowArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ZaloLoginSession that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionFindFirstArgs} args - Arguments to find a ZaloLoginSession
+     * @example
+     * // Get one ZaloLoginSession
+     * const zaloLoginSession = await prisma.zaloLoginSession.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends ZaloLoginSessionFindFirstArgs>(args?: SelectSubset<T, ZaloLoginSessionFindFirstArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first ZaloLoginSession that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionFindFirstOrThrowArgs} args - Arguments to find a ZaloLoginSession
+     * @example
+     * // Get one ZaloLoginSession
+     * const zaloLoginSession = await prisma.zaloLoginSession.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends ZaloLoginSessionFindFirstOrThrowArgs>(args?: SelectSubset<T, ZaloLoginSessionFindFirstOrThrowArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more ZaloLoginSessions that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all ZaloLoginSessions
+     * const zaloLoginSessions = await prisma.zaloLoginSession.findMany()
+     * 
+     * // Get first 10 ZaloLoginSessions
+     * const zaloLoginSessions = await prisma.zaloLoginSession.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const zaloLoginSessionWithIdOnly = await prisma.zaloLoginSession.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends ZaloLoginSessionFindManyArgs>(args?: SelectSubset<T, ZaloLoginSessionFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a ZaloLoginSession.
+     * @param {ZaloLoginSessionCreateArgs} args - Arguments to create a ZaloLoginSession.
+     * @example
+     * // Create one ZaloLoginSession
+     * const ZaloLoginSession = await prisma.zaloLoginSession.create({
+     *   data: {
+     *     // ... data to create a ZaloLoginSession
+     *   }
+     * })
+     * 
+     */
+    create<T extends ZaloLoginSessionCreateArgs>(args: SelectSubset<T, ZaloLoginSessionCreateArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many ZaloLoginSessions.
+     * @param {ZaloLoginSessionCreateManyArgs} args - Arguments to create many ZaloLoginSessions.
+     * @example
+     * // Create many ZaloLoginSessions
+     * const zaloLoginSession = await prisma.zaloLoginSession.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends ZaloLoginSessionCreateManyArgs>(args?: SelectSubset<T, ZaloLoginSessionCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many ZaloLoginSessions and returns the data saved in the database.
+     * @param {ZaloLoginSessionCreateManyAndReturnArgs} args - Arguments to create many ZaloLoginSessions.
+     * @example
+     * // Create many ZaloLoginSessions
+     * const zaloLoginSession = await prisma.zaloLoginSession.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many ZaloLoginSessions and only return the `id`
+     * const zaloLoginSessionWithIdOnly = await prisma.zaloLoginSession.createManyAndReturn({
+     *   select: { id: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends ZaloLoginSessionCreateManyAndReturnArgs>(args?: SelectSubset<T, ZaloLoginSessionCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a ZaloLoginSession.
+     * @param {ZaloLoginSessionDeleteArgs} args - Arguments to delete one ZaloLoginSession.
+     * @example
+     * // Delete one ZaloLoginSession
+     * const ZaloLoginSession = await prisma.zaloLoginSession.delete({
+     *   where: {
+     *     // ... filter to delete one ZaloLoginSession
+     *   }
+     * })
+     * 
+     */
+    delete<T extends ZaloLoginSessionDeleteArgs>(args: SelectSubset<T, ZaloLoginSessionDeleteArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one ZaloLoginSession.
+     * @param {ZaloLoginSessionUpdateArgs} args - Arguments to update one ZaloLoginSession.
+     * @example
+     * // Update one ZaloLoginSession
+     * const zaloLoginSession = await prisma.zaloLoginSession.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends ZaloLoginSessionUpdateArgs>(args: SelectSubset<T, ZaloLoginSessionUpdateArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more ZaloLoginSessions.
+     * @param {ZaloLoginSessionDeleteManyArgs} args - Arguments to filter ZaloLoginSessions to delete.
+     * @example
+     * // Delete a few ZaloLoginSessions
+     * const { count } = await prisma.zaloLoginSession.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends ZaloLoginSessionDeleteManyArgs>(args?: SelectSubset<T, ZaloLoginSessionDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ZaloLoginSessions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many ZaloLoginSessions
+     * const zaloLoginSession = await prisma.zaloLoginSession.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends ZaloLoginSessionUpdateManyArgs>(args: SelectSubset<T, ZaloLoginSessionUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more ZaloLoginSessions and returns the data updated in the database.
+     * @param {ZaloLoginSessionUpdateManyAndReturnArgs} args - Arguments to update many ZaloLoginSessions.
+     * @example
+     * // Update many ZaloLoginSessions
+     * const zaloLoginSession = await prisma.zaloLoginSession.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more ZaloLoginSessions and only return the `id`
+     * const zaloLoginSessionWithIdOnly = await prisma.zaloLoginSession.updateManyAndReturn({
+     *   select: { id: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends ZaloLoginSessionUpdateManyAndReturnArgs>(args: SelectSubset<T, ZaloLoginSessionUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one ZaloLoginSession.
+     * @param {ZaloLoginSessionUpsertArgs} args - Arguments to update or create a ZaloLoginSession.
+     * @example
+     * // Update or create a ZaloLoginSession
+     * const zaloLoginSession = await prisma.zaloLoginSession.upsert({
+     *   create: {
+     *     // ... data to create a ZaloLoginSession
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the ZaloLoginSession we want to update
+     *   }
+     * })
+     */
+    upsert<T extends ZaloLoginSessionUpsertArgs>(args: SelectSubset<T, ZaloLoginSessionUpsertArgs<ExtArgs>>): Prisma__ZaloLoginSessionClient<$Result.GetResult<Prisma.$ZaloLoginSessionPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of ZaloLoginSessions.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionCountArgs} args - Arguments to filter ZaloLoginSessions to count.
+     * @example
+     * // Count the number of ZaloLoginSessions
+     * const count = await prisma.zaloLoginSession.count({
+     *   where: {
+     *     // ... the filter for the ZaloLoginSessions we want to count
+     *   }
+     * })
+    **/
+    count<T extends ZaloLoginSessionCountArgs>(
+      args?: Subset<T, ZaloLoginSessionCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], ZaloLoginSessionCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a ZaloLoginSession.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends ZaloLoginSessionAggregateArgs>(args: Subset<T, ZaloLoginSessionAggregateArgs>): Prisma.PrismaPromise<GetZaloLoginSessionAggregateType<T>>
+
+    /**
+     * Group by ZaloLoginSession.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {ZaloLoginSessionGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends ZaloLoginSessionGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: ZaloLoginSessionGroupByArgs['orderBy'] }
+        : { orderBy?: ZaloLoginSessionGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, ZaloLoginSessionGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetZaloLoginSessionGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the ZaloLoginSession model
+   */
+  readonly fields: ZaloLoginSessionFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for ZaloLoginSession.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__ZaloLoginSessionClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the ZaloLoginSession model
+   */
+  interface ZaloLoginSessionFieldRefs {
+    readonly id: FieldRef<"ZaloLoginSession", 'String'>
+    readonly userId: FieldRef<"ZaloLoginSession", 'String'>
+    readonly zaloUid: FieldRef<"ZaloLoginSession", 'String'>
+    readonly userProfile: FieldRef<"ZaloLoginSession", 'Json'>
+    readonly credentialsEncrypted: FieldRef<"ZaloLoginSession", 'Bytes'>
+    readonly createdAt: FieldRef<"ZaloLoginSession", 'DateTime'>
+    readonly updatedAt: FieldRef<"ZaloLoginSession", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * ZaloLoginSession findUnique
+   */
+  export type ZaloLoginSessionFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloLoginSession to fetch.
+     */
+    where: ZaloLoginSessionWhereUniqueInput
+  }
+
+  /**
+   * ZaloLoginSession findUniqueOrThrow
+   */
+  export type ZaloLoginSessionFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloLoginSession to fetch.
+     */
+    where: ZaloLoginSessionWhereUniqueInput
+  }
+
+  /**
+   * ZaloLoginSession findFirst
+   */
+  export type ZaloLoginSessionFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloLoginSession to fetch.
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloLoginSessions to fetch.
+     */
+    orderBy?: ZaloLoginSessionOrderByWithRelationInput | ZaloLoginSessionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ZaloLoginSessions.
+     */
+    cursor?: ZaloLoginSessionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloLoginSessions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloLoginSessions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloLoginSessions.
+     */
+    distinct?: ZaloLoginSessionScalarFieldEnum | ZaloLoginSessionScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloLoginSession findFirstOrThrow
+   */
+  export type ZaloLoginSessionFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloLoginSession to fetch.
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloLoginSessions to fetch.
+     */
+    orderBy?: ZaloLoginSessionOrderByWithRelationInput | ZaloLoginSessionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for ZaloLoginSessions.
+     */
+    cursor?: ZaloLoginSessionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloLoginSessions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloLoginSessions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloLoginSessions.
+     */
+    distinct?: ZaloLoginSessionScalarFieldEnum | ZaloLoginSessionScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloLoginSession findMany
+   */
+  export type ZaloLoginSessionFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * Filter, which ZaloLoginSessions to fetch.
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of ZaloLoginSessions to fetch.
+     */
+    orderBy?: ZaloLoginSessionOrderByWithRelationInput | ZaloLoginSessionOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing ZaloLoginSessions.
+     */
+    cursor?: ZaloLoginSessionWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` ZaloLoginSessions from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` ZaloLoginSessions.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of ZaloLoginSessions.
+     */
+    distinct?: ZaloLoginSessionScalarFieldEnum | ZaloLoginSessionScalarFieldEnum[]
+  }
+
+  /**
+   * ZaloLoginSession create
+   */
+  export type ZaloLoginSessionCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * The data needed to create a ZaloLoginSession.
+     */
+    data: XOR<ZaloLoginSessionCreateInput, ZaloLoginSessionUncheckedCreateInput>
+  }
+
+  /**
+   * ZaloLoginSession createMany
+   */
+  export type ZaloLoginSessionCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many ZaloLoginSessions.
+     */
+    data: ZaloLoginSessionCreateManyInput | ZaloLoginSessionCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * ZaloLoginSession createManyAndReturn
+   */
+  export type ZaloLoginSessionCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * The data used to create many ZaloLoginSessions.
+     */
+    data: ZaloLoginSessionCreateManyInput | ZaloLoginSessionCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ZaloLoginSession update
+   */
+  export type ZaloLoginSessionUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * The data needed to update a ZaloLoginSession.
+     */
+    data: XOR<ZaloLoginSessionUpdateInput, ZaloLoginSessionUncheckedUpdateInput>
+    /**
+     * Choose, which ZaloLoginSession to update.
+     */
+    where: ZaloLoginSessionWhereUniqueInput
+  }
+
+  /**
+   * ZaloLoginSession updateMany
+   */
+  export type ZaloLoginSessionUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update ZaloLoginSessions.
+     */
+    data: XOR<ZaloLoginSessionUpdateManyMutationInput, ZaloLoginSessionUncheckedUpdateManyInput>
+    /**
+     * Filter which ZaloLoginSessions to update
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * Limit how many ZaloLoginSessions to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * ZaloLoginSession updateManyAndReturn
+   */
+  export type ZaloLoginSessionUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * The data used to update ZaloLoginSessions.
+     */
+    data: XOR<ZaloLoginSessionUpdateManyMutationInput, ZaloLoginSessionUncheckedUpdateManyInput>
+    /**
+     * Filter which ZaloLoginSessions to update
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * Limit how many ZaloLoginSessions to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * ZaloLoginSession upsert
+   */
+  export type ZaloLoginSessionUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * The filter to search for the ZaloLoginSession to update in case it exists.
+     */
+    where: ZaloLoginSessionWhereUniqueInput
+    /**
+     * In case the ZaloLoginSession found by the `where` argument doesn't exist, create a new ZaloLoginSession with this data.
+     */
+    create: XOR<ZaloLoginSessionCreateInput, ZaloLoginSessionUncheckedCreateInput>
+    /**
+     * In case the ZaloLoginSession was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<ZaloLoginSessionUpdateInput, ZaloLoginSessionUncheckedUpdateInput>
+  }
+
+  /**
+   * ZaloLoginSession delete
+   */
+  export type ZaloLoginSessionDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
+    /**
+     * Filter which ZaloLoginSession to delete.
+     */
+    where: ZaloLoginSessionWhereUniqueInput
+  }
+
+  /**
+   * ZaloLoginSession deleteMany
+   */
+  export type ZaloLoginSessionDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which ZaloLoginSessions to delete
+     */
+    where?: ZaloLoginSessionWhereInput
+    /**
+     * Limit how many ZaloLoginSessions to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * ZaloLoginSession without action
+   */
+  export type ZaloLoginSessionDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloLoginSession
+     */
+    select?: ZaloLoginSessionSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloLoginSession
+     */
+    omit?: ZaloLoginSessionOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloLoginSessionInclude<ExtArgs> | null
   }
 
 
@@ -11528,6 +12810,19 @@ export namespace Prisma {
   export type UserScalarFieldEnum = (typeof UserScalarFieldEnum)[keyof typeof UserScalarFieldEnum]
 
 
+  export const ZaloLoginSessionScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    zaloUid: 'zaloUid',
+    userProfile: 'userProfile',
+    credentialsEncrypted: 'credentialsEncrypted',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type ZaloLoginSessionScalarFieldEnum = (typeof ZaloLoginSessionScalarFieldEnum)[keyof typeof ZaloLoginSessionScalarFieldEnum]
+
+
   export const ZaloGroupScalarFieldEnum: {
     id: 'id',
     groupName: 'groupName',
@@ -11631,6 +12926,13 @@ export namespace Prisma {
   export type SortOrder = (typeof SortOrder)[keyof typeof SortOrder]
 
 
+  export const JsonNullValueInput: {
+    JsonNull: typeof JsonNull
+  };
+
+  export type JsonNullValueInput = (typeof JsonNullValueInput)[keyof typeof JsonNullValueInput]
+
+
   export const NullableJsonNullValueInput: {
     DbNull: typeof DbNull,
     JsonNull: typeof JsonNull
@@ -11719,20 +13021,6 @@ export namespace Prisma {
 
 
   /**
-   * Reference to a field of type 'Int'
-   */
-  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
-    
-
-
-  /**
-   * Reference to a field of type 'Int[]'
-   */
-  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
-    
-
-
-  /**
    * Reference to a field of type 'Json'
    */
   export type JsonFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Json'>
@@ -11743,6 +13031,34 @@ export namespace Prisma {
    * Reference to a field of type 'QueryMode'
    */
   export type EnumQueryModeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'QueryMode'>
+    
+
+
+  /**
+   * Reference to a field of type 'Bytes'
+   */
+  export type BytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes'>
+    
+
+
+  /**
+   * Reference to a field of type 'Bytes[]'
+   */
+  export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int'
+   */
+  export type IntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int'>
+    
+
+
+  /**
+   * Reference to a field of type 'Int[]'
+   */
+  export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
     
 
 
@@ -11802,6 +13118,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    zaloLoginSessions?: ZaloLoginSessionListRelationFilter
   }
 
   export type UserOrderByWithRelationInput = {
@@ -11812,6 +13129,7 @@ export namespace Prisma {
     isActive?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+    zaloLoginSessions?: ZaloLoginSessionOrderByRelationAggregateInput
   }
 
   export type UserWhereUniqueInput = Prisma.AtLeast<{
@@ -11825,6 +13143,7 @@ export namespace Prisma {
     isActive?: BoolFilter<"User"> | boolean
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
+    zaloLoginSessions?: ZaloLoginSessionListRelationFilter
   }, "id" | "email">
 
   export type UserOrderByWithAggregationInput = {
@@ -11851,6 +13170,71 @@ export namespace Prisma {
     isActive?: BoolWithAggregatesFilter<"User"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
+  }
+
+  export type ZaloLoginSessionWhereInput = {
+    AND?: ZaloLoginSessionWhereInput | ZaloLoginSessionWhereInput[]
+    OR?: ZaloLoginSessionWhereInput[]
+    NOT?: ZaloLoginSessionWhereInput | ZaloLoginSessionWhereInput[]
+    id?: UuidFilter<"ZaloLoginSession"> | string
+    userId?: UuidFilter<"ZaloLoginSession"> | string
+    zaloUid?: StringFilter<"ZaloLoginSession"> | string
+    userProfile?: JsonFilter<"ZaloLoginSession">
+    credentialsEncrypted?: BytesFilter<"ZaloLoginSession"> | Bytes
+    createdAt?: DateTimeFilter<"ZaloLoginSession"> | Date | string
+    updatedAt?: DateTimeFilter<"ZaloLoginSession"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type ZaloLoginSessionOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    zaloUid?: SortOrder
+    userProfile?: SortOrder
+    credentialsEncrypted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    user?: UserOrderByWithRelationInput
+  }
+
+  export type ZaloLoginSessionWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: ZaloLoginSessionWhereInput | ZaloLoginSessionWhereInput[]
+    OR?: ZaloLoginSessionWhereInput[]
+    NOT?: ZaloLoginSessionWhereInput | ZaloLoginSessionWhereInput[]
+    userId?: UuidFilter<"ZaloLoginSession"> | string
+    zaloUid?: StringFilter<"ZaloLoginSession"> | string
+    userProfile?: JsonFilter<"ZaloLoginSession">
+    credentialsEncrypted?: BytesFilter<"ZaloLoginSession"> | Bytes
+    createdAt?: DateTimeFilter<"ZaloLoginSession"> | Date | string
+    updatedAt?: DateTimeFilter<"ZaloLoginSession"> | Date | string
+    user?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id">
+
+  export type ZaloLoginSessionOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    zaloUid?: SortOrder
+    userProfile?: SortOrder
+    credentialsEncrypted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: ZaloLoginSessionCountOrderByAggregateInput
+    _max?: ZaloLoginSessionMaxOrderByAggregateInput
+    _min?: ZaloLoginSessionMinOrderByAggregateInput
+  }
+
+  export type ZaloLoginSessionScalarWhereWithAggregatesInput = {
+    AND?: ZaloLoginSessionScalarWhereWithAggregatesInput | ZaloLoginSessionScalarWhereWithAggregatesInput[]
+    OR?: ZaloLoginSessionScalarWhereWithAggregatesInput[]
+    NOT?: ZaloLoginSessionScalarWhereWithAggregatesInput | ZaloLoginSessionScalarWhereWithAggregatesInput[]
+    id?: UuidWithAggregatesFilter<"ZaloLoginSession"> | string
+    userId?: UuidWithAggregatesFilter<"ZaloLoginSession"> | string
+    zaloUid?: StringWithAggregatesFilter<"ZaloLoginSession"> | string
+    userProfile?: JsonWithAggregatesFilter<"ZaloLoginSession">
+    credentialsEncrypted?: BytesWithAggregatesFilter<"ZaloLoginSession"> | Bytes
+    createdAt?: DateTimeWithAggregatesFilter<"ZaloLoginSession"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"ZaloLoginSession"> | Date | string
   }
 
   export type ZaloGroupWhereInput = {
@@ -12364,6 +13748,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    zaloLoginSessions?: ZaloLoginSessionCreateNestedManyWithoutUserInput
   }
 
   export type UserUncheckedCreateInput = {
@@ -12374,6 +13759,7 @@ export namespace Prisma {
     isActive?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
+    zaloLoginSessions?: ZaloLoginSessionUncheckedCreateNestedManyWithoutUserInput
   }
 
   export type UserUpdateInput = {
@@ -12384,6 +13770,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    zaloLoginSessions?: ZaloLoginSessionUpdateManyWithoutUserNestedInput
   }
 
   export type UserUncheckedUpdateInput = {
@@ -12394,6 +13781,7 @@ export namespace Prisma {
     isActive?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    zaloLoginSessions?: ZaloLoginSessionUncheckedUpdateManyWithoutUserNestedInput
   }
 
   export type UserCreateManyInput = {
@@ -12422,6 +13810,75 @@ export namespace Prisma {
     password?: StringFieldUpdateOperationsInput | string
     role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
     isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloLoginSessionCreateInput = {
+    id: string
+    zaloUid: string
+    userProfile: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted: Bytes
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    user: UserCreateNestedOneWithoutZaloLoginSessionsInput
+  }
+
+  export type ZaloLoginSessionUncheckedCreateInput = {
+    id: string
+    userId: string
+    zaloUid: string
+    userProfile: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted: Bytes
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZaloLoginSessionUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    user?: UserUpdateOneRequiredWithoutZaloLoginSessionsNestedInput
+  }
+
+  export type ZaloLoginSessionUncheckedUpdateInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloLoginSessionCreateManyInput = {
+    id: string
+    userId: string
+    zaloUid: string
+    userProfile: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted: Bytes
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZaloLoginSessionUpdateManyMutationInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloLoginSessionUncheckedUpdateManyInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -12997,6 +14454,16 @@ export namespace Prisma {
     not?: NestedDateTimeFilter<$PrismaModel> | Date | string
   }
 
+  export type ZaloLoginSessionListRelationFilter = {
+    every?: ZaloLoginSessionWhereInput
+    some?: ZaloLoginSessionWhereInput
+    none?: ZaloLoginSessionWhereInput
+  }
+
+  export type ZaloLoginSessionOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UserCountOrderByAggregateInput = {
     id?: SortOrder
     email?: SortOrder
@@ -13090,6 +14557,105 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedDateTimeFilter<$PrismaModel>
     _max?: NestedDateTimeFilter<$PrismaModel>
+  }
+  export type JsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type BytesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesFilter<$PrismaModel> | Bytes
+  }
+
+  export type UserScalarRelationFilter = {
+    is?: UserWhereInput
+    isNot?: UserWhereInput
+  }
+
+  export type ZaloLoginSessionCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    zaloUid?: SortOrder
+    userProfile?: SortOrder
+    credentialsEncrypted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ZaloLoginSessionMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    zaloUid?: SortOrder
+    credentialsEncrypted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type ZaloLoginSessionMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    zaloUid?: SortOrder
+    credentialsEncrypted?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+  export type JsonWithAggregatesFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, Exclude<keyof Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>,
+        Required<JsonWithAggregatesFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<JsonWithAggregatesFilterBase<$PrismaModel>>, 'path'>>
+
+  export type JsonWithAggregatesFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedJsonFilter<$PrismaModel>
+    _max?: NestedJsonFilter<$PrismaModel>
+  }
+
+  export type BytesWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesWithAggregatesFilter<$PrismaModel> | Bytes
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBytesFilter<$PrismaModel>
+    _max?: NestedBytesFilter<$PrismaModel>
   }
 
   export type ZaloAccountGroupListRelationFilter = {
@@ -13544,6 +15110,20 @@ export namespace Prisma {
     updatedAt?: SortOrder
   }
 
+  export type ZaloLoginSessionCreateNestedManyWithoutUserInput = {
+    create?: XOR<ZaloLoginSessionCreateWithoutUserInput, ZaloLoginSessionUncheckedCreateWithoutUserInput> | ZaloLoginSessionCreateWithoutUserInput[] | ZaloLoginSessionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ZaloLoginSessionCreateOrConnectWithoutUserInput | ZaloLoginSessionCreateOrConnectWithoutUserInput[]
+    createMany?: ZaloLoginSessionCreateManyUserInputEnvelope
+    connect?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+  }
+
+  export type ZaloLoginSessionUncheckedCreateNestedManyWithoutUserInput = {
+    create?: XOR<ZaloLoginSessionCreateWithoutUserInput, ZaloLoginSessionUncheckedCreateWithoutUserInput> | ZaloLoginSessionCreateWithoutUserInput[] | ZaloLoginSessionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ZaloLoginSessionCreateOrConnectWithoutUserInput | ZaloLoginSessionCreateOrConnectWithoutUserInput[]
+    createMany?: ZaloLoginSessionCreateManyUserInputEnvelope
+    connect?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+  }
+
   export type StringFieldUpdateOperationsInput = {
     set?: string
   }
@@ -13558,6 +15138,52 @@ export namespace Prisma {
 
   export type DateTimeFieldUpdateOperationsInput = {
     set?: Date | string
+  }
+
+  export type ZaloLoginSessionUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ZaloLoginSessionCreateWithoutUserInput, ZaloLoginSessionUncheckedCreateWithoutUserInput> | ZaloLoginSessionCreateWithoutUserInput[] | ZaloLoginSessionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ZaloLoginSessionCreateOrConnectWithoutUserInput | ZaloLoginSessionCreateOrConnectWithoutUserInput[]
+    upsert?: ZaloLoginSessionUpsertWithWhereUniqueWithoutUserInput | ZaloLoginSessionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ZaloLoginSessionCreateManyUserInputEnvelope
+    set?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    disconnect?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    delete?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    connect?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    update?: ZaloLoginSessionUpdateWithWhereUniqueWithoutUserInput | ZaloLoginSessionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ZaloLoginSessionUpdateManyWithWhereWithoutUserInput | ZaloLoginSessionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ZaloLoginSessionScalarWhereInput | ZaloLoginSessionScalarWhereInput[]
+  }
+
+  export type ZaloLoginSessionUncheckedUpdateManyWithoutUserNestedInput = {
+    create?: XOR<ZaloLoginSessionCreateWithoutUserInput, ZaloLoginSessionUncheckedCreateWithoutUserInput> | ZaloLoginSessionCreateWithoutUserInput[] | ZaloLoginSessionUncheckedCreateWithoutUserInput[]
+    connectOrCreate?: ZaloLoginSessionCreateOrConnectWithoutUserInput | ZaloLoginSessionCreateOrConnectWithoutUserInput[]
+    upsert?: ZaloLoginSessionUpsertWithWhereUniqueWithoutUserInput | ZaloLoginSessionUpsertWithWhereUniqueWithoutUserInput[]
+    createMany?: ZaloLoginSessionCreateManyUserInputEnvelope
+    set?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    disconnect?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    delete?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    connect?: ZaloLoginSessionWhereUniqueInput | ZaloLoginSessionWhereUniqueInput[]
+    update?: ZaloLoginSessionUpdateWithWhereUniqueWithoutUserInput | ZaloLoginSessionUpdateWithWhereUniqueWithoutUserInput[]
+    updateMany?: ZaloLoginSessionUpdateManyWithWhereWithoutUserInput | ZaloLoginSessionUpdateManyWithWhereWithoutUserInput[]
+    deleteMany?: ZaloLoginSessionScalarWhereInput | ZaloLoginSessionScalarWhereInput[]
+  }
+
+  export type UserCreateNestedOneWithoutZaloLoginSessionsInput = {
+    create?: XOR<UserCreateWithoutZaloLoginSessionsInput, UserUncheckedCreateWithoutZaloLoginSessionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutZaloLoginSessionsInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type BytesFieldUpdateOperationsInput = {
+    set?: Bytes
+  }
+
+  export type UserUpdateOneRequiredWithoutZaloLoginSessionsNestedInput = {
+    create?: XOR<UserCreateWithoutZaloLoginSessionsInput, UserUncheckedCreateWithoutZaloLoginSessionsInput>
+    connectOrCreate?: UserCreateOrConnectWithoutZaloLoginSessionsInput
+    upsert?: UserUpsertWithoutZaloLoginSessionsInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutZaloLoginSessionsInput, UserUpdateWithoutZaloLoginSessionsInput>, UserUncheckedUpdateWithoutZaloLoginSessionsInput>
   }
 
   export type ZaloAccountGroupCreateNestedManyWithoutGroupInput = {
@@ -14154,6 +15780,46 @@ export namespace Prisma {
     _max?: NestedDateTimeFilter<$PrismaModel>
   }
 
+  export type NestedBytesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesFilter<$PrismaModel> | Bytes
+  }
+  export type NestedJsonFilter<$PrismaModel = never> =
+    | PatchUndefined<
+        Either<Required<NestedJsonFilterBase<$PrismaModel>>, Exclude<keyof Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>,
+        Required<NestedJsonFilterBase<$PrismaModel>>
+      >
+    | OptionalFlat<Omit<Required<NestedJsonFilterBase<$PrismaModel>>, 'path'>>
+
+  export type NestedJsonFilterBase<$PrismaModel = never> = {
+    equals?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+    path?: string[]
+    mode?: QueryMode | EnumQueryModeFieldRefInput<$PrismaModel>
+    string_contains?: string | StringFieldRefInput<$PrismaModel>
+    string_starts_with?: string | StringFieldRefInput<$PrismaModel>
+    string_ends_with?: string | StringFieldRefInput<$PrismaModel>
+    array_starts_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_ends_with?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    array_contains?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | null
+    lt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    lte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gt?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    gte?: InputJsonValue | JsonFieldRefInput<$PrismaModel>
+    not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
+  }
+
+  export type NestedBytesWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Bytes | BytesFieldRefInput<$PrismaModel>
+    in?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    notIn?: Bytes[] | ListBytesFieldRefInput<$PrismaModel>
+    not?: NestedBytesWithAggregatesFilter<$PrismaModel> | Bytes
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedBytesFilter<$PrismaModel>
+    _max?: NestedBytesFilter<$PrismaModel>
+  }
+
   export type NestedStringNullableFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel> | null
     in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
@@ -14303,6 +15969,119 @@ export namespace Prisma {
     _count?: NestedIntFilter<$PrismaModel>
     _min?: NestedEnumMessageStatusFilter<$PrismaModel>
     _max?: NestedEnumMessageStatusFilter<$PrismaModel>
+  }
+
+  export type ZaloLoginSessionCreateWithoutUserInput = {
+    id: string
+    zaloUid: string
+    userProfile: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted: Bytes
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZaloLoginSessionUncheckedCreateWithoutUserInput = {
+    id: string
+    zaloUid: string
+    userProfile: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted: Bytes
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZaloLoginSessionCreateOrConnectWithoutUserInput = {
+    where: ZaloLoginSessionWhereUniqueInput
+    create: XOR<ZaloLoginSessionCreateWithoutUserInput, ZaloLoginSessionUncheckedCreateWithoutUserInput>
+  }
+
+  export type ZaloLoginSessionCreateManyUserInputEnvelope = {
+    data: ZaloLoginSessionCreateManyUserInput | ZaloLoginSessionCreateManyUserInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type ZaloLoginSessionUpsertWithWhereUniqueWithoutUserInput = {
+    where: ZaloLoginSessionWhereUniqueInput
+    update: XOR<ZaloLoginSessionUpdateWithoutUserInput, ZaloLoginSessionUncheckedUpdateWithoutUserInput>
+    create: XOR<ZaloLoginSessionCreateWithoutUserInput, ZaloLoginSessionUncheckedCreateWithoutUserInput>
+  }
+
+  export type ZaloLoginSessionUpdateWithWhereUniqueWithoutUserInput = {
+    where: ZaloLoginSessionWhereUniqueInput
+    data: XOR<ZaloLoginSessionUpdateWithoutUserInput, ZaloLoginSessionUncheckedUpdateWithoutUserInput>
+  }
+
+  export type ZaloLoginSessionUpdateManyWithWhereWithoutUserInput = {
+    where: ZaloLoginSessionScalarWhereInput
+    data: XOR<ZaloLoginSessionUpdateManyMutationInput, ZaloLoginSessionUncheckedUpdateManyWithoutUserInput>
+  }
+
+  export type ZaloLoginSessionScalarWhereInput = {
+    AND?: ZaloLoginSessionScalarWhereInput | ZaloLoginSessionScalarWhereInput[]
+    OR?: ZaloLoginSessionScalarWhereInput[]
+    NOT?: ZaloLoginSessionScalarWhereInput | ZaloLoginSessionScalarWhereInput[]
+    id?: UuidFilter<"ZaloLoginSession"> | string
+    userId?: UuidFilter<"ZaloLoginSession"> | string
+    zaloUid?: StringFilter<"ZaloLoginSession"> | string
+    userProfile?: JsonFilter<"ZaloLoginSession">
+    credentialsEncrypted?: BytesFilter<"ZaloLoginSession"> | Bytes
+    createdAt?: DateTimeFilter<"ZaloLoginSession"> | Date | string
+    updatedAt?: DateTimeFilter<"ZaloLoginSession"> | Date | string
+  }
+
+  export type UserCreateWithoutZaloLoginSessionsInput = {
+    id?: string
+    email: string
+    password: string
+    role: $Enums.UserRole
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserUncheckedCreateWithoutZaloLoginSessionsInput = {
+    id?: string
+    email: string
+    password: string
+    role: $Enums.UserRole
+    isActive?: boolean
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type UserCreateOrConnectWithoutZaloLoginSessionsInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutZaloLoginSessionsInput, UserUncheckedCreateWithoutZaloLoginSessionsInput>
+  }
+
+  export type UserUpsertWithoutZaloLoginSessionsInput = {
+    update: XOR<UserUpdateWithoutZaloLoginSessionsInput, UserUncheckedUpdateWithoutZaloLoginSessionsInput>
+    create: XOR<UserCreateWithoutZaloLoginSessionsInput, UserUncheckedCreateWithoutZaloLoginSessionsInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutZaloLoginSessionsInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutZaloLoginSessionsInput, UserUncheckedUpdateWithoutZaloLoginSessionsInput>
+  }
+
+  export type UserUpdateWithoutZaloLoginSessionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type UserUncheckedUpdateWithoutZaloLoginSessionsInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    email?: StringFieldUpdateOperationsInput | string
+    password?: StringFieldUpdateOperationsInput | string
+    role?: EnumUserRoleFieldUpdateOperationsInput | $Enums.UserRole
+    isActive?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountGroupCreateWithoutGroupInput = {
@@ -15295,6 +17074,42 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     accountMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutGroupNestedInput
+  }
+
+  export type ZaloLoginSessionCreateManyUserInput = {
+    id: string
+    zaloUid: string
+    userProfile: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted: Bytes
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type ZaloLoginSessionUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloLoginSessionUncheckedUpdateWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type ZaloLoginSessionUncheckedUpdateManyWithoutUserInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloUid?: StringFieldUpdateOperationsInput | string
+    userProfile?: JsonNullValueInput | InputJsonValue
+    credentialsEncrypted?: BytesFieldUpdateOperationsInput | Bytes
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountGroupCreateManyGroupInput = {

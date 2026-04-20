@@ -33,7 +33,27 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
+  zaloLoginSessions ZaloLoginSession[]
+
   @@map("users")
+}
+
+/// Persisted Zalo QR session for zca-js (credentials encrypted at rest).
+model ZaloLoginSession {
+  id                    String   @id @db.Uuid
+  userId                String   @map("user_id") @db.Uuid
+  zaloUid               String   @map("zalo_uid") @db.VarChar(255)
+  userProfile           Json     @map("user_profile")
+  credentialsEncrypted  Bytes    @map("credentials_encrypted")
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([zaloUid])
+  @@index([userId, zaloUid])
+  @@map("zalo_login_sessions")
 }
 
 model ZaloGroup {

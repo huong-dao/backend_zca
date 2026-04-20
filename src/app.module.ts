@@ -14,6 +14,7 @@ import { UsersModule } from './modules/users/users.module';
 import { MessagesModule } from './modules/messages/messages.module';
 import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module';
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
+import { ZaloLoginSessionsModule } from './modules/zalo-login-sessions/zalo-login-sessions.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
     MessagesModule,
     ZaloAccountsModule,
     ZaloGroupsModule,
+    ZaloLoginSessionsModule,
   ],
   controllers: [AppController],
   providers: [
