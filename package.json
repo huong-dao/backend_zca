@@ -22,7 +22,9 @@
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
     "prisma:studio": "prisma studio",
-    "prisma:seed": "prisma db seed"
+    "prisma:seed": "prisma db seed",
+    "script:test-add-to-group": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/test-add-user-to-group.ts",
+    "script:find-user-by-phone": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/find-user-by-phone.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

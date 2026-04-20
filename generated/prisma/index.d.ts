@@ -13466,16 +13466,17 @@ export namespace Prisma {
 
   export type ZaloAccountGroupWhereUniqueInput = Prisma.AtLeast<{
     id?: string
-    groupZaloId?: string
+    zaloAccountId_groupId?: ZaloAccountGroupZaloAccountIdGroupIdCompoundUniqueInput
     AND?: ZaloAccountGroupWhereInput | ZaloAccountGroupWhereInput[]
     OR?: ZaloAccountGroupWhereInput[]
     NOT?: ZaloAccountGroupWhereInput | ZaloAccountGroupWhereInput[]
+    groupZaloId?: StringFilter<"ZaloAccountGroup"> | string
     zaloAccountId?: UuidFilter<"ZaloAccountGroup"> | string
     groupId?: UuidFilter<"ZaloAccountGroup"> | string
     joinedAt?: DateTimeFilter<"ZaloAccountGroup"> | Date | string
     zaloAccount?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
     group?: XOR<ZaloGroupScalarRelationFilter, ZaloGroupWhereInput>
-  }, "id" | "groupZaloId">
+  }, "id" | "zaloAccountId_groupId">
 
   export type ZaloAccountGroupOrderByWithAggregationInput = {
     id?: SortOrder
@@ -14912,6 +14913,11 @@ export namespace Prisma {
   export type ZaloGroupScalarRelationFilter = {
     is?: ZaloGroupWhereInput
     isNot?: ZaloGroupWhereInput
+  }
+
+  export type ZaloAccountGroupZaloAccountIdGroupIdCompoundUniqueInput = {
+    zaloAccountId: string
+    groupId: string
   }
 
   export type ZaloAccountGroupCountOrderByAggregateInput = {

@@ -107,13 +107,15 @@ model ZaloAccount {
 
 model ZaloAccountGroup {
   id            String      @id @default(uuid()) @db.Uuid
-  groupZaloId   String      @unique @map("group_zalo_id")
+  groupZaloId   String      @map("group_zalo_id")
   zaloAccountId String      @map("zalo_account_id") @db.Uuid
   groupId       String      @map("group_id") @db.Uuid
   joinedAt      DateTime    @default(now()) @map("joined_at")
   zaloAccount   ZaloAccount @relation(fields: [zaloAccountId], references: [id])
   group         ZaloGroup   @relation(fields: [groupId], references: [id])
 
+  @@unique([zaloAccountId, groupId])
+  @@index([groupZaloId])
   @@map("zalo_account_groups")
 }
 

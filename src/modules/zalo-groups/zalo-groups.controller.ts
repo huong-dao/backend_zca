@@ -13,6 +13,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
 import type { CreateMultipleZaloGroupsResult } from './dto/create-multiple-zalo-groups-result.dto';
 import { FindZaloGroupsDto } from './dto/find-zalo-groups.dto';
+import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 import { ZaloGroupsService } from './zalo-groups.service';
 
@@ -54,6 +55,14 @@ export class ZaloGroupsController {
       await this.zaloGroupsService.createMultiple(id, dto);
 
     return result;
+  }
+
+  @Post(':groupId/invite-member')
+  inviteMemberToGroup(
+    @Param('groupId', new ParseUUIDPipe()) groupId: string,
+    @Body() dto: InviteMemberToZaloGroupDto,
+  ) {
+    return this.zaloGroupsService.inviteMemberToGroup(groupId, dto);
   }
 
   @Put(':id')

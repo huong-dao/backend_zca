@@ -1,12 +1,27 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  Injectable,
+  InternalServerErrorException,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
+import { isDeepStrictEqual } from 'node:util';
+import type { API } from 'zca-js';
+import { ZaloApiError } from 'zca-js';
 import type { Prisma } from '../../../generated/prisma';
+import { createZcaApiFromCredentials, ZcaApiHelper } from '../../zalo';
+import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
+import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
 import type {
   CreateMultipleZaloGroupsResult,
   ZaloGroupRecord,
 } from './dto/create-multiple-zalo-groups-result.dto';
 import { FindZaloGroupsDto } from './dto/find-zalo-groups.dto';
+import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 
 const zaloGroupSelect = {
@@ -81,7 +96,12 @@ type PaginatedZaloGroupByAccountResult = {
 
 @Injectable()
 export class ZaloGroupsService {
-  constructor(private readonly prismaService: PrismaService) {}
+  private readonly logger = new Logger(ZaloGroupsService.name);
+
+  constructor(
+    private readonly prismaService: PrismaService,
+    private readonly loginSessions: ZaloLoginSessionsService,
+  ) {}
 
   async findAll(query: FindZaloGroupsDto) {
     const { page = 1, limit = 20 } = query;
@@ -94,6 +114,12 @@ export class ZaloGroupsService {
         take: limit,
         select: {
           ...zaloGroupSelect,
+          accountMaps: {
+            take: 1,
+            select: {
+              groupZaloId: true,
+            },
+          },
           _count: {
             select: {
               accountMaps: true,
@@ -107,8 +133,18 @@ export class ZaloGroupsService {
       }),
     ]);
 
+    const formattedData = data.map((group) => {
+      const groupZaloId = group.accountMaps?.[0]?.groupZaloId || null;
+      const { accountMaps: _accountMaps, ...rest } = group;
+      void _accountMaps;
+      return {
+        ...rest,
+        groupZaloId,
+      };
+    });
+
     return {
-      data,
+      data: formattedData,
       meta: {
         page,
         limit,
@@ -179,6 +215,127 @@ export class ZaloGroupsService {
     return this.createOrUpdate(dto);
   }
 
+  /**
+   * Invite a child Zalo user into a group using the **master** login session.
+   * Resolves the invitee uid via `findUser(phone)` on that session (friend-graph id), then `addUserToGroup`.
+   */
+  async inviteMemberToGroup(
+    zaloGroupId: string,
+    dto: InviteMemberToZaloGroupDto,
+  ) {
+    await this.ensureGroupExists(zaloGroupId);
+
+    const master = await this.prismaService.zaloAccount.findUnique({
+      where: { id: dto.masterZaloAccountId },
+      select: { id: true, isMaster: true },
+    });
+
+    if (!master) {
+      throw new NotFoundException('Master Zalo account not found.');
+    }
+
+    if (!master.isMaster) {
+      throw new BadRequestException(
+        'masterZaloAccountId must reference a master account (isMaster = true).',
+      );
+    }
+
+    const mapping = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId: dto.masterZaloAccountId,
+        groupId: zaloGroupId,
+      },
+      select: { groupZaloId: true },
+    });
+
+    if (!mapping) {
+      throw new NotFoundException(
+        'This Zalo group is not linked to the given master account (no ZaloAccountGroup mapping).',
+      );
+    }
+
+    let phone = dto.phoneNumber?.trim() ?? '';
+
+    if (dto.childZaloAccountId) {
+      const relation = await this.prismaService.zaloAccountRelation.findFirst({
+        where: {
+          masterId: dto.masterZaloAccountId,
+          childId: dto.childZaloAccountId,
+        },
+        select: { id: true },
+      });
+
+      if (!relation) {
+        throw new BadRequestException(
+          'childZaloAccountId is not registered as a child of this master.',
+        );
+      }
+
+      const child = await this.prismaService.zaloAccount.findUnique({
+        where: { id: dto.childZaloAccountId },
+        select: { phone: true, isMaster: true },
+      });
+
+      if (!child) {
+        throw new NotFoundException('Child Zalo account not found.');
+      }
+
+      if (child.isMaster) {
+        throw new BadRequestException(
+          'childZaloAccountId must not be a master account.',
+        );
+      }
+
+      if (!phone && child.phone?.trim()) {
+        phone = child.phone.trim();
+      }
+    }
+
+    if (!phone) {
+      throw new BadRequestException(
+        'Provide phoneNumber or childZaloAccountId with a stored phone on the child account.',
+      );
+    }
+
+    const { profile, zaloResult } = await this.withZaloSession(
+      dto.sessionId,
+      async (zca) => {
+        const p = await zca.findUser(phone);
+        const r = await zca.addUserToGroup(p.uid, mapping.groupZaloId);
+        return { profile: p, zaloResult: r };
+      },
+    );
+
+    if (!this.isZaloAddUserToGroupSuccess(zaloResult)) {
+      const errMembers = this.extractZaloAddUserErrorMembers(zaloResult);
+      throw new BadRequestException(
+        errMembers.length > 0
+          ? `Zalo addUserToGroup failed for: ${errMembers.join(', ')}`
+          : 'Zalo addUserToGroup did not complete successfully.',
+      );
+    }
+
+    const inviteUid = profile.uid;
+
+    const dbSync = await this.linkChildToGroupInDbAfterInvite({
+      zaloGroupId,
+      groupZaloId: mapping.groupZaloId,
+      childZaloAccountId: dto.childZaloAccountId,
+    });
+
+    return {
+      success: true as const,
+      masterGroupZaloId: mapping.groupZaloId,
+      inviteUid,
+      findUser: {
+        display_name: profile.display_name ?? profile.zalo_name,
+        globalId: profile.globalId,
+      },
+      zalo: zaloResult,
+      dbSync,
+    };
+  }
+
   async createMultiple(
     zaloAccountId: string,
     dto: CreateMultipleZaloGroupsDto,
@@ -216,6 +373,7 @@ export class ZaloGroupsService {
     const existingGroups: Array<{ groupZaloId: string }> =
       await this.prismaService.zaloAccountGroup.findMany({
         where: {
+          zaloAccountId,
           groupZaloId: {
             in: requestedGroupZaloIds,
           },
@@ -321,6 +479,183 @@ export class ZaloGroupsService {
     if (!zaloAccount) {
       throw new NotFoundException('Zalo account not found.');
     }
+  }
+
+  private async withZaloSession<T>(
+    sessionId: string,
+    run: (zca: ZcaApiHelper, api: API) => Promise<T>,
+  ): Promise<T> {
+    const full = await this.loginSessions.findOneFullBySessionId(sessionId);
+    const prevCreds: ZaloSessionCredentialsPayload = full.credentials;
+
+    let api: API;
+    try {
+      api = await createZcaApiFromCredentials(prevCreds);
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Zalo login from stored session failed (sessionId=${sessionId}): ${detail}`,
+        err instanceof Error ? err.stack : undefined,
+      );
+      throw new InternalServerErrorException(
+        `Failed to start Zalo client from session credentials. ${detail}`,
+      );
+    }
+
+    const zca = new ZcaApiHelper(api);
+    try {
+      const out = await run(zca, api);
+      await this.persistRefreshedCredentials(sessionId, api, prevCreds);
+      await this.loginSessions.touchBySessionId(sessionId);
+      return out;
+    } catch (err) {
+      if (err instanceof HttpException) {
+        throw err;
+      }
+      if (err instanceof ZaloApiError) {
+        const code = err.code != null ? `[${err.code}] ` : '';
+        throw new BadRequestException(
+          `${code}${err.message || 'Zalo API rejected the operation.'}`,
+        );
+      }
+      throw new InternalServerErrorException(
+        err instanceof Error ? err.message : 'Zalo API error.',
+      );
+    }
+  }
+
+  private async persistRefreshedCredentials(
+    sessionId: string,
+    api: API,
+    prev: ZaloSessionCredentialsPayload,
+  ): Promise<void> {
+    let nextCookies: Record<string, unknown>[];
+    try {
+      nextCookies = await snapshotSerializedCookiesFromApi(api, prev.cookies);
+    } catch {
+      return;
+    }
+
+    const next: ZaloSessionCredentialsPayload = {
+      imei: prev.imei,
+      userAgent: prev.userAgent,
+      cookies: nextCookies,
+    };
+
+    if (!isDeepStrictEqual(next, prev)) {
+      await this.loginSessions.updateCredentialsForSessionById(sessionId, next);
+    }
+  }
+
+  private isZaloAddUserToGroupSuccess(result: unknown): boolean {
+    if (result == null || typeof result !== 'object') {
+      return false;
+    }
+    const r = result as Record<string, unknown>;
+    const em = r.errorMembers;
+    if (Array.isArray(em) && em.length > 0) {
+      return false;
+    }
+    const ed = r.error_data;
+    if (ed != null && typeof ed === 'object') {
+      for (const v of Object.values(ed as Record<string, unknown>)) {
+        if (Array.isArray(v) && v.length > 0) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private extractZaloAddUserErrorMembers(result: unknown): string[] {
+    if (result == null || typeof result !== 'object') {
+      return [];
+    }
+    const r = result as Record<string, unknown>;
+    const em = r.errorMembers;
+    if (!Array.isArray(em)) {
+      return [];
+    }
+    return em.filter((x): x is string => typeof x === 'string');
+  }
+
+  private async linkChildToGroupInDbAfterInvite(opts: {
+    zaloGroupId: string;
+    groupZaloId: string;
+    childZaloAccountId?: string;
+  }): Promise<{
+    persisted: boolean;
+    created: boolean;
+    reason?: string;
+    childZaloAccountId?: string;
+    groupZaloId?: string;
+    groupId?: string;
+  }> {
+    const { zaloGroupId, groupZaloId, childZaloAccountId: childId } = opts;
+
+    if (!childId) {
+      return {
+        persisted: false,
+        created: false,
+        reason:
+          'No childZaloAccountId: skipped DB link (pass childZaloAccountId to persist after invite).',
+      };
+    }
+
+    const existingSameGroup =
+      await this.prismaService.zaloAccountGroup.findFirst({
+        where: { zaloAccountId: childId, groupId: zaloGroupId },
+      });
+
+    if (existingSameGroup) {
+      await this.refreshZaloAccountGroupCount(childId);
+      return {
+        persisted: true,
+        created: false,
+        reason:
+          'Child already linked to this ZaloGroup in DB; refreshed groupCount only.',
+        childZaloAccountId: childId,
+        groupZaloId: existingSameGroup.groupZaloId,
+        groupId: zaloGroupId,
+      };
+    }
+
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.zaloAccountGroup.create({
+        data: {
+          groupZaloId,
+          zaloAccountId: childId,
+          groupId: zaloGroupId,
+        },
+      });
+      const groupCount = await tx.zaloAccountGroup.count({
+        where: { zaloAccountId: childId },
+      });
+      await tx.zaloAccount.update({
+        where: { id: childId },
+        data: { groupCount },
+      });
+    });
+
+    return {
+      persisted: true,
+      created: true,
+      childZaloAccountId: childId,
+      groupZaloId,
+      groupId: zaloGroupId,
+    };
+  }
+
+  private async refreshZaloAccountGroupCount(
+    zaloAccountId: string,
+  ): Promise<void> {
+    const groupCount = await this.prismaService.zaloAccountGroup.count({
+      where: { zaloAccountId },
+    });
+    await this.prismaService.zaloAccount.update({
+      where: { id: zaloAccountId },
+      data: { groupCount },
+    });
   }
 
   private async createOrUpdate(dto: UpsertZaloGroupDto, id?: string) {
