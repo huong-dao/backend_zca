@@ -1,8 +1,10 @@
 # Zalo login sessions API
 
-Persist Zalo QR sessions (`zca-js`) per CMS user. Session **id** is a UUID aligned with Next.js cookies (`zca_zalo_session` / `zca_zalo_sessions`). **Credentials** (cookies, imei, userAgent) are stored encrypted (AES-256-GCM); they are never included in the list endpoint.
+Persist Zalo QR sessions (`zca-js`). Session **id** is a UUID aligned with Next.js cookies (`zca_zalo_session` / `zca_zalo_sessions`). **Credentials** (cookies, imei, userAgent) are stored encrypted (AES-256-GCM); they are never included in the list endpoint.
 
-**Auth:** JWT (cookie `access_token` or `Authorization: Bearer`) — same as other app routes. Only the **BFF / server** should call endpoints that return `credentials`.
+**Shared pool:** any authenticated CMS user may use **any** existing `sessionId` (list, full session for BFF, `/zalo/actions/*`, touch, delete). Access is **not** restricted by which user created the row; `userId` on the row is for audit / FK on create only.
+
+**Auth:** JWT (cookie `access_token` or `Authorization: Bearer`) — anonymous requests are rejected. Only the **BFF / server** should call endpoints that return `credentials`.
 
 **Env:** set `ZALO_SESSION_ENCRYPTION_KEY` to **64 hexadecimal characters** (32 bytes). If unset, a dev-only default key is used (not safe for production).
 
@@ -128,13 +130,13 @@ Bumps `updatedAt` (and any Prisma `@updatedAt` behavior) after a successful Zalo
 
 ## `DELETE /zalo-sessions/:sessionId`
 
-Deletes one session (`404` if not found or not owned).
+Deletes one session (`404` if not found). Any authenticated USER/ADMIN.
 
 ---
 
 ## `DELETE /zalo-sessions`
 
-Deletes all sessions for the current user.
+Deletes **all** Zalo sessions in the system. **`ADMIN` role only** (USER gets `403`).
 
 **Response** `200`:
 

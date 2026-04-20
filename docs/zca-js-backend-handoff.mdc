@@ -1,0 +1,75 @@
+---
+description: Bản đồ zca-js trên backend — Next chỉ còn loginQR; hợp đồng REST proxy `/zalo/actions/*`.
+globs: lib/zalo/server.ts,lib/api/zalo-actions.ts,app/api/zalo/**/*.ts
+---
+
+# zca-js trên backend (handoff)
+
+## Phạm vi Next.js (frontend_zca)
+
+| Thành phần | Vai trò |
+|------------|---------|
+| **`lib/zalo/server.ts`** | **Chỉ** luồng `loginQR`: `Zalo.loginQR`, callback QR, `fetchAccountInfo`, chuẩn hoá `credentials`, **`POST /zalo-sessions`** (upsert session sau khi đăng nhập). Không còn `new Zalo` + `login(cookie)` cho thao tác nghiệp vụ. |
+| **`lib/api/zalo-actions.ts`** | BFF proxy sang backend: **`/zalo/actions/*`** (cùng `NEXT_PUBLIC_API_BASE_URL`). |
+| **`lib/zalo/public-session.ts`** | Đọc phiên **public** qua **`GET /zalo-sessions`** (không credentials, không zca-js trên Next). |
+| **`lib/api/zalo-sessions.ts`** | CRUD session trên backend (`/zalo-sessions`…). Chi tiết: `zalo-sessions-api.md`. |
+
+Gói **`zca-js`** vẫn là dependency của Next **vì login QR**; `next.config` `serverExternalPackages: ["zca-js"]` giữ nguyên.
+
+---
+
+## Các API zca-js đã dùng trước đây trên Next (chuyển hết sang backend)
+
+Backend cần: lấy **`ActiveZaloSession` / credentials** theo `sessionId` từ DB (user đã xác thực app), khởi tạo client zca-js (`login` với cookie), gọi method tương ứng, cập nhật cookie jar nếu thư viện trả về session mới, và **nên** gọi **`PATCH /zalo-sessions/:sessionId/touch`** sau khi gọi Zalo thành công (tuỳ chính sách backend).
+
+| zca-js (trên instance đã login) | Mục đích | Proxy Next → backend |
+|---------------------------------|----------|----------------------|
+| `api.findUser(phoneNumber)` | Tì user theo SĐT | `POST /zalo/actions/find-user` body `{ sessionId, phoneNumber }` → `{ user }` (cùng kiểu `FindUserResponse`) |
+| `api.getQR(userId)` | Lấy QR theo user id | `POST /zalo/actions/get-qr` body `{ sessionId, userId }` → `{ qrCodes }` |
+| `api.sendFriendRequest(message, userId)` | Gửi lời mời kết bạn | `POST /zalo/actions/send-friend-request` body `{ sessionId, userId, message? }` → `{ success: true }` |
+| `api.getFriendRequestStatus(friendId)` | Trạng thái kết bạn / lời mời | `POST /zalo/actions/friend-request-status` body `{ sessionId, friendId }` → body giống `GetFriendRequestStatusResponse` |
+| `api.removeFriend(friendId)` | Huỷ kết bạn | `POST /zalo/actions/remove-friend` body `{ sessionId, friendId }` → `{ result: string }` (có thể `""`) |
+| `api.getAllGroups()` | Danh sách nhóm | `GET /zalo/actions/groups?sessionId=...` → `{ groups }` (cùng hình dạng `GetAllGroupsResponse` / kết quả zca-js) |
+| `api.getGroupInfo(groupId)` | Chi tiết nhóm | `POST /zalo/actions/group-info` body `{ sessionId, groupId }` → `{ groupInfo }` |
+
+**Lưu ý:** `loginQR` **không** nằm trong bảng trên — chỉ chạy trên Next (`server.ts`).
+
+---
+
+## Hợp đồng gợi ý (backend)
+
+- **Auth:** giống các route khác — JWT / cookie `access_token` (forward từ Next qua `serverApiRequest`).
+- **`sessionId`:** UUID trùng bản ghi `zalo-sessions` trong DB. **Pool dùng chung:** mọi user JWT hợp lệ có thể dùng mọi `sessionId` còn tồn tại; backend chỉ từ chối nếu **không có** bản ghi (hoặc decrypt lỗi).
+- **Lỗi:** HTTP 4xx/5xx + JSON `{ message: string }` (tương thích `ApiError` trên Next).
+
+---
+
+## Route Handler Next tương ứng (chỉ proxy + kiểm tra phiên public)
+
+| File | Ghi chú |
+|------|---------|
+| `app/api/zalo/find-user` | `getPublicSession` + `backendFindUserByPhone` |
+| `app/api/zalo/get-qr` | `backendGetQrByUserId` |
+| `app/api/zalo/send-friend-request` | `backendSendFriendRequest` |
+| `app/api/zalo/get-friend-request-status` | `backendGetFriendRequestStatus` |
+| `app/api/zalo/remove-friend` | `backendRemoveFriend` |
+| `app/api/zalo/get-all-groups` | `backendGetAllGroups` |
+| `app/api/zalo/get-group-info` | `backendGetGroupInfo` |
+| `app/api/zalo/session` | `GET /zalo-sessions` — danh sách public, đồng bộ cookie |
+| `app/api/zalo/login-qr/*` | **Không đổi** — gọi `startQrLogin` / `getQrLoginStatus` trong `server.ts` |
+
+---
+
+## Kiểm tra sau khi backend triển khai
+
+1. Đăng nhập app + QR Zalo → session có trong DB (`POST /zalo-sessions` từ Next).
+2. Gọi từ UI từng hành động (tìm SĐT, nhóm, kết bạn…) — Network: Next `/api/zalo/...` → backend `/zalo/actions/...` trả 200.
+3. Next **không** còn import `createApiFromSession` / `Zalo` ngoài `server.ts` (login QR).
+
+---
+
+## Backend (Nest `backend_zca`) — đã triển khai
+
+- Module: `ZaloActionsModule` — `POST/GET` dưới **`/zalo/actions/*`**, JWT giống route khác.
+- Sau mỗi lệnh gọi Zalo thành công: đồng bộ cookie jar vào DB (nếu đổi) + `touch` session.
+- Chi tiết: `src/modules/zalo-actions/` (controller, service, DTO).

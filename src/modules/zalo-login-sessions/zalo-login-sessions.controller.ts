@@ -14,6 +14,10 @@ import type { AuthenticatedUser } from '../../common/utils/authenticated-user';
 import { UpsertZaloLoginSessionDto } from './dto/upsert-zalo-login-session.dto';
 import { ZaloLoginSessionsService } from './zalo-login-sessions.service';
 
+/**
+ * Zalo sessions are a shared pool: any authenticated USER/ADMIN may read/update/delete
+ * a session by id. Bulk delete (`DELETE /zalo-sessions`) is **ADMIN only**.
+ */
 @Roles('ADMIN', 'USER')
 @Controller('zalo-sessions')
 export class ZaloLoginSessionsController {
@@ -28,44 +32,34 @@ export class ZaloLoginSessionsController {
   }
 
   @Get()
-  list(@CurrentUser() user: AuthenticatedUser) {
-    return this.zaloLoginSessionsService.listForUser(user.id);
+  list() {
+    return this.zaloLoginSessionsService.listAll();
   }
 
   @Delete()
-  deleteAll(@CurrentUser() user: AuthenticatedUser) {
-    return this.zaloLoginSessionsService.deleteAllForUser(user.id);
+  @Roles('ADMIN')
+  deleteAll() {
+    return this.zaloLoginSessionsService.deleteAllSessions();
   }
 
   @Get('by-zalo-uid/:zaloUid')
-  findByZaloUid(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('zaloUid') zaloUid: string,
-  ) {
-    return this.zaloLoginSessionsService.findLatestByZaloUid(user.id, zaloUid);
+  findByZaloUid(@Param('zaloUid') zaloUid: string) {
+    return this.zaloLoginSessionsService.findLatestByZaloUid(zaloUid);
   }
 
   @Patch(':sessionId/touch')
-  touch(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-  ) {
-    return this.zaloLoginSessionsService.touch(user.id, sessionId);
+  touch(@Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string) {
+    return this.zaloLoginSessionsService.touchBySessionId(sessionId);
   }
 
   @Get(':sessionId')
-  findOneFull(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-  ) {
-    return this.zaloLoginSessionsService.findOneFull(user.id, sessionId);
+  findOneFull(@Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string) {
+    return this.zaloLoginSessionsService.findOneFullBySessionId(sessionId);
   }
 
   @Delete(':sessionId')
-  remove(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
-  ) {
-    return this.zaloLoginSessionsService.deleteOne(user.id, sessionId);
+  @Roles('ADMIN')
+  remove(@Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string) {
+    return this.zaloLoginSessionsService.deleteOneBySessionId(sessionId);
   }
 }

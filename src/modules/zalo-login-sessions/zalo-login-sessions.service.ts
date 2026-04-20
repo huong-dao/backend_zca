@@ -1,6 +1,5 @@
 import { randomUUID } from 'node:crypto';
 import {
-  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -44,17 +43,15 @@ export class ZaloLoginSessionsService {
     private readonly crypto: ZaloSessionCryptoService,
   ) {}
 
+  /**
+   * Sessions are a shared pool: any authenticated app user may upsert by id.
+   * `appUserId` is still stored on create for audit / FK; access is not scoped by it.
+   */
   async upsert(
     appUserId: string,
     dto: UpsertZaloLoginSessionDto,
   ): Promise<ZaloLoginSessionPublic> {
     const sessionId = dto.id ?? randomUUID();
-    const existing = await this.prisma.zaloLoginSession.findUnique({
-      where: { id: sessionId },
-    });
-    if (existing && existing.userId !== appUserId) {
-      throw new ForbiddenException('Session belongs to another user.');
-    }
 
     const userProfile = this.normalizeUserProfile(dto);
     const encrypted = Uint8Array.from(this.crypto.encryptJson(dto.credentials));
@@ -84,68 +81,69 @@ export class ZaloLoginSessionsService {
     return this.toPublic(row);
   }
 
-  async listForUser(appUserId: string): Promise<{ sessions: ZaloLoginSessionPublic[] }> {
+  /** All sessions (shared resource); caller must enforce JWT. */
+  async listAll(): Promise<{ sessions: ZaloLoginSessionPublic[] }> {
     const rows = await this.prisma.zaloLoginSession.findMany({
-      where: { userId: appUserId },
       orderBy: { updatedAt: 'desc' },
     });
     return { sessions: rows.map((r) => this.toPublic(r)) };
   }
 
-  async findOneFull(
-    appUserId: string,
-    sessionId: string,
-  ): Promise<ZaloLoginSessionFull> {
-    const row = await this.prisma.zaloLoginSession.findFirst({
-      where: { id: sessionId, userId: appUserId },
+  /**
+   * Resolve session only from DB by id. No per-user ownership check.
+   */
+  async findOneFullBySessionId(sessionId: string): Promise<ZaloLoginSessionFull> {
+    const row = await this.prisma.zaloLoginSession.findUnique({
+      where: { id: sessionId },
     });
     if (!row) {
       throw new NotFoundException('Zalo session not found.');
     }
-    let credentials: ZaloSessionCredentialsPayload;
-    try {
-      credentials = this.crypto.decryptJson<ZaloSessionCredentialsPayload>(
-        Buffer.from(row.credentialsEncrypted as Uint8Array),
-      );
-    } catch {
-      throw new InternalServerErrorException('Failed to decrypt session credentials.');
-    }
-    return { ...this.toPublic(row), credentials };
+    return this.rowToFull(row);
   }
 
-  async findLatestByZaloUid(
-    appUserId: string,
-    zaloUid: string,
-  ): Promise<ZaloLoginSessionFull> {
+  async findLatestByZaloUid(zaloUid: string): Promise<ZaloLoginSessionFull> {
     const row = await this.prisma.zaloLoginSession.findFirst({
-      where: { userId: appUserId, zaloUid },
+      where: { zaloUid },
       orderBy: { updatedAt: 'desc' },
     });
     if (!row) {
       throw new NotFoundException('No session for this Zalo uid.');
     }
-    return this.findOneFull(appUserId, row.id);
+    return this.rowToFull(row);
   }
 
-  async deleteOne(appUserId: string, sessionId: string): Promise<void> {
+  async deleteOneBySessionId(sessionId: string): Promise<void> {
     const result = await this.prisma.zaloLoginSession.deleteMany({
-      where: { id: sessionId, userId: appUserId },
+      where: { id: sessionId },
     });
     if (result.count === 0) {
       throw new NotFoundException('Zalo session not found.');
     }
   }
 
-  async deleteAllForUser(appUserId: string): Promise<{ deleted: number }> {
-    const result = await this.prisma.zaloLoginSession.deleteMany({
-      where: { userId: appUserId },
-    });
+  async deleteAllSessions(): Promise<{ deleted: number }> {
+    const result = await this.prisma.zaloLoginSession.deleteMany({});
     return { deleted: result.count };
   }
 
-  async touch(appUserId: string, sessionId: string): Promise<ZaloLoginSessionPublic> {
-    const row = await this.prisma.zaloLoginSession.findFirst({
-      where: { id: sessionId, userId: appUserId },
+  async updateCredentialsForSessionById(
+    sessionId: string,
+    credentials: ZaloSessionCredentialsPayload,
+  ): Promise<void> {
+    const encrypted = Uint8Array.from(this.crypto.encryptJson(credentials));
+    const result = await this.prisma.zaloLoginSession.updateMany({
+      where: { id: sessionId },
+      data: { credentialsEncrypted: encrypted },
+    });
+    if (result.count === 0) {
+      throw new NotFoundException('Zalo session not found.');
+    }
+  }
+
+  async touchBySessionId(sessionId: string): Promise<ZaloLoginSessionPublic> {
+    const row = await this.prisma.zaloLoginSession.findUnique({
+      where: { id: sessionId },
     });
     if (!row) {
       throw new NotFoundException('Zalo session not found.');
@@ -155,6 +153,24 @@ export class ZaloLoginSessionsService {
       data: {},
     });
     return this.toPublic(updated);
+  }
+
+  private rowToFull(row: {
+    id: string;
+    userProfile: Prisma.JsonValue;
+    credentialsEncrypted: Uint8Array;
+    createdAt: Date;
+    updatedAt: Date;
+  }): ZaloLoginSessionFull {
+    let credentials: ZaloSessionCredentialsPayload;
+    try {
+      credentials = this.crypto.decryptJson<ZaloSessionCredentialsPayload>(
+        Buffer.from(row.credentialsEncrypted as Uint8Array),
+      );
+    } catch {
+      throw new InternalServerErrorException('Failed to decrypt session credentials.');
+    }
+    return { ...this.toPublic(row), credentials };
   }
 
   private normalizeUserProfile(dto: UpsertZaloLoginSessionDto): ZaloSessionUserProfile {
