@@ -86,7 +86,6 @@ export class ZaloLoginSessionsService {
     const rows = await this.prisma.zaloLoginSession.findMany({
       orderBy: { updatedAt: 'desc' },
     });
-    console.log(rows);
     return { sessions: rows.map((r) => this.toPublic(r)) };
   }
 
