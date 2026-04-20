@@ -2,6 +2,7 @@ import {
   HttpException,
   Injectable,
   InternalServerErrorException,
+  Logger,
 } from '@nestjs/common';
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
@@ -17,6 +18,8 @@ import type { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dt
 
 @Injectable()
 export class ZaloActionsService {
+  private readonly logger = new Logger(ZaloActionsService.name);
+
   constructor(private readonly loginSessions: ZaloLoginSessionsService) {}
 
   async findUser(dto: ZaloFindUserDto) {
@@ -78,9 +81,14 @@ export class ZaloActionsService {
     let api: API;
     try {
       api = await createZcaApiFromCredentials(prevCreds);
-    } catch {
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : String(err);
+      this.logger.error(
+        `Zalo login from stored session failed (sessionId=${sessionId}): ${detail}`,
+        err instanceof Error ? err.stack : undefined,
+      );
       throw new InternalServerErrorException(
-        'Failed to start Zalo client from session credentials.',
+        `Failed to start Zalo client from session credentials. ${detail}`,
       );
     }
 
