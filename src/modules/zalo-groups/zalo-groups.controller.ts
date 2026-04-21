@@ -57,12 +57,9 @@ export class ZaloGroupsController {
     return result;
   }
 
-  @Post(':groupId/invite-member')
-  inviteMemberToGroup(
-    @Param('groupId', new ParseUUIDPipe()) groupId: string,
-    @Body() dto: InviteMemberToZaloGroupDto,
-  ) {
-    return this.zaloGroupsService.inviteMemberToGroup(groupId, dto);
+  @Post('invite-member')
+  inviteMemberToGroup(@Body() dto: InviteMemberToZaloGroupDto) {
+    return this.zaloGroupsService.inviteMemberToGroup(dto);
   }
 
   @Put(':id')
