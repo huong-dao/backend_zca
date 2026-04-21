@@ -3,7 +3,6 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { MessageStatus } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -137,7 +136,7 @@ export class MessagesService {
         cliMsgId,
         uidFrom: zaloUid,
         sentAt: new Date(),
-        status: MessageStatus.SENT,
+        status: 'SENT',
       },
       select: {
         id: true,
