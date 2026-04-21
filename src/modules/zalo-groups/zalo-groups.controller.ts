@@ -1,9 +1,11 @@
 import {
   Body,
   Controller,
+  DefaultValuePipe,
   Delete,
   Get,
   Param,
+  ParseIntPipe,
   ParseUUIDPipe,
   Post,
   Put,
@@ -12,7 +14,10 @@ import {
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
 import type { CreateMultipleZaloGroupsResult } from './dto/create-multiple-zalo-groups-result.dto';
-import { FindZaloGroupsDto } from './dto/find-zalo-groups.dto';
+import {
+  FindZaloGroupsByAccountQuery,
+  FindZaloGroupsDto,
+} from './dto/find-zalo-groups.dto';
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 import { ZaloGroupsService } from './zalo-groups.service';
@@ -36,8 +41,11 @@ export class ZaloGroupsController {
   @Get('account/:id')
   findAllByZaloAccountId(
     @Param('id', new ParseUUIDPipe()) id: string,
-    @Query() query: FindZaloGroupsDto,
+    @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
+    @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
+    @Query('group_name') group_name?: string,
   ) {
+    const query: FindZaloGroupsByAccountQuery = { page, limit, group_name };
     return this.zaloGroupsService.findAllByZaloAccountId(id, query);
   }
 

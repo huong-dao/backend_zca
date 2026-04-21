@@ -13,12 +13,11 @@ export class FindZaloGroupsDto {
   @IsInt()
   @Min(1)
   limit: number = 20;
-
-  /**
-   * Only used by `GET /zalo-groups/account/:id`. When set (non-empty after trim), filters linked groups
-   * whose `group_name` contains this substring (case-insensitive). Omitted or blank: no name filter.
-   */
-  @IsOptional()
-  @IsString()
-  group_name?: string;
 }
+
+/** Built in the controller for `GET /zalo-groups/account/:id` (not validated as a single `@Query()` object). */
+export type FindZaloGroupsByAccountQuery = {
+  page: number;
+  limit: number;
+  group_name?: string;
+};

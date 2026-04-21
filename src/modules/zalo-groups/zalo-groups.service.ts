@@ -20,7 +20,10 @@ import type {
   CreateMultipleZaloGroupsResult,
   ZaloGroupRecord,
 } from './dto/create-multiple-zalo-groups-result.dto';
-import { FindZaloGroupsDto } from './dto/find-zalo-groups.dto';
+import {
+  FindZaloGroupsByAccountQuery,
+  FindZaloGroupsDto,
+} from './dto/find-zalo-groups.dto';
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 
@@ -174,9 +177,12 @@ export class ZaloGroupsService {
 
   async findAllByZaloAccountId(
     zaloAccountId: string,
-    query: FindZaloGroupsDto,
+    query: FindZaloGroupsByAccountQuery,
   ): Promise<PaginatedZaloGroupByAccountResult> {
     const { page = 1, limit = 20 } = query;
+    if (page < 1 || limit < 1) {
+      throw new BadRequestException('page and limit must be at least 1.');
+    }
     const skip = (page - 1) * limit;
 
     await this.ensureZaloAccountExists(zaloAccountId);
