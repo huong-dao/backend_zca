@@ -7,7 +7,11 @@ import {
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ThreadType } from 'zca-js';
-import { createZcaApiFromCredentials, ZcaApiHelper } from '../../zalo';
+import {
+  badRequestForZaloSessionRestoreFailure,
+  createZcaApiFromCredentials,
+  ZcaApiHelper,
+} from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -101,9 +105,7 @@ export class ZaloActionsService {
         `Zalo login from stored session failed (sessionId=${sessionId}): ${detail}`,
         err instanceof Error ? err.stack : undefined,
       );
-      throw new InternalServerErrorException(
-        `Failed to start Zalo client from session credentials. ${detail}`,
-      );
+      throw badRequestForZaloSessionRestoreFailure(detail);
     }
 
     const zca = new ZcaApiHelper(api);

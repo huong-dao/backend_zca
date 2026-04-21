@@ -12,7 +12,10 @@ import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
 import type { Prisma } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import { createZcaApiFromCredentials } from '../../zalo/create-zca-api';
+import {
+  badRequestForZaloSessionRestoreFailure,
+  createZcaApiFromCredentials,
+} from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import { ZcaApiHelper } from '../../zalo/zca-api.helper';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -1089,9 +1092,7 @@ export class ZaloAccountsService {
         `Zalo login failed for zaloUid=${zaloUid} sessionId=${sessionId}: ${detail}`,
         err instanceof Error ? err.stack : undefined,
       );
-      throw new InternalServerErrorException(
-        `Failed to start Zalo client for account (zaloUid ${zaloUid}). ${detail}`,
-      );
+      throw badRequestForZaloSessionRestoreFailure(detail);
     }
 
     const zca = new ZcaApiHelper(api);

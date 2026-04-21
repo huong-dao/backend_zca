@@ -1,3 +1,4 @@
+export { badRequestForZaloSessionRestoreFailure } from './bad-request-zalo-session-restore';
 export {
   createZcaApiFromCredentials,
   createZcaApiHelperFromCredentials,

@@ -10,7 +10,11 @@ import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
 import type { Prisma } from '../../../generated/prisma';
-import { createZcaApiFromCredentials, ZcaApiHelper } from '../../zalo';
+import {
+  badRequestForZaloSessionRestoreFailure,
+  createZcaApiFromCredentials,
+  ZcaApiHelper,
+} from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -547,9 +551,7 @@ export class ZaloGroupsService {
         `Zalo login from stored session failed (sessionId=${sessionId}): ${detail}`,
         err instanceof Error ? err.stack : undefined,
       );
-      throw new InternalServerErrorException(
-        `Failed to start Zalo client from session credentials. ${detail}`,
-      );
+      throw badRequestForZaloSessionRestoreFailure(detail);
     }
 
     const zca = new ZcaApiHelper(api);
