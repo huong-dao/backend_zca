@@ -592,6 +592,15 @@ Used in **Message Module**:
    - group
    - timestamp
 
+#### Backend (this repo)
+
+- **Helper:** `ZcaApiHelper.prototype.sendMessage` in `src/zalo/zca-api.helper.ts` — thin wrapper around `api.sendMessage(message, threadId, type)` from zca-js. Re-export: `ThreadType` from the same module (and `src/zalo/index.ts`).
+- **HTTP (stored QR session):** `POST /zalo/actions/send-message` with JSON body:
+  - `sessionId` (UUID) — `zalo_login_sessions.id`
+  - `text` (string) — plain text only; for `MessageContent` (mentions, styles, attachments), call `ZcaApiHelper.sendMessage` from Nest code with a `MessageContent` object.
+  - `threadId` (string) — target user or group id for the session
+  - `threadType` (optional) — `ThreadType` enum from zca-js; **omit = `ThreadType.Group`** for this endpoint (DM: set `ThreadType.User` explicitly)
+
 ---
 
 ## API: deleteMessage

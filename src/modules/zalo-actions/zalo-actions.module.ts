@@ -7,5 +7,6 @@ import { ZaloActionsService } from './zalo-actions.service';
   imports: [ZaloLoginSessionsModule],
   controllers: [ZaloActionsController],
   providers: [ZaloActionsService],
+  exports: [ZaloActionsService],
 })
 export class ZaloActionsModule {}

@@ -6,6 +6,7 @@ import { ZaloGetQrDto } from './dto/zalo-get-qr.dto';
 import { ZaloGroupInfoDto } from './dto/zalo-group-info.dto';
 import { ZaloGroupsQueryDto } from './dto/zalo-groups-query.dto';
 import { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dto';
+import { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
 import { ZaloActionsService } from './zalo-actions.service';
 
 /** Shared Zalo sessions: JWT required; sessionId is not scoped to current user. */
@@ -47,5 +48,10 @@ export class ZaloActionsController {
   @Post('group-info')
   getGroupInfo(@Body() dto: ZaloGroupInfoDto) {
     return this.zaloActionsService.getGroupInfo(dto);
+  }
+
+  @Post('send-message')
+  sendMessage(@Body() dto: ZaloSendMessageDto) {
+    return this.zaloActionsService.sendMessage(dto);
   }
 }

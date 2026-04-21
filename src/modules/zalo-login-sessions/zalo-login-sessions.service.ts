@@ -113,6 +113,26 @@ export class ZaloLoginSessionsService {
     return this.rowToFull(row);
   }
 
+  /**
+   * Latest stored session for this app user and Zalo uid (e.g. child `zalo_accounts.zalo_id`
+   * matching `zalo_login_sessions.zalo_uid`).
+   */
+  async findLatestFullForAppUserAndZaloUid(
+    appUserId: string,
+    zaloUid: string,
+  ): Promise<ZaloLoginSessionFull> {
+    const row = await this.prisma.zaloLoginSession.findFirst({
+      where: { userId: appUserId, zaloUid },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (!row) {
+      throw new NotFoundException(
+        'No Zalo login session for this user and child Zalo account. Log in with QR for that account first.',
+      );
+    }
+    return this.rowToFull(row);
+  }
+
   async deleteOneBySessionId(sessionId: string): Promise<void> {
     const result = await this.prisma.zaloLoginSession.deleteMany({
       where: { id: sessionId },

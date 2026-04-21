@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
+import { ThreadType } from 'zca-js';
 import { createZcaApiFromCredentials, ZcaApiHelper } from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -15,6 +16,7 @@ import type { ZaloFriendActionDto } from './dto/zalo-friend-action.dto';
 import type { ZaloGetQrDto } from './dto/zalo-get-qr.dto';
 import type { ZaloGroupInfoDto } from './dto/zalo-group-info.dto';
 import type { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dto';
+import type { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
 
 @Injectable()
 export class ZaloActionsService {
@@ -68,6 +70,18 @@ export class ZaloActionsService {
     return this.withSession(dto.sessionId, async (zca) => {
       const groupInfo = await zca.getGroupInfo(dto.groupId);
       return { groupInfo };
+    });
+  }
+
+  async sendMessage(dto: ZaloSendMessageDto) {
+    return this.withSession(dto.sessionId, async (zca) => {
+      const threadType = dto.threadType ?? ThreadType.Group;
+      const result = await zca.sendMessage(
+        dto.text.trim(),
+        dto.threadId.trim(),
+        threadType,
+      );
+      return { result };
     });
   }
 
