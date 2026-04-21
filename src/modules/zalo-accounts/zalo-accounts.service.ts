@@ -206,6 +206,7 @@ type FindOneAccountResponse = ZaloAccountBaseRecord & {
     group: {
       id: string;
       groupName: string;
+      originName: string | null;
     };
   }>;
   friends: ZaloAccountFriendSummary[];
@@ -247,6 +248,7 @@ type FindOneAccountRecord = ZaloAccountBaseRecord & {
     group: {
       id: string;
       groupName: string;
+      originName: string | null;
     };
   }>;
   friends: Array<{
@@ -600,6 +602,7 @@ export class ZaloAccountsService {
                 select: {
                   id: true,
                   groupName: true,
+                  originName: true,
                 },
               },
             },

@@ -55,6 +55,7 @@ export class MessagesService {
             select: {
               id: true,
               groupName: true,
+              originName: true,
             },
           },
         },
@@ -109,7 +110,7 @@ export class MessagesService {
         zaloAccountId: dto.zaloAccountId,
         groupId: dto.groupId,
       },
-      select: { groupZaloId: true },
+      select: { id: true },
     });
 
     if (!mapping) {
@@ -118,12 +119,23 @@ export class MessagesService {
       );
     }
 
-    const groupZaloId = mapping.groupZaloId.trim();
-    if (!groupZaloId) {
-      throw new BadRequestException(
-        'Stored group_zalo_id for this mapping is empty; fix zalo_account_groups for this child.',
-      );
+    const zaloGroup = await this.prismaService.zaloGroup.findUnique({
+      where: { id: dto.groupId },
+      select: { originName: true, groupName: true },
+    });
+
+    if (!zaloGroup) {
+      throw new NotFoundException('Zalo group not found.');
     }
+
+    const { groups } = await this.zaloActionsService.getAllGroups(session.id);
+    const gridVerMap = groups?.gridVerMap ?? {};
+
+    const groupZaloId = MessagesService.resolveChildGroupZaloIdFromGridVerMap(
+      gridVerMap,
+      zaloGroup.originName,
+      zaloGroup.groupName,
+    );
 
     const { result } = await this.zaloActionsService.sendMessage({
       sessionId: session.id,
@@ -160,6 +172,49 @@ export class MessagesService {
     });
 
     return { result, message: messageRow };
+  }
+
+  /**
+   * `zalo_account_groups.group_zalo_id` may reflect another account’s context (e.g. master).
+   * For sendMessage, thread id must come from this child’s `getAllGroups().gridVerMap`:
+   * key = Zalo group id for the child, value = name to match against DB `originName` (else `groupName`).
+   */
+  private static resolveChildGroupZaloIdFromGridVerMap(
+    gridVerMap: Record<string, string>,
+    originName: string | null,
+    groupName: string,
+  ): string {
+    const needle =
+      (originName?.trim() && originName.trim().length > 0
+        ? originName.trim()
+        : groupName.trim()) || '';
+
+    if (!needle) {
+      throw new BadRequestException(
+        'ZaloGroup has no originName or groupName to match against the child session group list.',
+      );
+    }
+
+    const matchedIds: string[] = [];
+    for (const [zaloGroupId, label] of Object.entries(gridVerMap)) {
+      if (String(label).trim() === needle) {
+        matchedIds.push(zaloGroupId);
+      }
+    }
+
+    if (matchedIds.length === 0) {
+      throw new BadRequestException(
+        'This child Zalo session has no group whose name matches this ZaloGroup origin name. Sync groups or check getAllGroups.',
+      );
+    }
+
+    if (matchedIds.length > 1) {
+      throw new BadRequestException(
+        `Multiple child groups match name "${needle}"; cannot pick a unique thread id for sendMessage.`,
+      );
+    }
+
+    return matchedIds[0]!.trim();
   }
 
   /** Best-effort parse of zca-js `sendMessage` return (shape may vary by version). */

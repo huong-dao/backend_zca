@@ -143,6 +143,8 @@ exports.Prisma.ZaloLoginSessionScalarFieldEnum = {
 exports.Prisma.ZaloGroupScalarFieldEnum = {
   id: 'id',
   groupName: 'groupName',
+  globalId: 'globalId',
+  originName: 'originName',
   isUpdateName: 'isUpdateName',
   createdAt: 'createdAt',
   updatedAt: 'updatedAt'

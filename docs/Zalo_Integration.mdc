@@ -122,7 +122,7 @@ console.log(zaloId);
 ### Description
 Retrieve the list of all Zalo groups that the current account has joined.
 
-This API returns metadata about groups, including group IDs, which can be used to fetch detailed group information.
+The response includes a version string and a map from each joined group’s **group id** to that group’s **origin name** (`origin_name`): the name Zalo associates with that group in this payload (useful for syncing with your DB `origin_name` / display).
 
 ---
 
@@ -138,20 +138,29 @@ api.getAllGroups()
 ---
 
 ### Return
-{
+
+TypeScript shape (matches typical zca-js usage; alias as needed in your project):
+
+```ts
+export type GetAllGroupsResponse = {
   version: string;
+  /** Keys: Zalo `groupId`. Values: that group’s `origin_name` string. */
   gridVerMap: {
     [groupId: string]: string;
   };
-}
+};
+```
+
+- `version`: protocol / list version from Zalo.
+- `gridVerMap`: map of **`groupId` → `origin_name`** (value is the origin name string for that group).
 
 ---
 
 ### Example
 
 ```ts
-const groups = await api.getAllGroups();
-console.log(groups);
+const groups: GetAllGroupsResponse = await api.getAllGroups();
+console.log(groups.version, groups.gridVerMap);
 ```
 
 ## API: getUserInfo

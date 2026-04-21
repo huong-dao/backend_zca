@@ -4073,6 +4073,8 @@ export namespace Prisma {
   export type ZaloGroupMinAggregateOutputType = {
     id: string | null
     groupName: string | null
+    globalId: string | null
+    originName: string | null
     isUpdateName: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4081,6 +4083,8 @@ export namespace Prisma {
   export type ZaloGroupMaxAggregateOutputType = {
     id: string | null
     groupName: string | null
+    globalId: string | null
+    originName: string | null
     isUpdateName: boolean | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -4089,6 +4093,8 @@ export namespace Prisma {
   export type ZaloGroupCountAggregateOutputType = {
     id: number
     groupName: number
+    globalId: number
+    originName: number
     isUpdateName: number
     createdAt: number
     updatedAt: number
@@ -4099,6 +4105,8 @@ export namespace Prisma {
   export type ZaloGroupMinAggregateInputType = {
     id?: true
     groupName?: true
+    globalId?: true
+    originName?: true
     isUpdateName?: true
     createdAt?: true
     updatedAt?: true
@@ -4107,6 +4115,8 @@ export namespace Prisma {
   export type ZaloGroupMaxAggregateInputType = {
     id?: true
     groupName?: true
+    globalId?: true
+    originName?: true
     isUpdateName?: true
     createdAt?: true
     updatedAt?: true
@@ -4115,6 +4125,8 @@ export namespace Prisma {
   export type ZaloGroupCountAggregateInputType = {
     id?: true
     groupName?: true
+    globalId?: true
+    originName?: true
     isUpdateName?: true
     createdAt?: true
     updatedAt?: true
@@ -4196,6 +4208,8 @@ export namespace Prisma {
   export type ZaloGroupGroupByOutputType = {
     id: string
     groupName: string
+    globalId: string | null
+    originName: string | null
     isUpdateName: boolean
     createdAt: Date
     updatedAt: Date
@@ -4221,6 +4235,8 @@ export namespace Prisma {
   export type ZaloGroupSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     groupName?: boolean
+    globalId?: boolean
+    originName?: boolean
     isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4232,6 +4248,8 @@ export namespace Prisma {
   export type ZaloGroupSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     groupName?: boolean
+    globalId?: boolean
+    originName?: boolean
     isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4240,6 +4258,8 @@ export namespace Prisma {
   export type ZaloGroupSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     groupName?: boolean
+    globalId?: boolean
+    originName?: boolean
     isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -4248,12 +4268,14 @@ export namespace Prisma {
   export type ZaloGroupSelectScalar = {
     id?: boolean
     groupName?: boolean
+    globalId?: boolean
+    originName?: boolean
     isUpdateName?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ZaloGroupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "groupName" | "isUpdateName" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloGroup"]>
+  export type ZaloGroupOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "groupName" | "globalId" | "originName" | "isUpdateName" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloGroup"]>
   export type ZaloGroupInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accountMaps?: boolean | ZaloGroup$accountMapsArgs<ExtArgs>
     messages?: boolean | ZaloGroup$messagesArgs<ExtArgs>
@@ -4271,6 +4293,14 @@ export namespace Prisma {
     scalars: $Extensions.GetPayloadResult<{
       id: string
       groupName: string
+      /**
+       * Zalo group global id (e.g. EPHPVTP4JNKHS9M7F4QP0UK2I8978C00). Optional; unique when set. For server-side filtering only — do not expose in API responses.
+       */
+      globalId: string | null
+      /**
+       * Original group name when first captured; exposed in API responses.
+       */
+      originName: string | null
       isUpdateName: boolean
       createdAt: Date
       updatedAt: Date
@@ -4701,6 +4731,8 @@ export namespace Prisma {
   interface ZaloGroupFieldRefs {
     readonly id: FieldRef<"ZaloGroup", 'String'>
     readonly groupName: FieldRef<"ZaloGroup", 'String'>
+    readonly globalId: FieldRef<"ZaloGroup", 'String'>
+    readonly originName: FieldRef<"ZaloGroup", 'String'>
     readonly isUpdateName: FieldRef<"ZaloGroup", 'Boolean'>
     readonly createdAt: FieldRef<"ZaloGroup", 'DateTime'>
     readonly updatedAt: FieldRef<"ZaloGroup", 'DateTime'>
@@ -12826,6 +12858,8 @@ export namespace Prisma {
   export const ZaloGroupScalarFieldEnum: {
     id: 'id',
     groupName: 'groupName',
+    globalId: 'globalId',
+    originName: 'originName',
     isUpdateName: 'isUpdateName',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -13243,6 +13277,8 @@ export namespace Prisma {
     NOT?: ZaloGroupWhereInput | ZaloGroupWhereInput[]
     id?: UuidFilter<"ZaloGroup"> | string
     groupName?: StringFilter<"ZaloGroup"> | string
+    globalId?: StringNullableFilter<"ZaloGroup"> | string | null
+    originName?: StringNullableFilter<"ZaloGroup"> | string | null
     isUpdateName?: BoolFilter<"ZaloGroup"> | boolean
     createdAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     updatedAt?: DateTimeFilter<"ZaloGroup"> | Date | string
@@ -13253,6 +13289,8 @@ export namespace Prisma {
   export type ZaloGroupOrderByWithRelationInput = {
     id?: SortOrder
     groupName?: SortOrder
+    globalId?: SortOrderInput | SortOrder
+    originName?: SortOrderInput | SortOrder
     isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13262,20 +13300,24 @@ export namespace Prisma {
 
   export type ZaloGroupWhereUniqueInput = Prisma.AtLeast<{
     id?: string
+    globalId?: string
     AND?: ZaloGroupWhereInput | ZaloGroupWhereInput[]
     OR?: ZaloGroupWhereInput[]
     NOT?: ZaloGroupWhereInput | ZaloGroupWhereInput[]
     groupName?: StringFilter<"ZaloGroup"> | string
+    originName?: StringNullableFilter<"ZaloGroup"> | string | null
     isUpdateName?: BoolFilter<"ZaloGroup"> | boolean
     createdAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     updatedAt?: DateTimeFilter<"ZaloGroup"> | Date | string
     accountMaps?: ZaloAccountGroupListRelationFilter
     messages?: MessageListRelationFilter
-  }, "id">
+  }, "id" | "globalId">
 
   export type ZaloGroupOrderByWithAggregationInput = {
     id?: SortOrder
     groupName?: SortOrder
+    globalId?: SortOrderInput | SortOrder
+    originName?: SortOrderInput | SortOrder
     isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -13290,6 +13332,8 @@ export namespace Prisma {
     NOT?: ZaloGroupScalarWhereWithAggregatesInput | ZaloGroupScalarWhereWithAggregatesInput[]
     id?: UuidWithAggregatesFilter<"ZaloGroup"> | string
     groupName?: StringWithAggregatesFilter<"ZaloGroup"> | string
+    globalId?: StringNullableWithAggregatesFilter<"ZaloGroup"> | string | null
+    originName?: StringNullableWithAggregatesFilter<"ZaloGroup"> | string | null
     isUpdateName?: BoolWithAggregatesFilter<"ZaloGroup"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"ZaloGroup"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ZaloGroup"> | Date | string
@@ -13887,6 +13931,8 @@ export namespace Prisma {
   export type ZaloGroupCreateInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13897,6 +13943,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedCreateInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13907,6 +13955,8 @@ export namespace Prisma {
   export type ZaloGroupUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13917,6 +13967,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13927,6 +13979,8 @@ export namespace Prisma {
   export type ZaloGroupCreateManyInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -13935,6 +13989,8 @@ export namespace Prisma {
   export type ZaloGroupUpdateManyMutationInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -13943,6 +13999,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateManyInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14659,6 +14717,21 @@ export namespace Prisma {
     _max?: NestedBytesFilter<$PrismaModel>
   }
 
+  export type StringNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableFilter<$PrismaModel> | string | null
+  }
+
   export type ZaloAccountGroupListRelationFilter = {
     every?: ZaloAccountGroupWhereInput
     some?: ZaloAccountGroupWhereInput
@@ -14669,6 +14742,11 @@ export namespace Prisma {
     every?: MessageWhereInput
     some?: MessageWhereInput
     none?: MessageWhereInput
+  }
+
+  export type SortOrderInput = {
+    sort: SortOrder
+    nulls?: NullsOrder
   }
 
   export type ZaloAccountGroupOrderByRelationAggregateInput = {
@@ -14682,6 +14760,8 @@ export namespace Prisma {
   export type ZaloGroupCountOrderByAggregateInput = {
     id?: SortOrder
     groupName?: SortOrder
+    globalId?: SortOrder
+    originName?: SortOrder
     isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -14690,6 +14770,8 @@ export namespace Prisma {
   export type ZaloGroupMaxOrderByAggregateInput = {
     id?: SortOrder
     groupName?: SortOrder
+    globalId?: SortOrder
+    originName?: SortOrder
     isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -14698,9 +14780,29 @@ export namespace Prisma {
   export type ZaloGroupMinOrderByAggregateInput = {
     id?: SortOrder
     groupName?: SortOrder
+    globalId?: SortOrder
+    originName?: SortOrder
     isUpdateName?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
+  }
+
+  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    contains?: string | StringFieldRefInput<$PrismaModel>
+    startsWith?: string | StringFieldRefInput<$PrismaModel>
+    endsWith?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type ZaloAccountScalarRelationFilter = {
@@ -14732,21 +14834,6 @@ export namespace Prisma {
     masterId?: SortOrder
     childId?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type StringNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableFilter<$PrismaModel> | string | null
   }
 
   export type IntFilter<$PrismaModel = never> = {
@@ -14793,11 +14880,6 @@ export namespace Prisma {
     every?: ZaloAccountFriendWhereInput
     some?: ZaloAccountFriendWhereInput
     none?: ZaloAccountFriendWhereInput
-  }
-
-  export type SortOrderInput = {
-    sort: SortOrder
-    nulls?: NullsOrder
   }
 
   export type ZaloAccountRelationOrderByRelationAggregateInput = {
@@ -14848,24 +14930,6 @@ export namespace Prisma {
 
   export type ZaloAccountSumOrderByAggregateInput = {
     groupCount?: SortOrder
-  }
-
-  export type StringNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    contains?: string | StringFieldRefInput<$PrismaModel>
-    startsWith?: string | StringFieldRefInput<$PrismaModel>
-    endsWith?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedStringNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -15220,6 +15284,10 @@ export namespace Prisma {
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
+  export type NullableStringFieldUpdateOperationsInput = {
+    set?: string | null
+  }
+
   export type ZaloAccountGroupUpdateManyWithoutGroupNestedInput = {
     create?: XOR<ZaloAccountGroupCreateWithoutGroupInput, ZaloAccountGroupUncheckedCreateWithoutGroupInput> | ZaloAccountGroupCreateWithoutGroupInput[] | ZaloAccountGroupUncheckedCreateWithoutGroupInput[]
     connectOrCreate?: ZaloAccountGroupCreateOrConnectWithoutGroupInput | ZaloAccountGroupCreateOrConnectWithoutGroupInput[]
@@ -15386,10 +15454,6 @@ export namespace Prisma {
     connectOrCreate?: ZaloAccountFriendCreateOrConnectWithoutFriendInput | ZaloAccountFriendCreateOrConnectWithoutFriendInput[]
     createMany?: ZaloAccountFriendCreateManyFriendInputEnvelope
     connect?: ZaloAccountFriendWhereUniqueInput | ZaloAccountFriendWhereUniqueInput[]
-  }
-
-  export type NullableStringFieldUpdateOperationsInput = {
-    set?: string | null
   }
 
   export type IntFieldUpdateOperationsInput = {
@@ -16684,6 +16748,8 @@ export namespace Prisma {
   export type ZaloGroupCreateWithoutAccountMapsInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16693,6 +16759,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedCreateWithoutAccountMapsInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16763,6 +16831,8 @@ export namespace Prisma {
   export type ZaloGroupUpdateWithoutAccountMapsInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16772,6 +16842,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateWithoutAccountMapsInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16988,6 +17060,8 @@ export namespace Prisma {
   export type ZaloGroupCreateWithoutMessagesInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -16997,6 +17071,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedCreateWithoutMessagesInput = {
     id?: string
     groupName: string
+    globalId?: string | null
+    originName?: string | null
     isUpdateName?: boolean
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -17067,6 +17143,8 @@ export namespace Prisma {
   export type ZaloGroupUpdateWithoutMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17076,6 +17154,8 @@ export namespace Prisma {
   export type ZaloGroupUncheckedUpdateWithoutMessagesInput = {
     id?: StringFieldUpdateOperationsInput | string
     groupName?: StringFieldUpdateOperationsInput | string
+    globalId?: NullableStringFieldUpdateOperationsInput | string | null
+    originName?: NullableStringFieldUpdateOperationsInput | string | null
     isUpdateName?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string

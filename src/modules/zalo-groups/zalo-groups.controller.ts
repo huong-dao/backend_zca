@@ -44,8 +44,14 @@ export class ZaloGroupsController {
     @Query('page', new DefaultValuePipe(1), ParseIntPipe) page: number,
     @Query('limit', new DefaultValuePipe(20), ParseIntPipe) limit: number,
     @Query('group_name') group_name?: string,
+    @Query('global_id') global_id?: string,
   ) {
-    const query: FindZaloGroupsByAccountQuery = { page, limit, group_name };
+    const query: FindZaloGroupsByAccountQuery = {
+      page,
+      limit,
+      group_name,
+      global_id,
+    };
     return this.zaloGroupsService.findAllByZaloAccountId(id, query);
   }
 

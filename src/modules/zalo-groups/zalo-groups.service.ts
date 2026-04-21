@@ -19,7 +19,10 @@ import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot
 import { PrismaService } from '../../database/prisma/prisma.service';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
-import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
+import {
+  CREATE_MULTIPLE_ZALO_GROUPS_MODE_UPDATE_ORIGIN_NAME,
+  CreateMultipleZaloGroupsDto,
+} from './dto/create-multiple-zalo-groups.dto';
 import type {
   CreateMultipleZaloGroupsResult,
   ZaloGroupRecord,
@@ -34,6 +37,7 @@ import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 const zaloGroupSelect = {
   id: true,
   groupName: true,
+  originName: true,
   isUpdateName: true,
   createdAt: true,
   updatedAt: true,
@@ -81,6 +85,7 @@ type ZaloAccountGroupRecord = Prisma.ZaloAccountGroupGetPayload<{
 type ZaloGroupByAccountItem = {
   id: string;
   groupName: string;
+  originName: string | null;
   groupZaloId: string;
   isUpdateName: boolean;
   createdAt: Date;
@@ -114,9 +119,16 @@ export class ZaloGroupsService {
     const { page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
 
+    const globalExact = query.global_id?.trim();
+    const whereZaloGroup: Prisma.ZaloGroupWhereInput | undefined =
+      globalExact && globalExact.length > 0
+        ? { globalId: globalExact }
+        : undefined;
+
     const [total, data] = await this.prismaService.$transaction([
-      this.prismaService.zaloGroup.count(),
+      this.prismaService.zaloGroup.count({ where: whereZaloGroup }),
       this.prismaService.zaloGroup.findMany({
+        where: whereZaloGroup,
         skip,
         take: limit,
         select: {
@@ -192,18 +204,27 @@ export class ZaloGroupsService {
     await this.ensureZaloAccountExists(zaloAccountId);
 
     const nameNeedle = query.group_name?.trim();
-    const where: Prisma.ZaloAccountGroupWhereInput = {
-      zaloAccountId,
+    const globalExact = query.global_id?.trim();
+
+    const groupWhere: Prisma.ZaloGroupWhereInput = {
       ...(nameNeedle
         ? {
-            group: {
-              groupName: {
-                contains: nameNeedle,
-                mode: 'insensitive',
-              },
+            groupName: {
+              contains: nameNeedle,
+              mode: 'insensitive',
             },
           }
         : {}),
+      ...(globalExact
+        ? {
+            globalId: globalExact,
+          }
+        : {}),
+    };
+
+    const where: Prisma.ZaloAccountGroupWhereInput = {
+      zaloAccountId,
+      ...(Object.keys(groupWhere).length > 0 ? { group: groupWhere } : {}),
     };
 
     const [total, data]: [number, ZaloAccountGroupRecord[]] =
@@ -403,14 +424,25 @@ export class ZaloGroupsService {
       throw new NotFoundException('Zalo account not found.');
     }
 
-    const normalizedGroups = dto.groups.map((group) => ({
-      groupName: group.group_name.trim(),
-      groupZaloId: group.group_zalo_id.trim(),
-    }));
+    const normalizedGroups = dto.groups.map((group) => {
+      const groupName = group.group_name.trim();
+      return {
+        groupName,
+        groupZaloId: group.group_zalo_id.trim(),
+        globalId: group.global_id?.trim() || undefined,
+        /** Set once on create from `group_name`; never updated later. */
+        originName: groupName,
+      };
+    });
 
     const uniqueGroups = new Map<
       string,
-      { groupName: string; groupZaloId: string }
+      {
+        groupName: string;
+        groupZaloId: string;
+        globalId?: string;
+        originName: string;
+      }
     >();
     const duplicateInputGroupZaloIds = new Set<string>();
 
@@ -424,7 +456,7 @@ export class ZaloGroupsService {
     }
 
     const requestedGroupZaloIds = [...uniqueGroups.keys()];
-    const existingGroups: Array<{ groupZaloId: string }> =
+    const existingMappings =
       await this.prismaService.zaloAccountGroup.findMany({
         where: {
           zaloAccountId,
@@ -434,62 +466,108 @@ export class ZaloGroupsService {
         },
         select: {
           groupZaloId: true,
+          groupId: true,
         },
       });
 
     const existingGroupZaloIds = new Set<string>(
-      existingGroups.map((group) => group.groupZaloId),
+      existingMappings.map((m) => m.groupZaloId),
     );
+
+    const firstMappingByGroupZaloId = new Map<
+      string,
+      { groupId: string }
+    >();
+    for (const m of existingMappings) {
+      if (!firstMappingByGroupZaloId.has(m.groupZaloId)) {
+        firstMappingByGroupZaloId.set(m.groupZaloId, { groupId: m.groupId });
+      }
+    }
+
+    const isUpdateOriginNameMode =
+      dto.mode === CREATE_MULTIPLE_ZALO_GROUPS_MODE_UPDATE_ORIGIN_NAME;
 
     const groupsToCreate = requestedGroupZaloIds
       .filter((groupZaloId) => !existingGroupZaloIds.has(groupZaloId))
       .map((groupZaloId) => uniqueGroups.get(groupZaloId)!);
 
-    const created = await this.prismaService.$transaction(async (tx) => {
-      const createdGroups: ZaloGroupRecord[] = [];
+    const { created, updatedOriginName } =
+      await this.prismaService.$transaction(async (tx) => {
+        const updatedOriginNameRows: ZaloGroupRecord[] = [];
 
-      for (const group of groupsToCreate) {
-        const createdGroup = await tx.zaloGroup.create({
-          data: {
-            groupName: group.groupName,
-          },
-          select: zaloGroupSelect,
+        if (isUpdateOriginNameMode) {
+          for (const [groupZaloId, { groupId }] of firstMappingByGroupZaloId) {
+            const group = uniqueGroups.get(groupZaloId);
+            if (!group) {
+              continue;
+            }
+            const row = await tx.zaloGroup.update({
+              where: { id: groupId },
+              data: { originName: group.originName },
+              select: zaloGroupSelect,
+            });
+            updatedOriginNameRows.push(row);
+          }
+        }
+
+        const createdGroups: ZaloGroupRecord[] = [];
+
+        for (const group of groupsToCreate) {
+          const createdGroup = await tx.zaloGroup.create({
+            data: {
+              groupName: group.groupName,
+              originName: group.originName,
+              ...(group.globalId ? { globalId: group.globalId } : {}),
+            },
+            select: zaloGroupSelect,
+          });
+
+          await tx.zaloAccountGroup.create({
+            data: {
+              groupZaloId: group.groupZaloId,
+              zaloAccountId,
+              groupId: createdGroup.id,
+            },
+          });
+
+          createdGroups.push(createdGroup);
+        }
+
+        const groupCount = await tx.zaloAccountGroup.count({
+          where: { zaloAccountId },
         });
 
-        await tx.zaloAccountGroup.create({
-          data: {
-            groupZaloId: group.groupZaloId,
-            zaloAccountId,
-            groupId: createdGroup.id,
-          },
+        await tx.zaloAccount.update({
+          where: { id: zaloAccountId },
+          data: { groupCount },
         });
 
-        createdGroups.push(createdGroup);
-      }
-
-      const groupCount = await tx.zaloAccountGroup.count({
-        where: { zaloAccountId },
+        return {
+          created: createdGroups,
+          updatedOriginName: updatedOriginNameRows,
+        };
       });
 
-      await tx.zaloAccount.update({
-        where: { id: zaloAccountId },
-        data: { groupCount },
-      });
-
-      return createdGroups;
-    });
+    const skippedExistingIds = isUpdateOriginNameMode
+      ? []
+      : [...existingGroupZaloIds];
+    const skippedExistingCount = isUpdateOriginNameMode
+      ? 0
+      : existingGroupZaloIds.size;
 
     return {
       created,
+      updatedOriginName,
       skipped: {
-        existingGroupZaloIds: Array.from(existingGroupZaloIds),
+        existingGroupZaloIds: skippedExistingIds,
         duplicateInputGroupZaloIds: Array.from(duplicateInputGroupZaloIds),
       },
       summary: {
         requested: dto.groups.length,
         uniqueRequested: requestedGroupZaloIds.length,
         created: created.length,
-        skippedExisting: existingGroupZaloIds.size,
+        updatedOriginName: updatedOriginName.length,
+        skippedExisting: skippedExistingCount,
         skippedDuplicateInput: duplicateInputGroupZaloIds.size,
       },
     };
@@ -710,21 +788,38 @@ export class ZaloGroupsService {
     });
   }
 
+  private optionalGlobalIdFromDto(dto: UpsertZaloGroupDto): {
+    globalId?: string | null;
+  } {
+    const out: { globalId?: string | null } = {};
+    if (dto.global_id !== undefined) {
+      const t = dto.global_id?.trim();
+      out.globalId = t && t.length > 0 ? t : null;
+    }
+    return out;
+  }
+
   private async createOrUpdate(dto: UpsertZaloGroupDto, id?: string) {
+    const globalMeta = this.optionalGlobalIdFromDto(dto);
+
     if (id) {
       return this.prismaService.zaloGroup.update({
         where: { id },
         data: {
           groupName: dto.group_name,
           isUpdateName: true,
+          ...globalMeta,
         },
         select: zaloGroupSelect,
       });
     }
 
+    const trimmedName = dto.group_name.trim();
     return this.prismaService.zaloGroup.create({
       data: {
-        groupName: dto.group_name,
+        groupName: trimmedName,
+        originName: trimmedName,
+        ...globalMeta,
       },
       select: zaloGroupSelect,
     });
