@@ -1,4 +1,5 @@
 export { badRequestForZaloSessionRestoreFailure } from './bad-request-zalo-session-restore';
+export { throwHttpForZaloOperationFailure } from './map-zalo-operation-error';
 export {
   createZcaApiFromCredentials,
   createZcaApiHelperFromCredentials,

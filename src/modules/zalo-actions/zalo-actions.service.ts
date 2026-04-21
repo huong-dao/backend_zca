@@ -1,15 +1,11 @@
-import {
-  HttpException,
-  Injectable,
-  InternalServerErrorException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ThreadType } from 'zca-js';
 import {
   badRequestForZaloSessionRestoreFailure,
   createZcaApiFromCredentials,
+  throwHttpForZaloOperationFailure,
   ZcaApiHelper,
 } from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
@@ -115,11 +111,7 @@ export class ZaloActionsService {
       await this.loginSessions.touchBySessionId(sessionId);
       return out;
     } catch (err) {
-      if (err instanceof HttpException) {
-        throw err;
-      }
-      const message = err instanceof Error ? err.message : 'Zalo API error.';
-      throw new InternalServerErrorException(message);
+      throwHttpForZaloOperationFailure(err);
     }
   }
 

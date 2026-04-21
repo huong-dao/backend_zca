@@ -25,7 +25,9 @@
     "prisma:seed": "prisma db seed",
     "script:test-add-to-group": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/test-add-user-to-group.ts",
     "script:find-user-by-phone": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/find-user-by-phone.ts",
-    "script:add-admin-user": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/add-admin-user.ts"
+    "script:add-admin-user": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/add-admin-user.ts",
+    "script:send-message": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/send-message.ts",
+    "script:get-group-info": "node --env-file=.env ./node_modules/ts-node/dist/bin.js --transpile-only -P tsconfig.scripts.json scripts/get-group-info.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.1",

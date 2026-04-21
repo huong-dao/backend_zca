@@ -118,10 +118,17 @@ export class MessagesService {
       );
     }
 
+    const groupZaloId = mapping.groupZaloId.trim();
+    if (!groupZaloId) {
+      throw new BadRequestException(
+        'Stored group_zalo_id for this mapping is empty; fix zalo_account_groups for this child.',
+      );
+    }
+
     const { result } = await this.zaloActionsService.sendMessage({
       sessionId: session.id,
       text: dto.text.trim(),
-      threadId: mapping.groupZaloId,
+      threadId: groupZaloId,
     });
 
     const { messageZaloId, cliMsgId } =
