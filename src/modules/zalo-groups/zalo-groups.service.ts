@@ -262,8 +262,9 @@ export class ZaloGroupsService {
 
   /**
    * Invite a child Zalo user into a group using the **master** login session.
-   * Resolves the group via optional internal `groupId`, else via `groupName` + that master’s mapping.
-   * Resolves the invitee uid via `findUser(phone)` on that session (friend-graph id), then `addUserToGroup`.
+   * Resolves the group by **`globalId`** (preferred), or internal `groupId`, or `groupName` + master mapping.
+   * Resolves the invitee uid via `findUser(phone)`, then `addUserToGroup` — **no DB rows are created/updated** here;
+   * mapping for your app can rely on `ZaloGroup.global_id` + child accounts separately.
    */
   async inviteMemberToGroup(dto: InviteMemberToZaloGroupDto) {
     const master = await this.prismaService.zaloAccount.findFirst({
@@ -281,13 +282,12 @@ export class ZaloGroupsService {
       );
     }
 
-    const mapping = await this.resolveGroupMappingForMaster(
+    const mapping = await this.resolveGroupMappingForInviteOrRemove(
       master.id,
+      dto.globalId,
       dto.groupId,
       dto.groupName,
     );
-
-    const zaloGroupId = mapping.groupId;
 
     let phone = dto.phoneNumber?.trim() ?? '';
 
@@ -352,12 +352,6 @@ export class ZaloGroupsService {
 
     const inviteUid = profile.uid;
 
-    const dbSync = await this.linkChildToGroupInDbAfterInvite({
-      zaloGroupId,
-      groupZaloId: mapping.groupZaloId,
-      childZaloAccountId: dto.childZaloAccountId,
-    });
-
     return {
       success: true as const,
       masterGroupZaloId: mapping.groupZaloId,
@@ -367,7 +361,6 @@ export class ZaloGroupsService {
         globalId: profile.globalId,
       },
       zalo: zaloResult,
-      dbSync,
     };
   }
 
@@ -392,8 +385,9 @@ export class ZaloGroupsService {
       );
     }
 
-    const mapping = await this.resolveGroupMappingForMaster(
+    const mapping = await this.resolveGroupMappingForInviteOrRemove(
       master.id,
+      dto.globalId,
       dto.groupId,
       dto.groupName,
     );
@@ -726,6 +720,60 @@ export class ZaloGroupsService {
     return { groupId: byName.groupId, groupZaloId: byName.groupZaloId };
   }
 
+  /**
+   * Prefer `globalId` (Zalo’s canonical group id) → `zalo_groups.global_id` + master’s `ZaloAccountGroup`
+   * row to obtain `group_zalo_id` for zca-js. Otherwise `groupId` / `groupName` as in
+   * {@link resolveGroupMappingForMaster}.
+   */
+  private async resolveGroupMappingForInviteOrRemove(
+    masterZaloAccountId: string,
+    globalId: string | undefined,
+    groupId: string | undefined,
+    groupName: string | undefined,
+  ): Promise<{ groupId: string; groupZaloId: string }> {
+    const gid = globalId?.trim();
+    if (gid) {
+      return this.resolveGroupMappingForMasterByGlobalId(
+        masterZaloAccountId,
+        gid,
+      );
+    }
+    return this.resolveGroupMappingForMaster(
+      masterZaloAccountId,
+      groupId,
+      groupName,
+    );
+  }
+
+  private async resolveGroupMappingForMasterByGlobalId(
+    masterZaloAccountId: string,
+    globalId: string,
+  ): Promise<{ groupId: string; groupZaloId: string }> {
+    const group = await this.prismaService.zaloGroup.findFirst({
+      where: { globalId },
+      select: { id: true },
+    });
+    if (!group) {
+      throw new NotFoundException(
+        'No Zalo group with this global_id. Sync or set global_id on the group first.',
+      );
+    }
+    const map = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId: masterZaloAccountId,
+        groupId: group.id,
+      },
+      select: { groupId: true, groupZaloId: true },
+      orderBy: { joinedAt: 'asc' },
+    });
+    if (!map) {
+      throw new NotFoundException(
+        'This Zalo group is not linked to the given master account (no ZaloAccountGroup mapping).',
+      );
+    }
+    return { groupId: map.groupId, groupZaloId: map.groupZaloId };
+  }
+
   private async withZaloSession<T>(
     sessionId: string,
     run: (zca: ZcaApiHelper, api: API) => Promise<T>,
@@ -833,73 +881,6 @@ export class ZaloGroupsService {
     return em.filter((x): x is string => typeof x === 'string');
   }
 
-  private async linkChildToGroupInDbAfterInvite(opts: {
-    zaloGroupId: string;
-    groupZaloId: string;
-    childZaloAccountId?: string;
-  }): Promise<{
-    persisted: boolean;
-    created: boolean;
-    reason?: string;
-    childZaloAccountId?: string;
-    groupZaloId?: string;
-    groupId?: string;
-  }> {
-    const { zaloGroupId, groupZaloId, childZaloAccountId: childId } = opts;
-
-    if (!childId) {
-      return {
-        persisted: false,
-        created: false,
-        reason:
-          'No childZaloAccountId: skipped DB link (pass childZaloAccountId to persist after invite).',
-      };
-    }
-
-    const existingSameGroup =
-      await this.prismaService.zaloAccountGroup.findFirst({
-        where: { zaloAccountId: childId, groupId: zaloGroupId },
-      });
-
-    if (existingSameGroup) {
-      await this.refreshZaloAccountGroupCount(childId);
-      return {
-        persisted: true,
-        created: false,
-        reason:
-          'Child already linked to this ZaloGroup in DB; refreshed groupCount only.',
-        childZaloAccountId: childId,
-        groupZaloId: existingSameGroup.groupZaloId,
-        groupId: zaloGroupId,
-      };
-    }
-
-    await this.prismaService.$transaction(async (tx) => {
-      await tx.zaloAccountGroup.create({
-        data: {
-          groupZaloId,
-          zaloAccountId: childId,
-          groupId: zaloGroupId,
-        },
-      });
-      const groupCount = await tx.zaloAccountGroup.count({
-        where: { zaloAccountId: childId },
-      });
-      await tx.zaloAccount.update({
-        where: { id: childId },
-        data: { groupCount },
-      });
-    });
-
-    return {
-      persisted: true,
-      created: true,
-      childZaloAccountId: childId,
-      groupZaloId,
-      groupId: zaloGroupId,
-    };
-  }
-
   private async unlinkChildFromGroupInDbAfterRemove(opts: {
     zaloGroupId: string;
     childZaloAccountId?: string;
@@ -949,18 +930,6 @@ export class ZaloGroupsService {
       childZaloAccountId: childId,
       groupId: opts.zaloGroupId,
     };
-  }
-
-  private async refreshZaloAccountGroupCount(
-    zaloAccountId: string,
-  ): Promise<void> {
-    const groupCount = await this.prismaService.zaloAccountGroup.count({
-      where: { zaloAccountId },
-    });
-    await this.prismaService.zaloAccount.update({
-      where: { id: zaloAccountId },
-      data: { groupCount },
-    });
   }
 
   private optionalGlobalIdFromDto(dto: UpsertZaloGroupDto): {

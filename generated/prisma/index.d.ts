@@ -93,6 +93,14 @@ export const ZaloAccountFriendStatus: {
 
 export type ZaloAccountFriendStatus = (typeof ZaloAccountFriendStatus)[keyof typeof ZaloAccountFriendStatus]
 
+
+export const ZaloAccountStatus: {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
+};
+
+export type ZaloAccountStatus = (typeof ZaloAccountStatus)[keyof typeof ZaloAccountStatus]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -106,6 +114,10 @@ export const MessageStatus: typeof $Enums.MessageStatus
 export type ZaloAccountFriendStatus = $Enums.ZaloAccountFriendStatus
 
 export const ZaloAccountFriendStatus: typeof $Enums.ZaloAccountFriendStatus
+
+export type ZaloAccountStatus = $Enums.ZaloAccountStatus
+
+export const ZaloAccountStatus: typeof $Enums.ZaloAccountStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -6279,6 +6291,7 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean | null
+    status: $Enums.ZaloAccountStatus | null
     isDeleted: boolean | null
     deletedAt: Date | null
     groupCount: number | null
@@ -6292,6 +6305,7 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean | null
+    status: $Enums.ZaloAccountStatus | null
     isDeleted: boolean | null
     deletedAt: Date | null
     groupCount: number | null
@@ -6305,6 +6319,7 @@ export namespace Prisma {
     phone: number
     name: number
     isMaster: number
+    status: number
     isDeleted: number
     deletedAt: number
     groupCount: number
@@ -6329,6 +6344,7 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
+    status?: true
     isDeleted?: true
     deletedAt?: true
     groupCount?: true
@@ -6342,6 +6358,7 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
+    status?: true
     isDeleted?: true
     deletedAt?: true
     groupCount?: true
@@ -6355,6 +6372,7 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
+    status?: true
     isDeleted?: true
     deletedAt?: true
     groupCount?: true
@@ -6456,6 +6474,7 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean
+    status: $Enums.ZaloAccountStatus
     isDeleted: boolean
     deletedAt: Date | null
     groupCount: number
@@ -6489,6 +6508,7 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    status?: boolean
     isDeleted?: boolean
     deletedAt?: boolean
     groupCount?: boolean
@@ -6510,6 +6530,7 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    status?: boolean
     isDeleted?: boolean
     deletedAt?: boolean
     groupCount?: boolean
@@ -6524,6 +6545,7 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    status?: boolean
     isDeleted?: boolean
     deletedAt?: boolean
     groupCount?: boolean
@@ -6538,6 +6560,7 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    status?: boolean
     isDeleted?: boolean
     deletedAt?: boolean
     groupCount?: boolean
@@ -6546,7 +6569,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type ZaloAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zaloId" | "phone" | "name" | "isMaster" | "isDeleted" | "deletedAt" | "groupCount" | "groupData" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloAccount"]>
+  export type ZaloAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zaloId" | "phone" | "name" | "isMaster" | "status" | "isDeleted" | "deletedAt" | "groupCount" | "groupData" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloAccount"]>
   export type ZaloAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     masters?: boolean | ZaloAccount$mastersArgs<ExtArgs>
     children?: boolean | ZaloAccount$childrenArgs<ExtArgs>
@@ -6575,6 +6598,10 @@ export namespace Prisma {
       phone: string | null
       name: string | null
       isMaster: boolean
+      /**
+       * `ACTIVE` required for send message / recall; new rows default to `INACTIVE` until enabled.
+       */
+      status: $Enums.ZaloAccountStatus
       /**
        * Soft delete: when true, this account is excluded from app queries and features (row kept for referential integrity).
        */
@@ -7018,6 +7045,7 @@ export namespace Prisma {
     readonly phone: FieldRef<"ZaloAccount", 'String'>
     readonly name: FieldRef<"ZaloAccount", 'String'>
     readonly isMaster: FieldRef<"ZaloAccount", 'Boolean'>
+    readonly status: FieldRef<"ZaloAccount", 'ZaloAccountStatus'>
     readonly isDeleted: FieldRef<"ZaloAccount", 'Boolean'>
     readonly deletedAt: FieldRef<"ZaloAccount", 'DateTime'>
     readonly groupCount: FieldRef<"ZaloAccount", 'Int'>
@@ -12913,6 +12941,7 @@ export namespace Prisma {
     phone: 'phone',
     name: 'name',
     isMaster: 'isMaster',
+    status: 'status',
     isDeleted: 'isDeleted',
     deletedAt: 'deletedAt',
     groupCount: 'groupCount',
@@ -13110,6 +13139,20 @@ export namespace Prisma {
    * Reference to a field of type 'Bytes[]'
    */
   export type ListBytesFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Bytes[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'ZaloAccountStatus'
+   */
+  export type EnumZaloAccountStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ZaloAccountStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'ZaloAccountStatus[]'
+   */
+  export type ListEnumZaloAccountStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'ZaloAccountStatus[]'>
     
 
 
@@ -13433,6 +13476,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"ZaloAccount"> | string | null
     name?: StringNullableFilter<"ZaloAccount"> | string | null
     isMaster?: BoolFilter<"ZaloAccount"> | boolean
+    status?: EnumZaloAccountStatusFilter<"ZaloAccount"> | $Enums.ZaloAccountStatus
     isDeleted?: BoolFilter<"ZaloAccount"> | boolean
     deletedAt?: DateTimeNullableFilter<"ZaloAccount"> | Date | string | null
     groupCount?: IntFilter<"ZaloAccount"> | number
@@ -13453,6 +13497,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     isMaster?: SortOrder
+    status?: SortOrder
     isDeleted?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
     groupCount?: SortOrder
@@ -13476,6 +13521,7 @@ export namespace Prisma {
     phone?: StringNullableFilter<"ZaloAccount"> | string | null
     name?: StringNullableFilter<"ZaloAccount"> | string | null
     isMaster?: BoolFilter<"ZaloAccount"> | boolean
+    status?: EnumZaloAccountStatusFilter<"ZaloAccount"> | $Enums.ZaloAccountStatus
     isDeleted?: BoolFilter<"ZaloAccount"> | boolean
     deletedAt?: DateTimeNullableFilter<"ZaloAccount"> | Date | string | null
     groupCount?: IntFilter<"ZaloAccount"> | number
@@ -13496,6 +13542,7 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     isMaster?: SortOrder
+    status?: SortOrder
     isDeleted?: SortOrder
     deletedAt?: SortOrderInput | SortOrder
     groupCount?: SortOrder
@@ -13518,6 +13565,7 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     name?: StringNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     isMaster?: BoolWithAggregatesFilter<"ZaloAccount"> | boolean
+    status?: EnumZaloAccountStatusWithAggregatesFilter<"ZaloAccount"> | $Enums.ZaloAccountStatus
     isDeleted?: BoolWithAggregatesFilter<"ZaloAccount"> | boolean
     deletedAt?: DateTimeNullableWithAggregatesFilter<"ZaloAccount"> | Date | string | null
     groupCount?: IntWithAggregatesFilter<"ZaloAccount"> | number
@@ -14100,6 +14148,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -14120,6 +14169,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -14140,6 +14190,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -14160,6 +14211,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -14180,6 +14232,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -14194,6 +14247,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -14208,6 +14262,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -14891,6 +14946,13 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type EnumZaloAccountStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountStatus | EnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountStatusFilter<$PrismaModel> | $Enums.ZaloAccountStatus
+  }
+
   export type DateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -14962,6 +15024,7 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
+    status?: SortOrder
     isDeleted?: SortOrder
     deletedAt?: SortOrder
     groupCount?: SortOrder
@@ -14980,6 +15043,7 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
+    status?: SortOrder
     isDeleted?: SortOrder
     deletedAt?: SortOrder
     groupCount?: SortOrder
@@ -14993,6 +15057,7 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
+    status?: SortOrder
     isDeleted?: SortOrder
     deletedAt?: SortOrder
     groupCount?: SortOrder
@@ -15002,6 +15067,16 @@ export namespace Prisma {
 
   export type ZaloAccountSumOrderByAggregateInput = {
     groupCount?: SortOrder
+  }
+
+  export type EnumZaloAccountStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountStatus | EnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountStatusWithAggregatesFilter<$PrismaModel> | $Enums.ZaloAccountStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumZaloAccountStatusFilter<$PrismaModel>
+    _max?: NestedEnumZaloAccountStatusFilter<$PrismaModel>
   }
 
   export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -15517,6 +15592,10 @@ export namespace Prisma {
     connect?: ZaloAccountFriendWhereUniqueInput | ZaloAccountFriendWhereUniqueInput[]
   }
 
+  export type EnumZaloAccountStatusFieldUpdateOperationsInput = {
+    set?: $Enums.ZaloAccountStatus
+  }
+
   export type NullableDateTimeFieldUpdateOperationsInput = {
     set?: Date | string | null
   }
@@ -15993,6 +16072,13 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedEnumZaloAccountStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountStatus | EnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountStatusFilter<$PrismaModel> | $Enums.ZaloAccountStatus
+  }
+
   export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
     equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
     in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
@@ -16002,6 +16088,16 @@ export namespace Prisma {
     gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
     not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedEnumZaloAccountStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.ZaloAccountStatus | EnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.ZaloAccountStatus[] | ListEnumZaloAccountStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumZaloAccountStatusWithAggregatesFilter<$PrismaModel> | $Enums.ZaloAccountStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumZaloAccountStatusFilter<$PrismaModel>
+    _max?: NestedEnumZaloAccountStatusFilter<$PrismaModel>
   }
 
   export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
@@ -16338,6 +16434,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16357,6 +16454,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16381,6 +16479,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16400,6 +16499,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16435,6 +16535,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -16454,6 +16555,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -16484,6 +16586,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -16503,6 +16606,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -16789,6 +16893,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16808,6 +16913,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16870,6 +16976,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -16889,6 +16996,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -16941,6 +17049,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16960,6 +17069,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -16984,6 +17094,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -17003,6 +17114,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -17038,6 +17150,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -17057,6 +17170,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -17087,6 +17201,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -17106,6 +17221,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -17125,6 +17241,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -17144,6 +17261,7 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
     isDeleted?: boolean
     deletedAt?: Date | string | null
     groupCount?: number
@@ -17206,6 +17324,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
@@ -17225,6 +17344,7 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
     isDeleted?: BoolFieldUpdateOperationsInput | boolean
     deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number

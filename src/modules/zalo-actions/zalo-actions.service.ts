@@ -1,4 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+} from '@nestjs/common';
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ThreadType } from 'zca-js';
@@ -10,6 +14,7 @@ import {
 } from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
+import { PrismaService } from '../../database/prisma/prisma.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import type { ZaloFindUserDto } from './dto/zalo-find-user.dto';
 import type { ZaloFriendActionDto } from './dto/zalo-friend-action.dto';
@@ -22,7 +27,10 @@ import type { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
 export class ZaloActionsService {
   private readonly logger = new Logger(ZaloActionsService.name);
 
-  constructor(private readonly loginSessions: ZaloLoginSessionsService) {}
+  constructor(
+    private readonly loginSessions: ZaloLoginSessionsService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   async findUser(dto: ZaloFindUserDto) {
     return this.withSession(dto.sessionId, async (zca) => {
@@ -74,6 +82,22 @@ export class ZaloActionsService {
   }
 
   async sendMessage(dto: ZaloSendMessageDto) {
+    const row = await this.prisma.zaloLoginSession.findUnique({
+      where: { id: dto.sessionId },
+      select: { zaloUid: true },
+    });
+    const zaloUid = row?.zaloUid?.trim();
+    if (zaloUid) {
+      const acc = await this.prisma.zaloAccount.findFirst({
+        where: { zaloId: zaloUid, isDeleted: false },
+        select: { status: true },
+      });
+      if (acc && acc.status !== 'ACTIVE') {
+        throw new BadRequestException(
+          'Cannot send messages: this Zalo account is not active (status must be ACTIVE).',
+        );
+      }
+    }
     return this.withSession(dto.sessionId, async (zca) => {
       const threadType = dto.threadType ?? ThreadType.Group;
       const result = await zca.sendMessage(

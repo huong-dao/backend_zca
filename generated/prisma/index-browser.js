@@ -163,6 +163,7 @@ exports.Prisma.ZaloAccountScalarFieldEnum = {
   phone: 'phone',
   name: 'name',
   isMaster: 'isMaster',
+  status: 'status',
   isDeleted: 'isDeleted',
   deletedAt: 'deletedAt',
   groupCount: 'groupCount',
@@ -247,6 +248,11 @@ exports.Prisma.NullsOrder = {
 exports.UserRole = exports.$Enums.UserRole = {
   ADMIN: 'ADMIN',
   USER: 'USER'
+};
+
+exports.ZaloAccountStatus = exports.$Enums.ZaloAccountStatus = {
+  ACTIVE: 'ACTIVE',
+  INACTIVE: 'INACTIVE'
 };
 
 exports.ZaloAccountFriendStatus = exports.$Enums.ZaloAccountFriendStatus = {

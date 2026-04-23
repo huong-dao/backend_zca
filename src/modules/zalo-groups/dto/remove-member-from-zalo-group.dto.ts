@@ -7,11 +7,18 @@ import {
 } from 'class-validator';
 
 export class RemoveMemberFromZaloGroupDto {
+  /** Zalo group global id (preferred). When set, `groupId` / `groupName` are ignored. */
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  globalId?: string;
+
+  @ValidateIf((o) => !o.globalId?.trim())
   @IsOptional()
   @IsUUID('4')
   groupId?: string;
 
-  @ValidateIf((o) => !o.groupId)
+  @ValidateIf((o) => !o.globalId?.trim() && !o.groupId)
   @IsString()
   @MinLength(1)
   groupName?: string;

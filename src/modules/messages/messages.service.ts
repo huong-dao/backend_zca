@@ -30,6 +30,7 @@ const messageWithSenderGroupSelect = {
       zaloId: true,
       name: true,
       phone: true,
+      status: true,
       isDeleted: true,
       deletedAt: true,
     },
@@ -83,11 +84,17 @@ export class MessagesService {
   async send(appUserId: string, dto: SendMessageDto) {
     const account = await this.prismaService.zaloAccount.findFirst({
       where: { id: dto.zaloAccountId, isDeleted: false },
-      select: { id: true, zaloId: true, isMaster: true },
+      select: { id: true, zaloId: true, isMaster: true, status: true },
     });
 
     if (!account) {
       throw new NotFoundException('Zalo account not found or removed.');
+    }
+
+    if (account.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Cannot send messages: this Zalo account is not active (status must be ACTIVE).',
+      );
     }
 
     if (account.isMaster) {
@@ -292,6 +299,7 @@ export class MessagesService {
         sender: {
           select: {
             zaloId: true,
+            status: true,
             isDeleted: true,
           },
         },
@@ -305,6 +313,12 @@ export class MessagesService {
     if (found.sender.isDeleted) {
       throw new BadRequestException(
         'Cannot recall: sender Zalo account was removed.',
+      );
+    }
+
+    if (found.sender.status !== 'ACTIVE') {
+      throw new BadRequestException(
+        'Cannot recall: this Zalo account is not active (status must be ACTIVE).',
       );
     }
 

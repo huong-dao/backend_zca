@@ -8,18 +8,28 @@ import {
 
 export class InviteMemberToZaloGroupDto {
   /**
-   * Internal `zalo_groups.id`. When set, the group is resolved by this UUID (scoped to `masterZaloAccountId`);
+   * Zalo group **global id** (unique, same for master/child). Preferred: resolves `zalo_groups` + master’s
+   * `group_zalo_id` for the zca-js call. When set, `groupId` / `groupName` are ignored.
+   */
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  globalId?: string;
+
+  /**
+   * Internal `zalo_groups.id`. When set (and `globalId` omitted), the group is resolved by this UUID;
    * `groupName` is ignored for lookup.
    */
+  @ValidateIf((o) => !o.globalId?.trim())
   @IsOptional()
   @IsUUID('4')
   groupId?: string;
 
   /**
-   * Required when `groupId` is omitted. `zalo_groups.group_name` — must be linked to `masterZaloAccountId`
+   * Required when both `globalId` and `groupId` are omitted. Must be linked to `masterZaloAccountId`
    * via `zalo_account_groups`.
    */
-  @ValidateIf((o) => !o.groupId)
+  @ValidateIf((o) => !o.globalId?.trim() && !o.groupId)
   @IsString()
   @MinLength(1)
   groupName?: string;

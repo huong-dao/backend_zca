@@ -24,6 +24,12 @@ enum ZaloAccountFriendStatus {
   CANCEL
 }
 
+/// Messaging is allowed only when `ACTIVE` (see messages send + recall, zalo-actions send-message).
+enum ZaloAccountStatus {
+  ACTIVE
+  INACTIVE
+}
+
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique @db.VarChar(255)
@@ -86,18 +92,20 @@ model ZaloAccountRelation {
 }
 
 model ZaloAccount {
-  id         String    @id @default(uuid()) @db.Uuid
-  zaloId     String?   @unique @map("zalo_id") @db.VarChar(255)
-  phone      String?   @db.VarChar(50)
-  name       String?   @db.VarChar(255)
-  isMaster   Boolean   @default(false) @map("is_master")
+  id         String            @id @default(uuid()) @db.Uuid
+  zaloId     String?           @unique @map("zalo_id") @db.VarChar(255)
+  phone      String?           @db.VarChar(50)
+  name       String?           @db.VarChar(255)
+  isMaster   Boolean           @default(false) @map("is_master")
+  /// `ACTIVE` required for send message / recall; new rows default to `INACTIVE` until enabled.
+  status     ZaloAccountStatus @default(INACTIVE) @map("status")
   /// Soft delete: when true, this account is excluded from app queries and features (row kept for referential integrity).
-  isDeleted  Boolean   @default(false) @map("is_deleted")
-  deletedAt  DateTime? @map("deleted_at")
-  groupCount Int       @default(0) @map("group_count")
-  groupData  Json?     @map("group_data")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
+  isDeleted  Boolean           @default(false) @map("is_deleted")
+  deletedAt  DateTime?         @map("deleted_at")
+  groupCount Int               @default(0) @map("group_count")
+  groupData  Json?             @map("group_data")
+  createdAt  DateTime          @default(now()) @map("created_at")
+  updatedAt  DateTime          @updatedAt @map("updated_at")
 
   // 👉 relation mới
   masters  ZaloAccountRelation[] @relation("ChildRelations")
@@ -110,6 +118,7 @@ model ZaloAccount {
   friendOf ZaloAccountFriend[] @relation("FriendOf")
 
   @@index([isDeleted])
+  @@index([status])
   @@map("zalo_accounts")
 }
 

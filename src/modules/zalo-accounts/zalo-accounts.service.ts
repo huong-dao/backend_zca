@@ -10,7 +10,7 @@ import {
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
-import type { Prisma } from '../../../generated/prisma';
+import type { Prisma, ZaloAccountStatus } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
   badRequestForZaloSessionRestoreFailure,
@@ -33,6 +33,7 @@ const zaloAccountSelect = {
   phone: true,
   name: true,
   isMaster: true,
+  status: true,
   isDeleted: true,
   deletedAt: true,
   groupCount: true,
@@ -47,6 +48,7 @@ type ZaloAccountBaseRecord = {
   phone: string | null;
   name: string | null;
   isMaster: boolean;
+  status: ZaloAccountStatus;
   isDeleted: boolean;
   deletedAt: Date | null;
   groupCount: number;
