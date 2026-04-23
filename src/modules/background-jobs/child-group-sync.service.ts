@@ -258,6 +258,14 @@ export class ChildGroupSyncService {
       return false;
     }
     const zaloUid = account.zaloId.trim();
+    const masterIds = await this.getMasterIdsForChild(zaloAccountId);
+    if (masterIds.length === 0) {
+      this.logger.warn(
+        `Child scan: no master in zalo_account_relations for child zaloAccountId=${zaloAccountId}; cannot link groups — skip.`,
+      );
+      return false;
+    }
+
     const batchSize = this.config.get<number>(
       'childGroupSync.getGroupInfoBatchSize',
     ) ?? 20;
@@ -279,6 +287,7 @@ export class ChildGroupSyncService {
     workList = await this.applyCacheAndShrink(
       zaloUid,
       zaloAccountId,
+      masterIds,
       workList,
       ttl,
     );
@@ -317,7 +326,12 @@ export class ChildGroupSyncService {
         const entry = grid?.[gridId];
         if (entry) {
           await this.setCache(zaloUid, gridId, entry, ttl);
-          await this.upsertGroupAndLink(zaloAccountId, gridId, entry);
+          await this.tryLinkChildToMasterGroup(
+            zaloAccountId,
+            masterIds,
+            gridId,
+            entry,
+          );
         }
       }
       prev = await this.persistCredsAndReturnNext(sessionId, ap, prev);
@@ -346,6 +360,14 @@ export class ChildGroupSyncService {
       return true;
     }
     return false;
+  }
+
+  private async getMasterIdsForChild(childId: string): Promise<string[]> {
+    const rows = await this.prisma.zaloAccountRelation.findMany({
+      where: { childId },
+      select: { masterId: true },
+    });
+    return rows.map((r) => r.masterId);
   }
 
   /**
@@ -500,6 +522,7 @@ export class ChildGroupSyncService {
   private async applyCacheAndShrink(
     zaloUid: string,
     zaloAccountId: string,
+    masterIds: string[],
     workList: string[],
     ttl: number,
   ): Promise<string[]> {
@@ -507,7 +530,12 @@ export class ChildGroupSyncService {
     for (const gridId of workList) {
       const cached = await this.getCache(zaloUid, gridId);
       if (cached?.globalId) {
-        await this.upsertGroupAndLink(zaloAccountId, gridId, cached);
+        await this.tryLinkChildToMasterGroup(
+          zaloAccountId,
+          masterIds,
+          gridId,
+          cached,
+        );
         continue;
       }
       next.push(gridId);
@@ -515,15 +543,19 @@ export class ChildGroupSyncService {
     return next;
   }
 
-  private async upsertGroupAndLink(
+  /**
+   * Link child → ZaloGroup only when:
+   * 1) getGroupInfo provides globalId;
+   * 2) a `ZaloGroup` row with that globalId **already exists** (created via master / app, not here);
+   * 3) at least one of the child's masters already has a `ZaloAccountGroup` row for that `group_id`.
+   * Then add child's `ZaloAccountGroup` with `group_zalo_id` = this device's grid id.
+   */
+  private async tryLinkChildToMasterGroup(
     zaloAccountId: string,
+    masterIds: string[],
     groupZaloId: string,
     entry: GridInfoEntry,
   ): Promise<void> {
-    const nameFromZ =
-      typeof entry.name === 'string' && entry.name.trim()
-        ? entry.name.trim()
-        : 'Group';
     const globalFromZ =
       typeof entry.globalId === 'string' && entry.globalId.trim()
         ? entry.globalId.trim()
@@ -534,10 +566,30 @@ export class ChildGroupSyncService {
       );
       return;
     }
-    const group = await this.findOrCreateGroupByGlobalId(
-      globalFromZ,
-      nameFromZ,
-    );
+    const group = await this.prisma.zaloGroup.findFirst({
+      where: { globalId: globalFromZ },
+      select: { id: true },
+    });
+    if (!group) {
+      this.logger.debug(
+        `Child scan: no ZaloGroup with globalId=${globalFromZ} (master has not created/synced this group in DB); skip grid ${groupZaloId}.`,
+      );
+      return;
+    }
+    const masterHasGroup = await this.prisma.zaloAccountGroup.findFirst({
+      where: {
+        groupId: group.id,
+        zaloAccountId: { in: masterIds },
+        zaloAccount: { isMaster: true, isDeleted: false },
+      },
+      select: { id: true },
+    });
+    if (!masterHasGroup) {
+      this.logger.debug(
+        `Child scan: ZaloGroup id=${group.id} (globalId=${globalFromZ}) is not among this child's masters' groups; skip grid ${groupZaloId}.`,
+      );
+      return;
+    }
     const exists = await this.prisma.zaloAccountGroup.findFirst({
       where: { zaloAccountId, groupId: group.id },
     });
@@ -548,39 +600,12 @@ export class ChildGroupSyncService {
       await this.prisma.zaloAccountGroup.create({
         data: { zaloAccountId, groupZaloId, groupId: group.id },
       });
-    } catch (e) {
-      if (
-        e &&
-        typeof e === 'object' &&
-        'code' in e &&
-        (e as { code: string }).code === 'P2002'
-      ) {
-        return;
-      }
-      throw e;
-    }
-  }
-
-  private async findOrCreateGroupByGlobalId(
-    globalId: string,
-    groupName: string,
-  ) {
-    const found = await this.prisma.zaloGroup.findFirst({
-      where: { globalId },
-      select: { id: true },
-    });
-    if (found) {
-      return found;
-    }
-    try {
-      return await this.prisma.zaloGroup.create({
-        data: {
-          groupName,
-          globalId,
-          originName: groupName,
-          isUpdateName: true,
-        },
-        select: { id: true },
+      const groupCount = await this.prisma.zaloAccountGroup.count({
+        where: { zaloAccountId },
+      });
+      await this.prisma.zaloAccount.update({
+        where: { id: zaloAccountId },
+        data: { groupCount },
       });
     } catch (e) {
       if (
@@ -589,13 +614,7 @@ export class ChildGroupSyncService {
         'code' in e &&
         (e as { code: string }).code === 'P2002'
       ) {
-        const again = await this.prisma.zaloGroup.findFirst({
-          where: { globalId },
-          select: { id: true },
-        });
-        if (again) {
-          return again;
-        }
+        return;
       }
       throw e;
     }
