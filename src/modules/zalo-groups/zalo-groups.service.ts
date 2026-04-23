@@ -178,7 +178,11 @@ export class ZaloGroupsService {
     const groups: PendingNameUpdateGroup[] =
       await this.prismaService.zaloGroup.findMany({
         where: {
-          isUpdateName: false,
+          OR: [
+            { isUpdateName: false },
+            { originName: null },
+            { originName: '' },
+          ],
         },
         select: pendingNameUpdateSelect,
         orderBy: {
