@@ -6279,6 +6279,8 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean | null
+    isDeleted: boolean | null
+    deletedAt: Date | null
     groupCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6290,6 +6292,8 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean | null
+    isDeleted: boolean | null
+    deletedAt: Date | null
     groupCount: number | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -6301,6 +6305,8 @@ export namespace Prisma {
     phone: number
     name: number
     isMaster: number
+    isDeleted: number
+    deletedAt: number
     groupCount: number
     groupData: number
     createdAt: number
@@ -6323,6 +6329,8 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
+    isDeleted?: true
+    deletedAt?: true
     groupCount?: true
     createdAt?: true
     updatedAt?: true
@@ -6334,6 +6342,8 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
+    isDeleted?: true
+    deletedAt?: true
     groupCount?: true
     createdAt?: true
     updatedAt?: true
@@ -6345,6 +6355,8 @@ export namespace Prisma {
     phone?: true
     name?: true
     isMaster?: true
+    isDeleted?: true
+    deletedAt?: true
     groupCount?: true
     groupData?: true
     createdAt?: true
@@ -6444,6 +6456,8 @@ export namespace Prisma {
     phone: string | null
     name: string | null
     isMaster: boolean
+    isDeleted: boolean
+    deletedAt: Date | null
     groupCount: number
     groupData: JsonValue | null
     createdAt: Date
@@ -6475,6 +6489,8 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
@@ -6494,6 +6510,8 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
@@ -6506,6 +6524,8 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
@@ -6518,13 +6538,15 @@ export namespace Prisma {
     phone?: boolean
     name?: boolean
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: boolean
     groupCount?: boolean
     groupData?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ZaloAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zaloId" | "phone" | "name" | "isMaster" | "groupCount" | "groupData" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloAccount"]>
+  export type ZaloAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "zaloId" | "phone" | "name" | "isMaster" | "isDeleted" | "deletedAt" | "groupCount" | "groupData" | "createdAt" | "updatedAt", ExtArgs["result"]["zaloAccount"]>
   export type ZaloAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     masters?: boolean | ZaloAccount$mastersArgs<ExtArgs>
     children?: boolean | ZaloAccount$childrenArgs<ExtArgs>
@@ -6553,6 +6575,11 @@ export namespace Prisma {
       phone: string | null
       name: string | null
       isMaster: boolean
+      /**
+       * Soft delete: when true, this account is excluded from app queries and features (row kept for referential integrity).
+       */
+      isDeleted: boolean
+      deletedAt: Date | null
       groupCount: number
       groupData: Prisma.JsonValue | null
       createdAt: Date
@@ -6991,6 +7018,8 @@ export namespace Prisma {
     readonly phone: FieldRef<"ZaloAccount", 'String'>
     readonly name: FieldRef<"ZaloAccount", 'String'>
     readonly isMaster: FieldRef<"ZaloAccount", 'Boolean'>
+    readonly isDeleted: FieldRef<"ZaloAccount", 'Boolean'>
+    readonly deletedAt: FieldRef<"ZaloAccount", 'DateTime'>
     readonly groupCount: FieldRef<"ZaloAccount", 'Int'>
     readonly groupData: FieldRef<"ZaloAccount", 'Json'>
     readonly createdAt: FieldRef<"ZaloAccount", 'DateTime'>
@@ -12884,6 +12913,8 @@ export namespace Prisma {
     phone: 'phone',
     name: 'name',
     isMaster: 'isMaster',
+    isDeleted: 'isDeleted',
+    deletedAt: 'deletedAt',
     groupCount: 'groupCount',
     groupData: 'groupData',
     createdAt: 'createdAt',
@@ -13402,6 +13433,8 @@ export namespace Prisma {
     phone?: StringNullableFilter<"ZaloAccount"> | string | null
     name?: StringNullableFilter<"ZaloAccount"> | string | null
     isMaster?: BoolFilter<"ZaloAccount"> | boolean
+    isDeleted?: BoolFilter<"ZaloAccount"> | boolean
+    deletedAt?: DateTimeNullableFilter<"ZaloAccount"> | Date | string | null
     groupCount?: IntFilter<"ZaloAccount"> | number
     groupData?: JsonNullableFilter<"ZaloAccount">
     createdAt?: DateTimeFilter<"ZaloAccount"> | Date | string
@@ -13420,6 +13453,8 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     isMaster?: SortOrder
+    isDeleted?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
     groupCount?: SortOrder
     groupData?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -13441,6 +13476,8 @@ export namespace Prisma {
     phone?: StringNullableFilter<"ZaloAccount"> | string | null
     name?: StringNullableFilter<"ZaloAccount"> | string | null
     isMaster?: BoolFilter<"ZaloAccount"> | boolean
+    isDeleted?: BoolFilter<"ZaloAccount"> | boolean
+    deletedAt?: DateTimeNullableFilter<"ZaloAccount"> | Date | string | null
     groupCount?: IntFilter<"ZaloAccount"> | number
     groupData?: JsonNullableFilter<"ZaloAccount">
     createdAt?: DateTimeFilter<"ZaloAccount"> | Date | string
@@ -13459,6 +13496,8 @@ export namespace Prisma {
     phone?: SortOrderInput | SortOrder
     name?: SortOrderInput | SortOrder
     isMaster?: SortOrder
+    isDeleted?: SortOrder
+    deletedAt?: SortOrderInput | SortOrder
     groupCount?: SortOrder
     groupData?: SortOrderInput | SortOrder
     createdAt?: SortOrder
@@ -13479,6 +13518,8 @@ export namespace Prisma {
     phone?: StringNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     name?: StringNullableWithAggregatesFilter<"ZaloAccount"> | string | null
     isMaster?: BoolWithAggregatesFilter<"ZaloAccount"> | boolean
+    isDeleted?: BoolWithAggregatesFilter<"ZaloAccount"> | boolean
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"ZaloAccount"> | Date | string | null
     groupCount?: IntWithAggregatesFilter<"ZaloAccount"> | number
     groupData?: JsonNullableWithAggregatesFilter<"ZaloAccount">
     createdAt?: DateTimeWithAggregatesFilter<"ZaloAccount"> | Date | string
@@ -14059,6 +14100,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -14077,6 +14120,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -14095,6 +14140,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14113,6 +14160,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14131,6 +14180,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -14143,6 +14194,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14155,6 +14208,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14836,6 +14891,17 @@ export namespace Prisma {
     createdAt?: SortOrder
   }
 
+  export type DateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
   export type IntFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -14896,6 +14962,8 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
+    isDeleted?: SortOrder
+    deletedAt?: SortOrder
     groupCount?: SortOrder
     groupData?: SortOrder
     createdAt?: SortOrder
@@ -14912,6 +14980,8 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
+    isDeleted?: SortOrder
+    deletedAt?: SortOrder
     groupCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -14923,6 +14993,8 @@ export namespace Prisma {
     phone?: SortOrder
     name?: SortOrder
     isMaster?: SortOrder
+    isDeleted?: SortOrder
+    deletedAt?: SortOrder
     groupCount?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -14930,6 +15002,20 @@ export namespace Prisma {
 
   export type ZaloAccountSumOrderByAggregateInput = {
     groupCount?: SortOrder
+  }
+
+  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type IntWithAggregatesFilter<$PrismaModel = never> = {
@@ -15054,17 +15140,6 @@ export namespace Prisma {
     _max?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
   }
 
-  export type DateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
   export type EnumMessageStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageStatus | EnumMessageStatusFieldRefInput<$PrismaModel>
     in?: $Enums.MessageStatus[] | ListEnumMessageStatusFieldRefInput<$PrismaModel>
@@ -15109,20 +15184,6 @@ export namespace Prisma {
     sentAt?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type DateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type EnumMessageStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -15456,6 +15517,10 @@ export namespace Prisma {
     connect?: ZaloAccountFriendWhereUniqueInput | ZaloAccountFriendWhereUniqueInput[]
   }
 
+  export type NullableDateTimeFieldUpdateOperationsInput = {
+    set?: Date | string | null
+  }
+
   export type IntFieldUpdateOperationsInput = {
     set?: number
     increment?: number
@@ -15704,10 +15769,6 @@ export namespace Prisma {
     connect?: ZaloGroupWhereUniqueInput
   }
 
-  export type NullableDateTimeFieldUpdateOperationsInput = {
-    set?: Date | string | null
-  }
-
   export type EnumMessageStatusFieldUpdateOperationsInput = {
     set?: $Enums.MessageStatus
   }
@@ -15932,6 +15993,31 @@ export namespace Prisma {
     not?: NestedIntNullableFilter<$PrismaModel> | number | null
   }
 
+  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
+  }
+
+  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
+    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
+    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
+    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedDateTimeNullableFilter<$PrismaModel>
+    _max?: NestedDateTimeNullableFilter<$PrismaModel>
+  }
+
   export type NestedIntWithAggregatesFilter<$PrismaModel = never> = {
     equals?: number | IntFieldRefInput<$PrismaModel>
     in?: number[] | ListIntFieldRefInput<$PrismaModel>
@@ -15999,36 +16085,11 @@ export namespace Prisma {
     _max?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
   }
 
-  export type NestedDateTimeNullableFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableFilter<$PrismaModel> | Date | string | null
-  }
-
   export type NestedEnumMessageStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageStatus | EnumMessageStatusFieldRefInput<$PrismaModel>
     in?: $Enums.MessageStatus[] | ListEnumMessageStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.MessageStatus[] | ListEnumMessageStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumMessageStatusFilter<$PrismaModel> | $Enums.MessageStatus
-  }
-
-  export type NestedDateTimeNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: Date | string | DateTimeFieldRefInput<$PrismaModel> | null
-    in?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    notIn?: Date[] | string[] | ListDateTimeFieldRefInput<$PrismaModel> | null
-    lt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    lte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gt?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    gte?: Date | string | DateTimeFieldRefInput<$PrismaModel>
-    not?: NestedDateTimeNullableWithAggregatesFilter<$PrismaModel> | Date | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedDateTimeNullableFilter<$PrismaModel>
-    _max?: NestedDateTimeNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumMessageStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -16277,6 +16338,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16294,6 +16357,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16316,6 +16381,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16333,6 +16400,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16366,6 +16435,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16383,6 +16454,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16411,6 +16484,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16428,6 +16503,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16712,6 +16789,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16729,6 +16808,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16789,6 +16870,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16806,6 +16889,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16856,6 +16941,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16873,6 +16960,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16895,6 +16984,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16912,6 +17003,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -16945,6 +17038,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16962,6 +17057,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -16990,6 +17087,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17007,6 +17106,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17024,6 +17125,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -17041,6 +17144,8 @@ export namespace Prisma {
     phone?: string | null
     name?: string | null
     isMaster?: boolean
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
     groupCount?: number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: Date | string
@@ -17101,6 +17206,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17118,6 +17225,8 @@ export namespace Prisma {
     phone?: NullableStringFieldUpdateOperationsInput | string | null
     name?: NullableStringFieldUpdateOperationsInput | string | null
     isMaster?: BoolFieldUpdateOperationsInput | boolean
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

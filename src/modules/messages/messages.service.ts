@@ -49,6 +49,8 @@ export class MessagesService {
               zaloId: true,
               name: true,
               phone: true,
+              isDeleted: true,
+              deletedAt: true,
             },
           },
           group: {
@@ -77,13 +79,13 @@ export class MessagesService {
   }
 
   async send(appUserId: string, dto: SendMessageDto) {
-    const account = await this.prismaService.zaloAccount.findUnique({
-      where: { id: dto.zaloAccountId },
+    const account = await this.prismaService.zaloAccount.findFirst({
+      where: { id: dto.zaloAccountId, isDeleted: false },
       select: { id: true, zaloId: true, isMaster: true },
     });
 
     if (!account) {
-      throw new NotFoundException('Zalo account not found.');
+      throw new NotFoundException('Zalo account not found or removed.');
     }
 
     if (account.isMaster) {

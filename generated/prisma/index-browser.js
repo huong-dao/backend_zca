@@ -163,6 +163,8 @@ exports.Prisma.ZaloAccountScalarFieldEnum = {
   phone: 'phone',
   name: 'name',
   isMaster: 'isMaster',
+  isDeleted: 'isDeleted',
+  deletedAt: 'deletedAt',
   groupCount: 'groupCount',
   groupData: 'groupData',
   createdAt: 'createdAt',

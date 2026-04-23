@@ -266,8 +266,8 @@ export class ZaloGroupsService {
    * Resolves the invitee uid via `findUser(phone)` on that session (friend-graph id), then `addUserToGroup`.
    */
   async inviteMemberToGroup(dto: InviteMemberToZaloGroupDto) {
-    const master = await this.prismaService.zaloAccount.findUnique({
-      where: { id: dto.masterZaloAccountId },
+    const master = await this.prismaService.zaloAccount.findFirst({
+      where: { id: dto.masterZaloAccountId, isDeleted: false },
       select: { id: true, isMaster: true },
     });
 
@@ -306,8 +306,8 @@ export class ZaloGroupsService {
         );
       }
 
-      const child = await this.prismaService.zaloAccount.findUnique({
-        where: { id: dto.childZaloAccountId },
+      const child = await this.prismaService.zaloAccount.findFirst({
+        where: { id: dto.childZaloAccountId, isDeleted: false },
         select: { phone: true, isMaster: true },
       });
 
@@ -377,8 +377,8 @@ export class ZaloGroupsService {
    * Optionally unlinks the child in `zalo_account_groups` when `childZaloAccountId` is set.
    */
   async removeMemberFromGroup(dto: RemoveMemberFromZaloGroupDto) {
-    const master = await this.prismaService.zaloAccount.findUnique({
-      where: { id: dto.masterZaloAccountId },
+    const master = await this.prismaService.zaloAccount.findFirst({
+      where: { id: dto.masterZaloAccountId, isDeleted: false },
       select: { id: true, isMaster: true },
     });
 
@@ -417,8 +417,8 @@ export class ZaloGroupsService {
         );
       }
 
-      const child = await this.prismaService.zaloAccount.findUnique({
-        where: { id: dto.childZaloAccountId },
+      const child = await this.prismaService.zaloAccount.findFirst({
+        where: { id: dto.childZaloAccountId, isDeleted: false },
         select: { phone: true, isMaster: true },
       });
 
@@ -483,8 +483,8 @@ export class ZaloGroupsService {
     zaloAccountId: string,
     dto: CreateMultipleZaloGroupsDto,
   ): Promise<CreateMultipleZaloGroupsResult> {
-    const zaloAccount = await this.prismaService.zaloAccount.findUnique({
-      where: { id: zaloAccountId },
+    const zaloAccount = await this.prismaService.zaloAccount.findFirst({
+      where: { id: zaloAccountId, isDeleted: false },
       select: { id: true },
     });
 
@@ -671,8 +671,8 @@ export class ZaloGroupsService {
   }
 
   private async ensureZaloAccountExists(id: string) {
-    const zaloAccount = await this.prismaService.zaloAccount.findUnique({
-      where: { id },
+    const zaloAccount = await this.prismaService.zaloAccount.findFirst({
+      where: { id, isDeleted: false },
       select: { id: true },
     });
 

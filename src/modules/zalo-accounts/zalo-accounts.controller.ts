@@ -74,6 +74,11 @@ export class ZaloAccountsController {
     return await this.zaloAccountsService.removeFriend(dto);
   }
 
+  @Delete(':id')
+  softDelete(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.zaloAccountsService.softDelete(id);
+  }
+
   @Get(':id')
   findOne(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.zaloAccountsService.findOne(id);

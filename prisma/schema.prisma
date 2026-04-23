@@ -91,6 +91,9 @@ model ZaloAccount {
   phone      String?  @db.VarChar(50)
   name       String?  @db.VarChar(255)
   isMaster   Boolean  @default(false) @map("is_master")
+  /// Soft delete: when true, this account is excluded from app queries and features (row kept for referential integrity).
+  isDeleted  Boolean  @default(false) @map("is_deleted")
+  deletedAt  DateTime? @map("deleted_at")
   groupCount Int      @default(0) @map("group_count")
   groupData  Json?    @map("group_data")
   createdAt  DateTime @default(now()) @map("created_at")
@@ -106,6 +109,7 @@ model ZaloAccount {
   friends    ZaloAccountFriend[] @relation("MasterFriends")
   friendOf   ZaloAccountFriend[] @relation("FriendOf")
 
+  @@index([isDeleted])
   @@map("zalo_accounts")
 }
 

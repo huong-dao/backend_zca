@@ -33,6 +33,8 @@ const zaloAccountSelect = {
   phone: true,
   name: true,
   isMaster: true,
+  isDeleted: true,
+  deletedAt: true,
   groupCount: true,
   groupData: true,
   createdAt: true,
@@ -45,6 +47,8 @@ type ZaloAccountBaseRecord = {
   phone: string | null;
   name: string | null;
   isMaster: boolean;
+  isDeleted: boolean;
+  deletedAt: Date | null;
   groupCount: number;
   groupData: unknown;
   createdAt: Date;
@@ -347,12 +351,12 @@ export class ZaloAccountsService {
     }
 
     const [masterAccount, friendAccount, existingRelation] = await Promise.all([
-      this.prismaService.zaloAccount.findUnique({
-        where: { id: dto.masterId },
+      this.prismaService.zaloAccount.findFirst({
+        where: { id: dto.masterId, isDeleted: false },
         select: { id: true, zaloId: true, name: true, phone: true },
       }),
-      this.prismaService.zaloAccount.findUnique({
-        where: { id: dto.friendId },
+      this.prismaService.zaloAccount.findFirst({
+        where: { id: dto.friendId, isDeleted: false },
         select: { id: true, zaloId: true, name: true, phone: true },
       }),
       this.prismaService.zaloAccountFriend.findFirst({
@@ -507,11 +511,12 @@ export class ZaloAccountsService {
 
   async findOne(id: string): Promise<FindOneAccountResponse> {
     const account: FindOneAccountRecord | null =
-      await this.prismaService.zaloAccount.findUnique({
-        where: { id },
+      await this.prismaService.zaloAccount.findFirst({
+        where: { id, isDeleted: false },
         select: {
           ...zaloAccountSelect,
           masters: {
+            where: { master: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
@@ -532,6 +537,7 @@ export class ZaloAccountsService {
             },
           },
           children: {
+            where: { child: { isDeleted: false } },
             select: {
               createdAt: true,
               id: true,
@@ -554,6 +560,7 @@ export class ZaloAccountsService {
             },
           },
           friends: {
+            where: { friend: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
@@ -574,6 +581,7 @@ export class ZaloAccountsService {
             },
           },
           friendOf: {
+            where: { master: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
@@ -634,8 +642,8 @@ export class ZaloAccountsService {
   }
 
   async create(dto: CreateZaloAccountDto) {
-    const existingAccount = await this.prismaService.zaloAccount.findUnique({
-      where: { zaloId: dto.zaloId },
+    const existingAccount = await this.prismaService.zaloAccount.findFirst({
+      where: { zaloId: dto.zaloId, isDeleted: false },
       select: { id: true },
     });
 
@@ -659,8 +667,8 @@ export class ZaloAccountsService {
       (childId): childId is string => typeof childId === 'string',
     );
 
-    const masterAccount = await this.prismaService.zaloAccount.findUnique({
-      where: { id: dto.masterId },
+    const masterAccount = await this.prismaService.zaloAccount.findFirst({
+      where: { id: dto.masterId, isDeleted: false },
       select: {
         id: true,
         isMaster: true,
@@ -701,6 +709,7 @@ export class ZaloAccountsService {
         id: {
           in: requestedChildIds,
         },
+        isDeleted: false,
       },
       select: {
         id: true,
@@ -770,8 +779,8 @@ export class ZaloAccountsService {
   }
 
   async setMaster(id: string) {
-    const account = await this.prismaService.zaloAccount.findUnique({
-      where: { id },
+    const account = await this.prismaService.zaloAccount.findFirst({
+      where: { id, isDeleted: false },
       select: {
         id: true,
         isMaster: true,
@@ -801,6 +810,13 @@ export class ZaloAccountsService {
   }
 
   async updateGroupDataById(id: string, dto: UpdateGroupDataDto) {
+    const found = await this.prismaService.zaloAccount.findFirst({
+      where: { id, isDeleted: false },
+      select: { id: true },
+    });
+    if (!found) {
+      throw new NotFoundException('Zalo account not found.');
+    }
     return this.prismaService.zaloAccount.update({
       where: { id },
       data: { groupData: dto.groupData },
@@ -808,15 +824,69 @@ export class ZaloAccountsService {
     });
   }
 
+  /**
+   * Soft delete: mark account as removed; it will be excluded from listings and business logic.
+   * Also **hard-deletes** all `ZaloLoginSession` rows whose `zalo_uid` matches this account’s `zaloId`
+   * (the persisted QR / cookie session for that Zalo identity). Historical messages still reference
+   * `senderId`; `GET /messages` exposes `sender.isDeleted` for the UI.
+   */
+  async softDelete(id: string) {
+    const account = await this.prismaService.zaloAccount.findUnique({
+      where: { id },
+      select: { id: true, isDeleted: true, zaloId: true },
+    });
+    if (!account) {
+      throw new NotFoundException('Zalo account not found.');
+    }
+    const zaloUid = account.zaloId?.trim() ?? '';
+    if (account.isDeleted) {
+      const loginSessionsRemoved = zaloUid
+        ? (
+            await this.prismaService.zaloLoginSession.deleteMany({
+              where: { zaloUid },
+            })
+          ).count
+        : 0;
+      return {
+        message: 'Zalo account was already removed.',
+        id: account.id,
+        isDeleted: true as const,
+        loginSessionsRemoved,
+      };
+    }
+    const now = new Date();
+    let loginSessionsRemoved = 0;
+    await this.prismaService.$transaction(async (tx) => {
+      if (zaloUid) {
+        const r = await tx.zaloLoginSession.deleteMany({
+          where: { zaloUid },
+        });
+        loginSessionsRemoved = r.count;
+      }
+      await tx.zaloAccount.update({
+        where: { id },
+        data: { isDeleted: true, deletedAt: now },
+      });
+    });
+    return {
+      message: 'Zalo account removed.',
+      id,
+      isDeleted: true as const,
+      deletedAt: now,
+      loginSessionsRemoved,
+    };
+  }
+
   private async findAccounts(
     where?: Prisma.ZaloAccountWhereInput,
   ): Promise<ListedZaloAccount[]> {
     const accounts: FindAllAccountRecord[] =
       await this.prismaService.zaloAccount.findMany({
-        where,
+        where: { isDeleted: false, ...where },
         select: {
           ...zaloAccountSelect,
           masters: {
+            where: { master: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
@@ -833,6 +903,7 @@ export class ZaloAccountsService {
             },
           },
           children: {
+            where: { child: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
@@ -850,6 +921,7 @@ export class ZaloAccountsService {
             },
           },
           friends: {
+            where: { friend: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
@@ -870,6 +942,7 @@ export class ZaloAccountsService {
             },
           },
           friendOf: {
+            where: { master: { isDeleted: false } },
             select: {
               id: true,
               createdAt: true,
