@@ -888,6 +888,68 @@ Example with internal group UUID (no `groupName` needed for lookup):
 - Guards: `JwtAuthGuard`, `RolesGuard`
 - Roles: authenticated `ADMIN` or `USER`
 
+### POST `/zalo-groups/remove-member`
+#### Endpoint
+- Method: `POST`
+- Full path: `/zalo-groups/remove-member`
+- Function: `ZaloGroupsController.removeMemberFromGroup`
+
+#### Description
+Remove a Zalo user from a group using the **master** session, mirroring **`POST /zalo-groups/invite-member`** but calling Zalo **`removeUserFromGroup(memberUid, groupZaloId)`** instead of `addUserToGroup`.
+
+Same group resolution (`groupId` or `groupName` + `masterZaloAccountId`), same member resolution (`phoneNumber` / `childZaloAccountId` + `findUser` on the master session). The **`groupZaloId`** used for Zalo is always the one from the master’s **`zalo_account_groups`** row.
+
+After a successful remove (`errorMembers` empty), if **`childZaloAccountId`** is set, the API **deletes** the child’s **`zalo_account_groups`** row for that internal `group_id` and refreshes the child’s **`groupCount`**.
+
+#### Request
+- Params: none
+- Query: none
+- Body: same fields as **`POST /zalo-groups/invite-member`** (`groupId`, `groupName`, `sessionId`, `masterZaloAccountId`, `phoneNumber`, `childZaloAccountId`).
+
+Example:
+
+```json
+{
+  "groupName": "Nhóm bán hàng A",
+  "sessionId": "e2c52ab6-5134-4f9c-9968-3e8b430094aa",
+  "masterZaloAccountId": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  "childZaloAccountId": "fd87478e-14ae-46b5-8aec-e3800b800c91"
+}
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "masterGroupZaloId": "4722820980206948279",
+  "removedMemberUid": "4546690961257603620",
+  "findUser": {
+    "display_name": "Đào Văn Phương",
+    "globalId": "FJQ9QJLN50FORDFDT87QJPEMDV420BO0"
+  },
+  "zalo": {
+    "errorMembers": []
+  },
+  "dbSync": {
+    "persisted": true,
+    "childZaloAccountId": "fd87478e-14ae-46b5-8aec-e3800b800c91",
+    "groupId": "5d6a8d48-b45c-43d8-9b0d-5cc3bd110001"
+  }
+}
+```
+
+(`zalo` shape follows zca-js `removeUserFromGroup`. If `childZaloAccountId` is omitted, `dbSync.persisted` is `false` and `dbSync.reason` explains the skip.)
+
+#### Error cases
+- `400`: validation error; same account/relation/phone cases as invite-member; Zalo `removeUserFromGroup` returned non-empty `errorMembers`; Zalo API error
+- `401` / `403` / `404` / `500`: same categories as **invite-member** (session restore, not found, etc.)
+
+#### Authentication
+- JWT required
+- Guards: `JwtAuthGuard`, `RolesGuard`
+- Roles: authenticated `ADMIN` or `USER`
+
 ### PUT `/zalo-groups/:id`
 #### Endpoint
 - Method: `PUT`

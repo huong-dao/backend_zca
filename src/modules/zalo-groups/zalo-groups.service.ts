@@ -32,6 +32,7 @@ import {
   FindZaloGroupsDto,
 } from './dto/find-zalo-groups.dto';
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
+import { RemoveMemberFromZaloGroupDto } from './dto/remove-member-from-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 
 const zaloGroupSelect = {
@@ -265,8 +266,6 @@ export class ZaloGroupsService {
    * Resolves the invitee uid via `findUser(phone)` on that session (friend-graph id), then `addUserToGroup`.
    */
   async inviteMemberToGroup(dto: InviteMemberToZaloGroupDto) {
-    const groupIdFromBody = dto.groupId?.trim();
-
     const master = await this.prismaService.zaloAccount.findUnique({
       where: { id: dto.masterZaloAccountId },
       select: { id: true, isMaster: true },
@@ -282,50 +281,11 @@ export class ZaloGroupsService {
       );
     }
 
-    let mapping: { groupId: string; groupZaloId: string };
-
-    if (groupIdFromBody) {
-      await this.ensureGroupExists(groupIdFromBody);
-
-      const byId = await this.prismaService.zaloAccountGroup.findFirst({
-        where: {
-          zaloAccountId: master.id,
-          groupId: groupIdFromBody,
-        },
-        select: { groupId: true, groupZaloId: true },
-        orderBy: { joinedAt: 'asc' },
-      });
-
-      if (!byId) {
-        throw new NotFoundException(
-          'This Zalo group is not linked to the given master account (no ZaloAccountGroup mapping).',
-        );
-      }
-
-      mapping = byId;
-    } else {
-      const groupName = dto.groupName?.trim() ?? '';
-      if (!groupName) {
-        throw new BadRequestException('Provide groupId or groupName.');
-      }
-
-      const byName = await this.prismaService.zaloAccountGroup.findFirst({
-        where: {
-          zaloAccountId: master.id,
-          group: { groupName },
-        },
-        select: { groupId: true, groupZaloId: true },
-        orderBy: { joinedAt: 'asc' },
-      });
-
-      if (!byName) {
-        throw new NotFoundException(
-          'No Zalo group with this name is linked to the given master account.',
-        );
-      }
-
-      mapping = byName;
-    }
+    const mapping = await this.resolveGroupMappingForMaster(
+      master.id,
+      dto.groupId,
+      dto.groupName,
+    );
 
     const zaloGroupId = mapping.groupId;
 
@@ -402,6 +362,114 @@ export class ZaloGroupsService {
       success: true as const,
       masterGroupZaloId: mapping.groupZaloId,
       inviteUid,
+      findUser: {
+        display_name: profile.display_name ?? profile.zalo_name,
+        globalId: profile.globalId,
+      },
+      zalo: zaloResult,
+      dbSync,
+    };
+  }
+
+  /**
+   * Remove a user from a group using the **master** session (`removeUserFromGroup`), same resolution as
+   * {@link inviteMemberToGroup} for group + member (`findUser` by phone / child).
+   * Optionally unlinks the child in `zalo_account_groups` when `childZaloAccountId` is set.
+   */
+  async removeMemberFromGroup(dto: RemoveMemberFromZaloGroupDto) {
+    const master = await this.prismaService.zaloAccount.findUnique({
+      where: { id: dto.masterZaloAccountId },
+      select: { id: true, isMaster: true },
+    });
+
+    if (!master) {
+      throw new NotFoundException('Master Zalo account not found.');
+    }
+
+    if (!master.isMaster) {
+      throw new BadRequestException(
+        'masterZaloAccountId must reference a master account (isMaster = true).',
+      );
+    }
+
+    const mapping = await this.resolveGroupMappingForMaster(
+      master.id,
+      dto.groupId,
+      dto.groupName,
+    );
+
+    const zaloGroupId = mapping.groupId;
+
+    let phone = dto.phoneNumber?.trim() ?? '';
+
+    if (dto.childZaloAccountId) {
+      const relation = await this.prismaService.zaloAccountRelation.findFirst({
+        where: {
+          masterId: dto.masterZaloAccountId,
+          childId: dto.childZaloAccountId,
+        },
+        select: { id: true },
+      });
+
+      if (!relation) {
+        throw new BadRequestException(
+          'childZaloAccountId is not registered as a child of this master.',
+        );
+      }
+
+      const child = await this.prismaService.zaloAccount.findUnique({
+        where: { id: dto.childZaloAccountId },
+        select: { phone: true, isMaster: true },
+      });
+
+      if (!child) {
+        throw new NotFoundException('Child Zalo account not found.');
+      }
+
+      if (child.isMaster) {
+        throw new BadRequestException(
+          'childZaloAccountId must not be a master account.',
+        );
+      }
+
+      if (!phone && child.phone?.trim()) {
+        phone = child.phone.trim();
+      }
+    }
+
+    if (!phone) {
+      throw new BadRequestException(
+        'Provide phoneNumber or childZaloAccountId with a stored phone on the child account.',
+      );
+    }
+
+    const { profile, zaloResult } = await this.withZaloSession(
+      dto.sessionId,
+      async (zca) => {
+        const p = await zca.findUser(phone);
+        const r = await zca.removeUserFromGroup(p.uid, mapping.groupZaloId);
+        return { profile: p, zaloResult: r };
+      },
+    );
+
+    if (!this.isZaloRemoveUserFromGroupSuccess(zaloResult)) {
+      const errMembers = this.extractZaloAddUserErrorMembers(zaloResult);
+      throw new BadRequestException(
+        errMembers.length > 0
+          ? `Zalo removeUserFromGroup failed for: ${errMembers.join(', ')}`
+          : 'Zalo removeUserFromGroup did not complete successfully.',
+      );
+    }
+
+    const dbSync = await this.unlinkChildFromGroupInDbAfterRemove({
+      zaloGroupId,
+      childZaloAccountId: dto.childZaloAccountId,
+    });
+
+    return {
+      success: true as const,
+      masterGroupZaloId: mapping.groupZaloId,
+      removedMemberUid: profile.uid,
       findUser: {
         display_name: profile.display_name ?? profile.zalo_name,
         globalId: profile.globalId,
@@ -613,6 +681,53 @@ export class ZaloGroupsService {
     }
   }
 
+  private async resolveGroupMappingForMaster(
+    masterZaloAccountId: string,
+    groupId: string | undefined,
+    groupName: string | undefined,
+  ): Promise<{ groupId: string; groupZaloId: string }> {
+    const groupIdFromBody = groupId?.trim();
+    if (groupIdFromBody) {
+      await this.ensureGroupExists(groupIdFromBody);
+      const byId = await this.prismaService.zaloAccountGroup.findFirst({
+        where: {
+          zaloAccountId: masterZaloAccountId,
+          groupId: groupIdFromBody,
+        },
+        select: { groupId: true, groupZaloId: true },
+        orderBy: { joinedAt: 'asc' },
+      });
+
+      if (!byId) {
+        throw new NotFoundException(
+          'This Zalo group is not linked to the given master account (no ZaloAccountGroup mapping).',
+        );
+      }
+      return { groupId: byId.groupId, groupZaloId: byId.groupZaloId };
+    }
+
+    const name = groupName?.trim() ?? '';
+    if (!name) {
+      throw new BadRequestException('Provide groupId or groupName.');
+    }
+
+    const byName = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId: masterZaloAccountId,
+        group: { groupName: name },
+      },
+      select: { groupId: true, groupZaloId: true },
+      orderBy: { joinedAt: 'asc' },
+    });
+
+    if (!byName) {
+      throw new NotFoundException(
+        'No Zalo group with this name is linked to the given master account.',
+      );
+    }
+    return { groupId: byName.groupId, groupZaloId: byName.groupZaloId };
+  }
+
   private async withZaloSession<T>(
     sessionId: string,
     run: (zca: ZcaApiHelper, api: API) => Promise<T>,
@@ -697,6 +812,17 @@ export class ZaloGroupsService {
     return true;
   }
 
+  private isZaloRemoveUserFromGroupSuccess(result: unknown): boolean {
+    if (result == null || typeof result !== 'object') {
+      return false;
+    }
+    const em = (result as Record<string, unknown>).errorMembers;
+    if (!Array.isArray(em)) {
+      return true;
+    }
+    return em.length === 0;
+  }
+
   private extractZaloAddUserErrorMembers(result: unknown): string[] {
     if (result == null || typeof result !== 'object') {
       return [];
@@ -773,6 +899,57 @@ export class ZaloGroupsService {
       childZaloAccountId: childId,
       groupZaloId,
       groupId: zaloGroupId,
+    };
+  }
+
+  private async unlinkChildFromGroupInDbAfterRemove(opts: {
+    zaloGroupId: string;
+    childZaloAccountId?: string;
+  }): Promise<{
+    persisted: boolean;
+    reason?: string;
+    childZaloAccountId?: string;
+    groupId?: string;
+  }> {
+    const childId = opts.childZaloAccountId;
+
+    if (!childId) {
+      return {
+        persisted: false,
+        reason:
+          'No childZaloAccountId: skipped DB unlink (pass childZaloAccountId to update zalo_account_groups).',
+      };
+    }
+
+    const row = await this.prismaService.zaloAccountGroup.findFirst({
+      where: { zaloAccountId: childId, groupId: opts.zaloGroupId },
+    });
+
+    if (!row) {
+      return {
+        persisted: false,
+        reason:
+          'No ZaloAccountGroup row for this child and group; nothing removed in DB.',
+        childZaloAccountId: childId,
+        groupId: opts.zaloGroupId,
+      };
+    }
+
+    await this.prismaService.$transaction(async (tx) => {
+      await tx.zaloAccountGroup.delete({ where: { id: row.id } });
+      const groupCount = await tx.zaloAccountGroup.count({
+        where: { zaloAccountId: childId },
+      });
+      await tx.zaloAccount.update({
+        where: { id: childId },
+        data: { groupCount },
+      });
+    });
+
+    return {
+      persisted: true,
+      childZaloAccountId: childId,
+      groupId: opts.zaloGroupId,
     };
   }
 

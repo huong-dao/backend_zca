@@ -428,6 +428,67 @@ await api.addUserToGroup(memberIds, groupId);
 
 ---
 
+## API: removeUserFromGroup
+
+### Description
+Xóa thành viên khỏi nhóm.
+
+Remove one or more members from a Zalo group by their Zalo user id(s), scoped to a `groupId`.
+
+---
+
+### Method (zca-js)
+api.removeUserFromGroup(memberId, groupId)
+
+---
+
+### Parameters
+
+- memberId: string | string[]  
+  → Zalo user ID or list of user IDs to remove from the group
+
+- groupId: string  
+  → Target group ID
+
+---
+
+### Return
+`Promise<RemoveUserFromGroupResponse>`
+
+TypeScript:
+
+```ts
+export type RemoveUserFromGroupResponse = {
+  errorMembers: string[];
+};
+```
+
+- `errorMembers`: list of user IDs for which removal failed (empty if all succeeded)
+
+---
+
+### Example
+
+```ts
+const groupId = "0000000000000000000";
+
+// Remove one member
+const memberId = "0000000000000000001";
+api
+  .removeUserFromGroup(memberId, groupId)
+  .then(console.log)
+  .catch(console.error);
+
+// Remove several members
+const memberIds = ["0000000000000000001", "0000000000000000002"];
+api
+  .removeUserFromGroup(memberIds, groupId)
+  .then(console.log)
+  .catch(console.error);
+```
+
+---
+
 ## API: sendMessage
 
 ### Description

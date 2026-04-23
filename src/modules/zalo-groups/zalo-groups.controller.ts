@@ -19,6 +19,7 @@ import {
   FindZaloGroupsDto,
 } from './dto/find-zalo-groups.dto';
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
+import { RemoveMemberFromZaloGroupDto } from './dto/remove-member-from-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 import { ZaloGroupsService } from './zalo-groups.service';
 
@@ -74,6 +75,11 @@ export class ZaloGroupsController {
   @Post('invite-member')
   inviteMemberToGroup(@Body() dto: InviteMemberToZaloGroupDto) {
     return this.zaloGroupsService.inviteMemberToGroup(dto);
+  }
+
+  @Post('remove-member')
+  removeMemberFromGroup(@Body() dto: RemoveMemberFromZaloGroupDto) {
+    return this.zaloGroupsService.removeMemberFromGroup(dto);
   }
 
   @Put(':id')

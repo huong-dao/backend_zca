@@ -10,6 +10,7 @@ import type { GetQRResponse } from 'zca-js';
 import type { MessageContent } from 'zca-js';
 import type { AddUserToGroupResponse } from 'zca-js';
 import type { InviteUserToGroupsResponse } from 'zca-js';
+import type { RemoveUserFromGroupResponse } from 'zca-js';
 import type { SendMessageResponse } from 'zca-js';
 import type { UndoPayload, UndoResponse } from 'zca-js';
 import type { UserInfoResponse } from 'zca-js';
@@ -73,6 +74,13 @@ export class ZcaApiHelper {
     groupId: string,
   ): Promise<AddUserToGroupResponse> {
     return this.api.addUserToGroup(memberId, groupId);
+  }
+
+  removeUserFromGroup(
+    memberId: string | string[],
+    groupId: string,
+  ): Promise<RemoveUserFromGroupResponse> {
+    return this.api.removeUserFromGroup(memberId, groupId);
   }
 
   /** Alternative invite path (`/api/group/invite/multi`) — try if `addUserToGroup` returns Zalo 114. */
