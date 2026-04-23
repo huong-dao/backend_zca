@@ -7,13 +7,26 @@ import {
   ParseUUIDPipe,
   Post,
   Query,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import type { Express } from 'express';
+import { memoryStorage } from 'multer';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
 import type { AuthenticatedUser } from '../../common/utils/authenticated-user';
 import { FindMessagesDto } from './dto/find-messages.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { MessagesService } from './messages.service';
+
+const sendMessageMultipart = FileFieldsInterceptor(
+  [{ name: 'files', maxCount: 20 }],
+  {
+    storage: memoryStorage(),
+    limits: { fileSize: 25 * 1024 * 1024, files: 20 },
+  },
+);
 
 @Roles('ADMIN', 'USER')
 @Controller('messages')
@@ -26,8 +39,13 @@ export class MessagesController {
   }
 
   @Post('send')
-  send(@CurrentUser() user: AuthenticatedUser, @Body() dto: SendMessageDto) {
-    return this.messagesService.send(user.id, dto);
+  @UseInterceptors(sendMessageMultipart)
+  send(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: SendMessageDto,
+    @UploadedFiles() fileFields?: { files?: Express.Multer.File[] },
+  ) {
+    return this.messagesService.send(user.id, dto, fileFields?.files);
   }
 
   @Delete(':id')

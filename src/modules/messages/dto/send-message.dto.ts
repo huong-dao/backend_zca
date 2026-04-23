@@ -1,15 +1,18 @@
-import { IsString, IsUUID, MinLength } from 'class-validator';
+import { IsOptional, IsString, IsUUID, MaxLength } from 'class-validator';
 
+/**
+ * Form fields for `POST /messages/send` (multipart: `zaloAccountId`, `groupId`, optional `text`, optional `files`).
+ * Either non-empty `text` or at least one file is required (enforced in {@link MessagesService.send}).
+ */
 export class SendMessageDto {
-  /** Child `zalo_accounts.id` — must have `zalo_id` set and a matching `zalo_login_sessions` row for the JWT user. */
   @IsUUID('4')
   zaloAccountId!: string;
 
-  /** Internal `zalo_groups.id`. */
   @IsUUID('4')
   groupId!: string;
 
+  @IsOptional()
   @IsString()
-  @MinLength(1)
-  text!: string;
+  @MaxLength(20_000)
+  text?: string;
 }

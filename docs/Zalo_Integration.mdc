@@ -664,12 +664,14 @@ Used in **Message Module**:
 
 #### Backend (this repo)
 
-- **Helper:** `ZcaApiHelper.prototype.sendMessage` in `src/zalo/zca-api.helper.ts` — thin wrapper around `api.sendMessage(message, threadId, type)` from zca-js. Re-export: `ThreadType` from the same module (and `src/zalo/index.ts`).
-- **HTTP (stored QR session):** `POST /zalo/actions/send-message` with JSON body:
+- **Helper:** `ZcaApiHelper.prototype.sendMessage` in `src/zalo/zca-api.helper.ts` — thin wrapper around `api.sendMessage(message, threadId, type)` from zca-js. The first argument may be a **string** or a **`MessageContent` object** (e.g. `{ msg, attachments: [absolute file paths] }` per the zca-js docs above). Re-export: `ThreadType` from the same module (and `src/zalo/index.ts`).
+- **App send (child account + `messages` row):** `POST /messages/send` with **`multipart/form-data`**: `zaloAccountId`, `groupId`, optional `text`, optional repeated `files`. The service writes uploaded buffers to temp paths, calls `ZcaApiHelper.sendMessage` with `MessageContent` when files are present, then deletes the temp files.
+- **HTTP (stored QR session, raw session):** `POST /zalo/actions/send-message` with JSON body:
   - `sessionId` (UUID) — `zalo_login_sessions.id`
-  - `text` (string) — plain text only; for `MessageContent` (mentions, styles, attachments), call `ZcaApiHelper.sendMessage` from Nest code with a `MessageContent` object.
+  - `text` (string) — required for JSON calls **unless** the server populates `attachmentLocalPaths` internally (e.g. `MessagesService` for uploads). Plain `text`-only is the typical JSON use case.
   - `threadId` (string) — target user or group id for the session
   - `threadType` (optional) — `ThreadType` enum from zca-js; **omit = `ThreadType.Group`** for this endpoint (DM: set `ThreadType.User` explicitly)
+  - `attachmentLocalPaths` (optional, internal) — absolute paths; not intended for public JSON clients. For attachments from a browser, use **`POST /messages/send`** with multipart.
 
 ---
 

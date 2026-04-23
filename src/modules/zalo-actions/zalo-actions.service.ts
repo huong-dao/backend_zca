@@ -4,7 +4,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { isDeepStrictEqual } from 'node:util';
-import type { API } from 'zca-js';
+import type { API, MessageContent } from 'zca-js';
 import { ThreadType } from 'zca-js';
 import {
   badRequestForZaloSessionRestoreFailure,
@@ -100,8 +100,16 @@ export class ZaloActionsService {
     }
     return this.withSession(dto.sessionId, async (zca) => {
       const threadType = dto.threadType ?? ThreadType.Group;
+      const paths = dto.attachmentLocalPaths;
+      const message: string | MessageContent =
+        paths?.length
+          ? {
+              msg: (dto.text ?? '').trim(),
+              attachments: paths,
+            }
+          : (dto.text ?? '').trim();
       const result = await zca.sendMessage(
-        dto.text.trim(),
+        message,
         dto.threadId.trim(),
         threadType,
       );

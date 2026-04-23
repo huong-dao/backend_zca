@@ -1,9 +1,15 @@
+import { randomUUID } from 'node:crypto';
+import { writeFile, unlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
   BadRequestException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import type { Express } from 'express';
 import { PrismaService } from '../../database/prisma/prisma.service';
+import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { FindMessagesDto } from './dto/find-messages.dto';
@@ -48,6 +54,7 @@ const messageWithSenderGroupSelect = {
 export class MessagesService {
   constructor(
     private readonly prismaService: PrismaService,
+    private readonly configsService: ConfigsService,
     private readonly zaloActionsService: ZaloActionsService,
     private readonly zaloLoginSessions: ZaloLoginSessionsService,
   ) {}
@@ -81,10 +88,14 @@ export class MessagesService {
     };
   }
 
-  async send(appUserId: string, dto: SendMessageDto) {
+  async send(
+    appUserId: string,
+    dto: SendMessageDto,
+    files?: Express.Multer.File[],
+  ) {
     const account = await this.prismaService.zaloAccount.findFirst({
       where: { id: dto.zaloAccountId, isDeleted: false },
-      select: { id: true, zaloId: true, isMaster: true, status: true },
+      select: { id: true, zaloId: true, name: true, isMaster: true, status: true },
     });
 
     if (!account) {
@@ -137,41 +148,129 @@ export class MessagesService {
       );
     }
 
-    const { result } = await this.zaloActionsService.sendMessage({
-      sessionId: session.id,
-      text: dto.text.trim(),
-      threadId: groupZaloId,
-    });
+    const intervalMinutes = await this.configsService.getMessageIntervalMinutes();
+    if (intervalMinutes > 0) {
+      const [zaloGroup, lastMessage] = await Promise.all([
+        this.prismaService.zaloGroup.findUnique({
+          where: { id: dto.groupId },
+          select: { groupName: true },
+        }),
+        this.prismaService.message.findFirst({
+          where: {
+            senderId: dto.zaloAccountId,
+            groupId: dto.groupId,
+          },
+          orderBy: { createdAt: 'desc' },
+          select: { sentAt: true, createdAt: true },
+        }),
+      ]);
+      if (lastMessage) {
+        const lastAt = lastMessage.sentAt ?? lastMessage.createdAt;
+        const intervalMs = intervalMinutes * 60_000;
+        const elapsed = Date.now() - lastAt.getTime();
+        if (elapsed < intervalMs) {
+          const childName =
+            account.name?.trim() || 'Tài khoản này';
+          const groupLabel = zaloGroup?.groupName?.trim() || 'nhóm này';
+          const remainingMs = intervalMs - elapsed;
+          const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60_000));
+          const agoMinutes = Math.floor(elapsed / 60_000);
+          const agoLabel =
+            agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
+          throw new BadRequestException(
+            `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`,
+          );
+        }
+      }
+    }
 
-    const { messageZaloId, cliMsgId } =
-      MessagesService.extractIdsFromZaloSendResult(result);
+    const textPart = dto.text?.trim() ?? '';
+    const fileList = files?.length ? files : [];
+    if (!textPart && !fileList.length) {
+      throw new BadRequestException(
+        'Cần nội dung tin nhắn (text) hoặc ít nhất một file đính kèm.',
+      );
+    }
 
-    const messageRow = await this.prismaService.message.create({
-      data: {
-        content: dto.text.trim(),
-        senderId: dto.zaloAccountId,
-        groupId: dto.groupId,
-        messageZaloId,
-        cliMsgId,
-        uidFrom: zaloUid,
-        sentAt: new Date(),
-        status: 'SENT',
-      },
-      select: {
-        id: true,
-        messageZaloId: true,
-        cliMsgId: true,
-        uidFrom: true,
-        content: true,
-        senderId: true,
-        groupId: true,
-        sentAt: true,
-        status: true,
-        createdAt: true,
-      },
-    });
+    const contentForDb = (() => {
+      if (textPart && fileList.length) {
+        const names = fileList
+          .map((f) => f.originalname || 'file')
+          .join(', ');
+        return `${textPart}\n\n(Đính kèm: ${names})`;
+      }
+      if (textPart) return textPart;
+      return `Đính kèm: ${fileList.map((f) => f.originalname || 'file').join(', ')}`;
+    })();
 
-    return { result, message: messageRow };
+    let tempPaths: string[] = [];
+    try {
+      if (fileList.length) {
+        tempPaths = await MessagesService.writeMulterFilesToTemp(fileList);
+      }
+      const { result } = await this.zaloActionsService.sendMessage({
+        sessionId: session.id,
+        text: textPart,
+        threadId: groupZaloId,
+        ...(tempPaths.length
+          ? { attachmentLocalPaths: tempPaths }
+          : {}),
+      });
+
+      const { messageZaloId, cliMsgId } =
+        MessagesService.extractIdsFromZaloSendResult(result);
+
+      const messageRow = await this.prismaService.message.create({
+        data: {
+          content: contentForDb,
+          senderId: dto.zaloAccountId,
+          groupId: dto.groupId,
+          messageZaloId,
+          cliMsgId,
+          uidFrom: zaloUid,
+          sentAt: new Date(),
+          status: 'SENT',
+        },
+        select: {
+          id: true,
+          messageZaloId: true,
+          cliMsgId: true,
+          uidFrom: true,
+          content: true,
+          senderId: true,
+          groupId: true,
+          sentAt: true,
+          status: true,
+          createdAt: true,
+        },
+      });
+
+      return { result, message: messageRow };
+    } finally {
+      await MessagesService.unlinkTempPaths(tempPaths);
+    }
+  }
+
+  private static async writeMulterFilesToTemp(
+    files: Express.Multer.File[],
+  ): Promise<string[]> {
+    const paths: string[] = [];
+    for (const f of files) {
+      const base = (f.originalname || 'file')
+        .replace(/[^a-zA-Z0-9._\-\s\u00C0-\u024F]/g, '_')
+        .slice(0, 120);
+      const p = join(tmpdir(), `zca-msg-${randomUUID()}-${base}`);
+      await writeFile(p, f.buffer);
+      paths.push(p);
+    }
+    return paths;
+  }
+
+  private static async unlinkTempPaths(paths: string[]): Promise<void> {
+    if (!paths.length) return;
+    await Promise.all(
+      paths.map((p) => unlink(p).catch(() => undefined)),
+    );
   }
 
   /** Best-effort parse of zca-js `sendMessage` return (shape may vary by version). */
