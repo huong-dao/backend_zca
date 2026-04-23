@@ -26,10 +26,7 @@ export class MessagesController {
   }
 
   @Post('send')
-  send(
-    @CurrentUser() user: AuthenticatedUser,
-    @Body() dto: SendMessageDto,
-  ) {
+  send(@CurrentUser() user: AuthenticatedUser, @Body() dto: SendMessageDto) {
     return this.messagesService.send(user.id, dto);
   }
 

@@ -1,7 +1,12 @@
 import type { API } from 'zca-js';
 import type { Cookie } from 'tough-cookie';
 
-const DEFAULT_ZALO_DOMAINS = ['.zalo.me', 'zalo.me', 'chat.zalo.me', 'id.zalo.me'];
+const DEFAULT_ZALO_DOMAINS = [
+  '.zalo.me',
+  'zalo.me',
+  'chat.zalo.me',
+  'id.zalo.me',
+];
 
 function domainToOrigin(domain: string): string {
   const host = domain.startsWith('.') ? domain.slice(1) : domain;

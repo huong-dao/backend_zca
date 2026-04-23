@@ -1,0 +1,69 @@
+---
+description: Job nền đồng bộ tên nhóm & globalId Zalo (Schedule + BullMQ)
+---
+
+## Mục đích
+
+Tự động lấy **tên nhóm** và **globalId** từ Zalo (`zca-js` `getGroupInfo`) cho các bản ghi `ZaloGroup` còn thiếu thông tin:
+
+- `is_update_name = false`, **hoặc**
+- `global_id` null hoặc chuỗi rỗng.
+
+**Lịch (cron)** chỉ **đẩy job vào hàng đợi**; **worker BullMQ** mới gọi Zalo API, Prisma update, retry/backoff và **rate limit** ở worker.
+
+## Bật tính năng
+
+1. Cài và chạy **Redis** (BullMQ bắt buộc khi bật job).
+2. Trong `.env` (tham khảo `.env.example`):
+
+| Biến | Ý nghĩa | Mặc định / ghi chú |
+|------|---------|-------------------|
+| `GROUP_SYNC_ENABLED` | Bật module (cron + queue + worker) | Phải là `true` để kích hoạt. Nếu không set / `false`, app **không** import Bull/Schedule (dev không cần Redis). |
+| `BULL_REDIS_URL` | URL Redis (ưu tiên hơn host/port) | Ví dụ `redis://127.0.0.1:6379` |
+| `BULL_REDIS_HOST` | Host Redis | `127.0.0.1` |
+| `BULL_REDIS_PORT` | Cổng Redis | `6379` |
+| `BULL_REDIS_PASSWORD` | Mật khẩu (nếu có) | Tuỳ chọn |
+| `BULL_REDIS_USERNAME` | User Redis (nếu có) | Tuỳ chọn |
+| `GROUP_SYNC_CRON` | Biểu thức cron **6 trường** (giây phút giờ …) | `0 */3 * * * *` ≈ mỗi 3 phút (tại giây 0) |
+| `GROUP_SYNC_TZ` | Múi giờ IANA cho cron | Ví dụ `Asia/Ho_Chi_Minh` |
+| `GROUP_SYNC_BATCH_SIZE` | Số nhóm tối đa xử lý mỗi lần chạy job | `10` |
+
+3. **Khởi động lại** process backend sau khi sửa `.env` (Nest đọc config lúc bootstrap).
+
+## Cách “chạy lại” job / áp dụng cấu hình mới
+
+- **Đổi thông số** (`GROUP_SYNC_*`, Redis, `BULL_*`): sửa `.env` rồi **restart** ứng dụng (PM2, Docker, `systemd`, hoặc `npm run start:dev` tắt rồi bật lại). Cron pattern mới chỉ có hiệu lực sau restart.
+- **Không cần restart Redis** khi chỉ đổi cron/batch trên app — chỉ cần restart **Node/Nest**.
+- **Lần chạy tiếp theo**: sau khi restart, lịch cron sẽ **enqueue** job `tick` theo chu kỳ mới; worker xử lý hàng đợi `group-metadata-sync`.
+- **Chờ xử lý hàng đợi**: nếu Redis còn job cũ, worker sẽ xử lý tuỳ theo `attempts`/backoff đã cấu hình trong `BackgroundJobsModule`.
+
+### Gợi ý khi cần kích hoạt sớm (không đợi cron)
+
+Ứng dụng hiện **không** expose HTTP để enqueue tay. Có thể:
+
+- Tạm **rút ngắn** `GROUP_SYNC_CRON` (ví dụ mỗi phút), restart, xem log, rồi trả lại giá trị cũ; hoặc
+- Dùng công cụ quản lý BullMQ (Bull Board, CLI Redis) để thêm job vào queue tên `group-metadata-sync` với tên job `tick` — chỉ nên dùng nếu team đã quen vận hành queue.
+
+## Hành vi nghiệp vụ (tóm tắt)
+
+- Mỗi lần job chạy: lấy tối đa `GROUP_SYNC_BATCH_SIZE` nhóm thỏa điều kiện pending, **ưu tiên** `created_at` cũ trước (`asc`).
+- Với mỗi nhóm: tìm **một** master (`ZaloAccountGroup` + `zalo_accounts.is_master = true`, không soft-delete) và `group_zalo_id` tương ứng.
+- Dùng session `zalo_login_sessions` mới nhất theo `zalo_uid` = `zalo_accounts.zalo_id` của master. **Không có session** → bỏ qua nhóm đó (log cảnh báo); lần cron sau thử lại.
+- Gọi `getGroupInfo` (gộp theo từng master để giảm số vòng gọi API), cập nhật `group_name`, `global_id`, và `is_update_name` khi có tên từ Zalo.
+- Trùng **unique** `global_id` (P2002): cập nhật tên nếu có, bỏ qua ghi `global_id` trùng (log cảnh báo).
+
+## Log
+
+Tìm prefix logger:
+
+- `GroupMetadataSyncScheduler` — cron đã enqueue.
+- `GroupMetadataSyncService` — tổng kết batch (`updated`, `skippedNoSession`, …).
+- `GroupMetadataSyncProcessor` — lỗi worker nếu có.
+
+## Code tham chiếu
+
+- Module: `src/modules/background-jobs/background-jobs.module.ts`
+- Cron (chỉ enqueue): `src/modules/background-jobs/group-sync.scheduler.ts`
+- Worker: `src/modules/background-jobs/group-sync.processor.ts`
+- Logic sync: `src/modules/background-jobs/group-metadata-sync.service.ts`
+- Cấu hình: `src/config/configuration.ts` (`groupSync`)

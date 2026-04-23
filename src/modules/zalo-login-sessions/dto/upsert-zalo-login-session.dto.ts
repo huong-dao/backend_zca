@@ -1,10 +1,5 @@
 import { Type } from 'class-transformer';
-import {
-  IsISO8601,
-  IsOptional,
-  IsUUID,
-  ValidateNested,
-} from 'class-validator';
+import { IsISO8601, IsOptional, IsUUID, ValidateNested } from 'class-validator';
 import { ZaloSessionCredentialsDto } from './zalo-session-credentials.dto';
 import { ZaloSessionUserDto } from './zalo-session-user.dto';
 

@@ -218,7 +218,7 @@ export class MessagesService {
       );
     }
 
-    return matchedIds[0]!.trim();
+    return matchedIds[0].trim();
   }
 
   /** Best-effort parse of zca-js `sendMessage` return (shape may vary by version). */
@@ -233,7 +233,10 @@ export class MessagesService {
 
     const fromMsgBlock = (block: unknown) => {
       if (!block || typeof block !== 'object') {
-        return { messageZaloId: null as string | null, cliMsgId: null as string | null };
+        return {
+          messageZaloId: null as string | null,
+          cliMsgId: null as string | null,
+        };
       }
       const m = block as Record<string, unknown>;
       const messageZaloId =

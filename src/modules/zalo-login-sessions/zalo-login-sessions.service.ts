@@ -92,7 +92,9 @@ export class ZaloLoginSessionsService {
   /**
    * Resolve session only from DB by id. No per-user ownership check.
    */
-  async findOneFullBySessionId(sessionId: string): Promise<ZaloLoginSessionFull> {
+  async findOneFullBySessionId(
+    sessionId: string,
+  ): Promise<ZaloLoginSessionFull> {
     const row = await this.prisma.zaloLoginSession.findUnique({
       where: { id: sessionId },
     });
@@ -185,15 +187,19 @@ export class ZaloLoginSessionsService {
     let credentials: ZaloSessionCredentialsPayload;
     try {
       credentials = this.crypto.decryptJson<ZaloSessionCredentialsPayload>(
-        Buffer.from(row.credentialsEncrypted as Uint8Array),
+        Buffer.from(row.credentialsEncrypted),
       );
     } catch {
-      throw new InternalServerErrorException('Failed to decrypt session credentials.');
+      throw new InternalServerErrorException(
+        'Failed to decrypt session credentials.',
+      );
     }
     return { ...this.toPublic(row), credentials };
   }
 
-  private normalizeUserProfile(dto: UpsertZaloLoginSessionDto): ZaloSessionUserProfile {
+  private normalizeUserProfile(
+    dto: UpsertZaloLoginSessionDto,
+  ): ZaloSessionUserProfile {
     const u = dto.user;
     return {
       uid: u.uid,

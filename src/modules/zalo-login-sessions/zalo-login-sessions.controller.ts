@@ -21,7 +21,9 @@ import { ZaloLoginSessionsService } from './zalo-login-sessions.service';
 @Roles('ADMIN', 'USER')
 @Controller('zalo-sessions')
 export class ZaloLoginSessionsController {
-  constructor(private readonly zaloLoginSessionsService: ZaloLoginSessionsService) {}
+  constructor(
+    private readonly zaloLoginSessionsService: ZaloLoginSessionsService,
+  ) {}
 
   @Post()
   upsert(
@@ -48,18 +50,24 @@ export class ZaloLoginSessionsController {
   }
 
   @Patch(':sessionId/touch')
-  touch(@Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string) {
+  touch(
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+  ) {
     return this.zaloLoginSessionsService.touchBySessionId(sessionId);
   }
 
   @Get(':sessionId')
-  findOneFull(@Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string) {
+  findOneFull(
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+  ) {
     return this.zaloLoginSessionsService.findOneFullBySessionId(sessionId);
   }
 
   @Delete(':sessionId')
   @Roles('ADMIN')
-  remove(@Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string) {
+  remove(
+    @Param('sessionId', new ParseUUIDPipe({ version: '4' })) sessionId: string,
+  ) {
     return this.zaloLoginSessionsService.deleteOneBySessionId(sessionId);
   }
 }

@@ -178,11 +178,7 @@ export class ZaloGroupsService {
     const groups: PendingNameUpdateGroup[] =
       await this.prismaService.zaloGroup.findMany({
         where: {
-          OR: [
-            { isUpdateName: false },
-            { globalId: null },
-            { globalId: '' },
-          ],
+          OR: [{ isUpdateName: false }, { globalId: null }, { globalId: '' }],
         },
         select: pendingNameUpdateSelect,
         orderBy: {
@@ -528,8 +524,8 @@ export class ZaloGroupsService {
     }
 
     const requestedGroupZaloIds = [...uniqueGroups.keys()];
-    const existingMappings =
-      await this.prismaService.zaloAccountGroup.findMany({
+    const existingMappings = await this.prismaService.zaloAccountGroup.findMany(
+      {
         where: {
           zaloAccountId,
           groupZaloId: {
@@ -540,16 +536,14 @@ export class ZaloGroupsService {
           groupZaloId: true,
           groupId: true,
         },
-      });
+      },
+    );
 
     const existingGroupZaloIds = new Set<string>(
       existingMappings.map((m) => m.groupZaloId),
     );
 
-    const firstMappingByGroupZaloId = new Map<
-      string,
-      { groupId: string }
-    >();
+    const firstMappingByGroupZaloId = new Map<string, { groupId: string }>();
     for (const m of existingMappings) {
       if (!firstMappingByGroupZaloId.has(m.groupZaloId)) {
         firstMappingByGroupZaloId.set(m.groupZaloId, { groupId: m.groupId });

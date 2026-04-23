@@ -1,8 +1,4 @@
-import {
-  createCipheriv,
-  createDecipheriv,
-  randomBytes,
-} from 'node:crypto';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
@@ -50,9 +46,10 @@ export class ZaloSessionCryptoService implements OnModuleInit {
     const data = blob.subarray(IV_LENGTH + AUTH_TAG_LENGTH);
     const decipher = createDecipheriv(ALGO, this.key, iv);
     decipher.setAuthTag(authTag);
-    const plain = Buffer.concat([decipher.update(data), decipher.final()]).toString(
-      'utf8',
-    );
+    const plain = Buffer.concat([
+      decipher.update(data),
+      decipher.final(),
+    ]).toString('utf8');
     return JSON.parse(plain) as T;
   }
 }

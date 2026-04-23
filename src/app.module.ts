@@ -1,3 +1,6 @@
+import { config } from 'dotenv';
+config();
+
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
@@ -16,6 +19,9 @@ import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
 import { ZaloLoginSessionsModule } from './modules/zalo-login-sessions/zalo-login-sessions.module';
 import { ZaloActionsModule } from './modules/zalo-actions/zalo-actions.module';
+import { BackgroundJobsModule } from './modules/background-jobs/background-jobs.module';
+
+const groupSyncEnabled = process.env.GROUP_SYNC_ENABLED === 'true';
 
 @Module({
   imports: [
@@ -35,6 +41,7 @@ import { ZaloActionsModule } from './modules/zalo-actions/zalo-actions.module';
     ZaloGroupsModule,
     ZaloLoginSessionsModule,
     ZaloActionsModule,
+    ...(groupSyncEnabled ? [BackgroundJobsModule] : []),
   ],
   controllers: [AppController],
   providers: [
