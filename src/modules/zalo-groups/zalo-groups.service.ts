@@ -180,8 +180,8 @@ export class ZaloGroupsService {
         where: {
           OR: [
             { isUpdateName: false },
-            { originName: null },
-            { originName: '' },
+            { globalId: null },
+            { globalId: '' },
           ],
         },
         select: pendingNameUpdateSelect,
