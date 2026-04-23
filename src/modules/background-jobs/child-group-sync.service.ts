@@ -24,6 +24,7 @@ import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
+import { randomUUID } from 'node:crypto';
 import { CHILD_GROUP_SCAN_QUEUE } from './constants';
 
 export type ChildGroupScanJobPayload = {
@@ -38,6 +39,9 @@ export type ChildGroupScanJobPayload = {
 };
 
 type GridInfoEntry = { name?: string; globalId?: string };
+
+/** Avoid hung workers leaving child `INACTIVE` forever if Zalo never responds. */
+const ZALO_CHILD_SCAN_API_TIMEOUT_MS = 120_000;
 
 @Injectable()
 export class ChildGroupSyncService {
@@ -75,6 +79,33 @@ export class ChildGroupSyncService {
 
   isEnabled(): boolean {
     return this.config.get('groupSync.enabled') === true;
+  }
+
+  private async withZaloCallTimeout<T>(
+    promise: Promise<T>,
+    label: string,
+  ): Promise<T> {
+    const ms = ZALO_CHILD_SCAN_API_TIMEOUT_MS;
+    return new Promise<T>((resolve, reject) => {
+      const t = setTimeout(
+        () =>
+          reject(
+            new Error(
+              `Zalo child scan API timeout after ${ms}ms (${label}).`,
+            ),
+          ),
+        ms,
+      );
+      promise
+        .then((v) => {
+          clearTimeout(t);
+          resolve(v);
+        })
+        .catch((e) => {
+          clearTimeout(t);
+          reject(e);
+        });
+    });
   }
 
   /**
@@ -134,7 +165,8 @@ export class ChildGroupSyncService {
         workGridIds: null,
       } satisfies ChildGroupScanJobPayload,
       {
-        jobId: `child-scan-${zaloAccountId}`,
+        // Unique id: a job stuck in "active" on Zalo would block re-enqueue with a fixed id in Bull.
+        jobId: `child-scan-${zaloAccountId}-${randomUUID()}`,
         removeOnComplete: 50,
         removeOnFail: 20,
       },
@@ -195,7 +227,7 @@ export class ChildGroupSyncService {
         workGridIds: null,
       } satisfies ChildGroupScanJobPayload,
       {
-        jobId: `child-scan-${childZaloAccountId}`,
+        jobId: `child-scan-${childZaloAccountId}-${randomUUID()}`,
         removeOnComplete: 50,
         removeOnFail: 20,
       },
@@ -216,7 +248,18 @@ export class ChildGroupSyncService {
   async runScanFromJob(job: Job<ChildGroupScanJobPayload>): Promise<void> {
     const p = job.data;
     if (!p?.zaloAccountId || !p.sessionId) {
-      this.logger.error('child-group-scan: invalid job payload');
+      this.logger.error(
+        `child-group-scan: invalid job payload (jobId=${String(job.id)})`,
+      );
+      if (p?.zaloAccountId) {
+        await this.prisma.zaloAccount.updateMany({
+          where: { id: p.zaloAccountId, status: 'INACTIVE' },
+          data: { status: 'ACTIVE' },
+        });
+        this.logger.warn(
+          `child-group-scan: reverted INACTIVE for zaloAccountId=${p.zaloAccountId} (invalid payload)`,
+        );
+      }
       return;
     }
     let continuationScheduled = false;
@@ -292,8 +335,15 @@ export class ChildGroupSyncService {
       ttl,
     );
     if (workList.length === 0) {
+      this.logger.log(
+        `Child scan: nothing to do (empty work list) zaloAccountId=${zaloAccountId}`,
+      );
       return false;
     }
+
+    this.logger.log(
+      `Child scan: start zaloAccountId=${zaloAccountId} masters=${masterIds.length} workItems=${workList.length}`,
+    );
 
     const maxIdsThisRun = maxCalls * batchSize;
     const toProcessThisRun = workList.slice(0, maxIdsThisRun);
@@ -320,7 +370,10 @@ export class ChildGroupSyncService {
       }
       const arg: string | string[] =
         chunk.length === 1 ? chunk[0]! : chunk;
-      const res = await zca.getGroupInfo(arg);
+      const res = await this.withZaloCallTimeout(
+        zca.getGroupInfo(arg),
+        `getGroupInfo(${String(Array.isArray(arg) ? arg.length : 1)} ids)`,
+      );
       const grid = this.readGrid(res);
       for (const gridId of chunk) {
         const entry = grid?.[gridId];
@@ -349,7 +402,7 @@ export class ChildGroupSyncService {
         } satisfies ChildGroupScanJobPayload,
         {
           delay,
-          jobId: `child-scan-${zaloAccountId}-c-${Date.now()}`,
+          jobId: `child-scan-${zaloAccountId}-c-${randomUUID()}`,
           removeOnComplete: 50,
           removeOnFail: 20,
         },
@@ -378,10 +431,13 @@ export class ChildGroupSyncService {
     zaloAccountId: string,
     zaloUid: string,
   ): Promise<string[]> {
-    const { gridVerMap } = await this.withZaloSessionShort(sessionId, async (zca) => {
-      const g = await zca.getAllGroups();
-      return { gridVerMap: g?.gridVerMap ?? {} };
-    });
+    const { gridVerMap } = await this.withZaloCallTimeout(
+      this.withZaloSessionShort(sessionId, async (zca) => {
+        const g = await zca.getAllGroups();
+        return { gridVerMap: g?.gridVerMap ?? {} };
+      }),
+      'getAllGroups',
+    );
     const keys = Object.keys(
       (gridVerMap as Record<string, string>) || {},
     ).filter((k) => k.length > 0);
@@ -566,15 +622,50 @@ export class ChildGroupSyncService {
       );
       return;
     }
-    const group = await this.prisma.zaloGroup.findFirst({
+    let group: { id: string } | null = await this.prisma.zaloGroup.findFirst({
       where: { globalId: globalFromZ },
       select: { id: true },
     });
     if (!group) {
-      this.logger.debug(
-        `Child scan: no ZaloGroup with globalId=${globalFromZ} (master has not created/synced this group in DB); skip grid ${groupZaloId}.`,
-      );
-      return;
+      const masterMapRows = await this.prisma.zaloAccountGroup.findMany({
+        where: { zaloAccountId: { in: masterIds } },
+        select: { groupId: true },
+      });
+      const masterGroupIds = [...new Set(masterMapRows.map((r) => r.groupId))];
+      const unSynced = await this.prisma.zaloGroup.findMany({
+        where: {
+          id: { in: masterGroupIds },
+          OR: [{ globalId: null }, { globalId: '' }],
+        },
+        select: { id: true, groupName: true },
+      });
+      if (unSynced.length === 1) {
+        const only = unSynced[0]!;
+        const nameFromZ =
+          typeof entry.name === 'string' && entry.name.trim()
+            ? entry.name.trim()
+            : only.groupName;
+        await this.prisma.zaloGroup.update({
+          where: { id: only.id },
+          data: {
+            globalId: globalFromZ,
+            groupName: nameFromZ,
+            isUpdateName: true,
+            ...(nameFromZ ? { originName: nameFromZ } : {}),
+          },
+        });
+        this.logger.log(
+          `Child scan: backfilled globalId on ZaloGroup id=${only.id} from child grid ${groupZaloId}.`,
+        );
+        group = { id: only.id };
+      } else {
+        this.logger.warn(
+          unSynced.length === 0
+            ? `Child scan: no ZaloGroup with globalId=${globalFromZ} and no master-mapped group row to backfill. Skip grid group_zalo_id=${groupZaloId}.`
+            : `Child scan: ${unSynced.length} master groups still missing globalId in DB; cannot guess which to match. Run master group metadata sync (GROUP_SYNC) or keep a single unsynced group. globalId from Zalo=${globalFromZ} grid ${groupZaloId}.`,
+        );
+        return;
+      }
     }
     const masterHasGroup = await this.prisma.zaloAccountGroup.findFirst({
       where: {
