@@ -75,6 +75,7 @@ type FindAllAccountRecord = ZaloAccountBaseRecord & {
       zaloId: string | null;
       name: string | null;
       groupCount: number;
+      status: ZaloAccountStatus;
     };
   }>;
   friends: Array<{
@@ -132,6 +133,7 @@ type ListedZaloAccount = ZaloAccountBaseRecord & {
     zaloId: string | null;
     name: string | null;
     groupCount: number;
+    status: ZaloAccountStatus;
   }>;
   friends: ZaloAccountFriendSummary[];
 };
@@ -202,6 +204,7 @@ type FindOneAccountResponse = ZaloAccountBaseRecord & {
     isMaster: boolean;
     groupCount: number;
     groupData: unknown;
+    status: ZaloAccountStatus;
     createdAt: Date;
     updatedAt: Date;
   }>;
@@ -243,6 +246,7 @@ type FindOneAccountRecord = ZaloAccountBaseRecord & {
       isMaster: boolean;
       groupCount: number;
       groupData: unknown;
+      status: ZaloAccountStatus;
       createdAt: Date;
       updatedAt: Date;
     };
@@ -552,6 +556,7 @@ export class ZaloAccountsService {
                   isMaster: true,
                   groupCount: true,
                   groupData: true,
+                  status: true,
                   createdAt: true,
                   updatedAt: true,
                 },
@@ -915,6 +920,7 @@ export class ZaloAccountsService {
                   zaloId: true,
                   name: true,
                   groupCount: true,
+                  status: true,
                 },
               },
             },

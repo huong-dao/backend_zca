@@ -26,15 +26,43 @@ export default () => ({
    * Opt-in: set GROUP_SYNC_ENABLED=true and run Redis. Cron only enqueues; worker runs the API calls.
    */
   groupSync: {
+    /**
+     * Master metadata cron + Bull workers + child group scan (same Redis).
+     * Set `GROUP_SYNC_ENABLED=true` to run master tick and allow child “quét nhóm”.
+     */
     enabled: process.env.GROUP_SYNC_ENABLED === 'true',
     /** 6-field cron (default: every 3 minutes at :00s). */
     cron: process.env.GROUP_SYNC_CRON?.trim() || '0 */3 * * * *',
     /** Optional IANA zone for the cron (e.g. Asia/Ho_Chi_Minh). */
     timezone: process.env.GROUP_SYNC_TZ?.trim() || undefined,
-    batchSize: Math.max(
+    /** `getGroupInfo` (zca-js): at most this many group grid ids per API call. */
+    getGroupInfoBatchSize: Math.max(
       1,
-      Number.parseInt(process.env.GROUP_SYNC_BATCH_SIZE ?? '10', 10) || 10,
+      Number.parseInt(
+        process.env.GROUP_SYNC_GET_GROUP_INFO_BATCH ?? '20',
+        10,
+      ) || 20,
     ),
+    /** Per cron tick (each worker run): at most this many `getGroupInfo` Zalo API calls. */
+    maxGetGroupInfoCallsPerRun: Math.max(
+      1,
+      Number.parseInt(
+        process.env.GROUP_SYNC_MAX_INFO_CALLS_PER_RUN ?? '10',
+        10,
+      ) || 10,
+    ),
+    /**
+     * Max pending `ZaloGroup` rows to load per tick (ordered oldest first).
+     * Default: getGroupInfoBatchSize × maxGetGroupInfoCallsPerRun. Override with GROUP_SYNC_MAX_GROUPS_PER_FETCH.
+     */
+    maxGroupsPerFetch: (() => {
+      const raw = process.env.GROUP_SYNC_MAX_GROUPS_PER_FETCH?.trim();
+      if (!raw) {
+        return undefined as number | undefined;
+      }
+      const n = Number.parseInt(raw, 10);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    })(),
     redis: {
       url: process.env.BULL_REDIS_URL?.trim() || undefined,
       host: process.env.BULL_REDIS_HOST?.trim() || '127.0.0.1',
@@ -45,5 +73,39 @@ export default () => ({
       password: process.env.BULL_REDIS_PASSWORD || undefined,
       username: process.env.BULL_REDIS_USERNAME || undefined,
     },
+  },
+  /**
+   * Child account: getAllGroups → batch getGroupInfo (Redis cache) → map globalId to ZaloGroup + ZaloAccountGroup.
+   * `status` INACTIVE for child during sync; return `status` to frontend (hide scan button, etc.).
+   * Requires the same Redis as Bull.
+   */
+  childGroupSync: {
+    getGroupInfoBatchSize: Math.max(
+      1,
+      Number.parseInt(
+        process.env.CHILD_GROUP_SYNC_GET_GROUP_INFO_BATCH ?? '20',
+        10,
+      ) || 20,
+    ),
+    maxGetGroupInfoCallsPerRun: Math.max(
+      1,
+      Number.parseInt(
+        process.env.CHILD_GROUP_SYNC_MAX_INFO_CALLS_PER_RUN ?? '10',
+        10,
+      ) || 10,
+    ),
+    /** ms between continued chunk jobs (default 3 min). */
+    continueDelayMs: Math.max(
+      0,
+      Number.parseInt(
+        process.env.CHILD_GROUP_SYNC_CONTINUE_DELAY_MS ?? '180000',
+        10,
+      ) || 180000,
+    ),
+    cacheTtlSec: Math.max(
+      60,
+      Number.parseInt(process.env.CHILD_GROUP_SYNC_CACHE_TTL_SEC ?? '604800', 10) ||
+        604800,
+    ),
   },
 });

@@ -3,7 +3,9 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ZaloLoginSessionsModule } from '../zalo-login-sessions/zalo-login-sessions.module';
-import { GROUP_METADATA_SYNC_QUEUE } from './constants';
+import { CHILD_GROUP_SCAN_QUEUE, GROUP_METADATA_SYNC_QUEUE } from './constants';
+import { ChildGroupSyncProcessor } from './child-group-sync.processor';
+import { ChildGroupSyncService } from './child-group-sync.service';
 import { GroupMetadataSyncService } from './group-metadata-sync.service';
 import { GroupMetadataSyncProcessor } from './group-sync.processor';
 import { GroupMetadataSyncScheduler } from './group-sync.scheduler';
@@ -46,11 +48,23 @@ import { GroupMetadataSyncScheduler } from './group-sync.scheduler';
         removeOnFail: 50,
       },
     }),
+    BullModule.registerQueue({
+      name: CHILD_GROUP_SCAN_QUEUE,
+      defaultJobOptions: {
+        attempts: 2,
+        backoff: { type: 'exponential', delay: 10_000 },
+        removeOnComplete: 100,
+        removeOnFail: 30,
+      },
+    }),
   ],
   providers: [
     GroupMetadataSyncService,
     GroupMetadataSyncProcessor,
     GroupMetadataSyncScheduler,
+    ChildGroupSyncService,
+    ChildGroupSyncProcessor,
   ],
+  exports: [ChildGroupSyncService],
 })
 export class BackgroundJobsModule {}

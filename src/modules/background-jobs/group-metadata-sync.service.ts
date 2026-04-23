@@ -38,10 +38,17 @@ export class GroupMetadataSyncService {
   ) {}
 
   async runSyncBatch() {
-    const batchSize = this.config.get<number>('groupSync.batchSize') ?? 10;
+    const chunkSize =
+      this.config.get<number>('groupSync.getGroupInfoBatchSize') ?? 20;
+    const maxCallsPerRun =
+      this.config.get<number>('groupSync.maxGetGroupInfoCallsPerRun') ?? 10;
+    const maxGroupsPerFetch =
+      this.config.get<number | undefined>('groupSync.maxGroupsPerFetch') ??
+      Math.max(1, chunkSize * maxCallsPerRun);
+
     const groups = await this.prisma.zaloGroup.findMany({
       where: pendingGroupWhere,
-      take: batchSize,
+      take: maxGroupsPerFetch,
       orderBy: { createdAt: 'asc' },
       select: { id: true, groupName: true, isUpdateName: true, globalId: true },
     });
@@ -51,6 +58,7 @@ export class GroupMetadataSyncService {
       return {
         candidates: 0,
         withMaster: 0,
+        getGroupInfoCalls: 0,
         updated: 0,
         skippedNoMaster: 0,
         skippedNoSession: 0,
@@ -101,6 +109,7 @@ export class GroupMetadataSyncService {
       return {
         candidates: groups.length,
         withMaster: 0,
+        getGroupInfoCalls: 0,
         updated: 0,
         skippedNoMaster,
         skippedNoSession: 0,
@@ -120,9 +129,9 @@ export class GroupMetadataSyncService {
     let skippedNoSession = 0;
     let failed = 0;
     let skippedGlobalIdConflict = 0;
+    let apiCalls = 0;
 
     for (const [zaloUid, batch] of byZalo) {
-      const groupZaloIds = batch.map((b) => b.groupZaloId);
       const full = await this.tryGetLatestSession(zaloUid);
       if (!full) {
         skippedNoSession += batch.length;
@@ -132,46 +141,63 @@ export class GroupMetadataSyncService {
         continue;
       }
 
-      try {
-        const grid = await this.withZaloSessionBySessionId(
-          full.id,
-          full.credentials,
-          async (zca) => {
-            const arg: string | string[] =
-              groupZaloIds.length === 1 ? groupZaloIds[0] : groupZaloIds;
-            return zca.getGroupInfo(arg);
-          },
-        );
-        for (const item of batch) {
-          const result = await this.applyGroupInfoFromZaloResponse(
-            item.groupId,
-            item.groupZaloId,
-            grid,
+      for (let i = 0; i < batch.length; i += chunkSize) {
+        if (apiCalls >= maxCallsPerRun) {
+          this.logger.debug(
+            `Group metadata sync: hit maxGetGroupInfoCallsPerRun=${maxCallsPerRun}; remaining group(s) deferred to next tick.`,
           );
-          if (result === 'updated') {
-            updated += 1;
-          } else if (result === 'globalId_conflict') {
-            skippedGlobalIdConflict += 1;
-          } else {
-            failed += 1;
-          }
+          break;
         }
-      } catch (err) {
-        failed += batch.length;
-        this.logger.error(
-          `Group metadata sync failed for zalo_uid=${zaloUid} (${batch.length} group(s)): ${err instanceof Error ? err.message : String(err)}`,
-          err instanceof Error ? err.stack : undefined,
-        );
+        const slice = batch.slice(i, i + chunkSize);
+        const groupZaloIds = slice.map((b) => b.groupZaloId);
+        apiCalls += 1;
+
+        try {
+          const grid = await this.withZaloSessionBySessionId(
+            full.id,
+            full.credentials,
+            async (zca) => {
+              const arg: string | string[] =
+                groupZaloIds.length === 1 ? groupZaloIds[0] : groupZaloIds;
+              return zca.getGroupInfo(arg);
+            },
+          );
+          for (const item of slice) {
+            const result = await this.applyGroupInfoFromZaloResponse(
+              item.groupId,
+              item.groupZaloId,
+              grid,
+            );
+            if (result === 'updated') {
+              updated += 1;
+            } else if (result === 'globalId_conflict') {
+              skippedGlobalIdConflict += 1;
+            } else {
+              failed += 1;
+            }
+          }
+        } catch (err) {
+          failed += slice.length;
+          this.logger.error(
+            `Group metadata sync failed for zalo_uid=${zaloUid} (${slice.length} group(s) in chunk): ${err instanceof Error ? err.message : String(err)}`,
+            err instanceof Error ? err.stack : undefined,
+          );
+        }
+      }
+
+      if (apiCalls >= maxCallsPerRun) {
+        break;
       }
     }
 
     this.logger.log(
-      `Group metadata sync done: candidates=${groups.length} withMaster=${rows.length} updated=${updated} skippedNoMaster=${skippedNoMaster} skippedNoSession=${skippedNoSession} failed=${failed} skippedGlobalIdConflict=${skippedGlobalIdConflict}`,
+      `Group metadata sync done: candidates=${groups.length} withMaster=${rows.length} getGroupInfoCalls=${apiCalls}/${maxCallsPerRun} chunkSize=${chunkSize} updated=${updated} skippedNoMaster=${skippedNoMaster} skippedNoSession=${skippedNoSession} failed=${failed} skippedGlobalIdConflict=${skippedGlobalIdConflict}`,
     );
 
     return {
       candidates: groups.length,
       withMaster: rows.length,
+      getGroupInfoCalls: apiCalls,
       updated,
       skippedNoMaster,
       skippedNoSession,

@@ -9,7 +9,9 @@ Tự động lấy **tên nhóm** và **globalId** từ Zalo (`zca-js` `getGroup
 - `is_update_name = false`, **hoặc**
 - `global_id` null hoặc chuỗi rỗng.
 
-**Lịch (cron)** chỉ **đẩy job vào hàng đợi**; **worker BullMQ** mới gọi Zalo API, Prisma update, retry/backoff và **rate limit** ở worker.
+**Lịch (cron)** chỉ **đẩy job vào hàng đợi**; **worker BullMQ** mới gọi Zalo API, Prisma update, retry/backoff.
+
+**Giới hạn API (master):** mỗi lần worker xử lý một job `tick`, gọi Zalo tối đa **`GROUP_SYNC_MAX_INFO_CALLS_PER_RUN`** lần `getGroupInfo`, mỗi lần truyền tối đa **`GROUP_SYNC_GET_GROUP_INFO_BATCH`** `group_zalo_id` (mặc định **10 lần × 20 nhóm** mỗi tick). Cron mặc định **~3 phút** một tick — tức trong mỗi ~3 phút chỉ qua **một** job `tick` (trừ khi có job dồn hàng đợi); mỗi tick đó tối đa **10** lần gọi `getGroupInfo` tới zca-js.
 
 ## Bật tính năng
 
@@ -18,7 +20,7 @@ Tự động lấy **tên nhóm** và **globalId** từ Zalo (`zca-js` `getGroup
 
 | Biến | Ý nghĩa | Mặc định / ghi chú |
 |------|---------|-------------------|
-| `GROUP_SYNC_ENABLED` | Bật module (cron + queue + worker) | Phải là `true` để kích hoạt. Nếu không set / `false`, app **không** import Bull/Schedule (dev không cần Redis). |
+| `GROUP_SYNC_ENABLED` | Bật cron master + queue + worker; **cùng cờ** bật child “quét nhóm” | Phải là `true`. |
 | `BULL_REDIS_URL` | URL Redis (ưu tiên hơn host/port) | Ví dụ `redis://127.0.0.1:6379` |
 | `BULL_REDIS_HOST` | Host Redis | `127.0.0.1` |
 | `BULL_REDIS_PORT` | Cổng Redis | `6379` |
@@ -26,9 +28,11 @@ Tự động lấy **tên nhóm** và **globalId** từ Zalo (`zca-js` `getGroup
 | `BULL_REDIS_USERNAME` | User Redis (nếu có) | Tuỳ chọn |
 | `GROUP_SYNC_CRON` | Biểu thức cron **6 trường** (giây phút giờ …) | `0 */3 * * * *` ≈ mỗi 3 phút (tại giây 0) |
 | `GROUP_SYNC_TZ` | Múi giờ IANA cho cron | Ví dụ `Asia/Ho_Chi_Minh` |
-| `GROUP_SYNC_BATCH_SIZE` | Số nhóm tối đa xử lý mỗi lần chạy job | `10` |
+| `GROUP_SYNC_GET_GROUP_INFO_BATCH` | Số `group_zalo_id` gửi mỗi **một** lần gọi `getGroupInfo` | `20` |
+| `GROUP_SYNC_MAX_INFO_CALLS_PER_RUN` | Tối đa **số lần** gọi `getGroupInfo` trong **một** lần worker chạy job tick | `10` |
+| `GROUP_SYNC_MAX_GROUPS_PER_FETCH` | Tối đa số bản ghi pending lấy từ DB mỗi tick (cũ `GROUP_SYNC_BATCH_SIZE`) | Mặc định = batch × max calls (200) nếu không set |
 
-3. **Khởi động lại** process backend sau khi sửa `.env` (Nest đọc config lúc bootstrap).
+3. **Khởi động lại** process backend sau khi sửa `.env` (Nest đọc config lúc bootstrap). Cron pattern mới chỉ có hiệu lực sau restart.
 
 ## Cách “chạy lại” job / áp dụng cấu hình mới
 
@@ -46,10 +50,10 @@ Tự động lấy **tên nhóm** và **globalId** từ Zalo (`zca-js` `getGroup
 
 ## Hành vi nghiệp vụ (tóm tắt)
 
-- Mỗi lần job chạy: lấy tối đa `GROUP_SYNC_BATCH_SIZE` nhóm thỏa điều kiện pending, **ưu tiên** `created_at` cũ trước (`asc`).
-- Với mỗi nhóm: tìm **một** master (`ZaloAccountGroup` + `zalo_accounts.is_master = true`, không soft-delete) và `group_zalo_id` tương ứng.
+- Mỗi lần job tick: lấy tối đa `GROUP_SYNC_MAX_GROUPS_PER_FETCH` (mặc định 200) nhóm thỏa điều kiện pending, **ưu tiên** `created_at` cũ trước (`asc`).
+- Với mỗi **master** (`zalo_uid`): chia danh sách `group_zalo_id` thành **từng chunk 20** (cấu hình được), mỗi chunk **một** lần `getGroupInfo`, dừng khi đã dùng hết **10 lần gọi** (mặc định) trong tick — phần còn lại **để tick sau** (3 phút sau nếu cron 3 phút).
+- Tìm **một** master (`ZaloAccountGroup` + `zalo_accounts.is_master = true`, không soft-delete) và `group_zalo_id` tương ứng.
 - Dùng session `zalo_login_sessions` mới nhất theo `zalo_uid` = `zalo_accounts.zalo_id` của master. **Không có session** → bỏ qua nhóm đó (log cảnh báo); lần cron sau thử lại.
-- Gọi `getGroupInfo` (gộp theo từng master để giảm số vòng gọi API), cập nhật `group_name`, `global_id`, và `is_update_name` khi có tên từ Zalo.
 - Trùng **unique** `global_id` (P2002): cập nhật tên nếu có, bỏ qua ghi `global_id` trùng (log cảnh báo).
 
 ## Log
@@ -57,7 +61,7 @@ Tự động lấy **tên nhóm** và **globalId** từ Zalo (`zca-js` `getGroup
 Tìm prefix logger:
 
 - `GroupMetadataSyncScheduler` — cron đã enqueue.
-- `GroupMetadataSyncService` — tổng kết batch (`updated`, `skippedNoSession`, …).
+- `GroupMetadataSyncService` — tổng kết batch (`getGroupInfoCalls`, `updated`, `skippedNoSession`, …).
 - `GroupMetadataSyncProcessor` — lỗi worker nếu có.
 
 ## Code tham chiếu

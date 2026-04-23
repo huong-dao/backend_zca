@@ -73,6 +73,10 @@ This document is intended for the NextJS frontend team and is generated from the
 - `FAILED`: send attempt failed but log was still stored
 - `RECALL`: message was recalled successfully via Zalo undo API
 
+### ZaloAccountStatus
+- `ACTIVE`: account can be used for messaging (and normal UI actions) per backend rules
+- `INACTIVE`: set while a **child group scan** (or post-invite sync) is in progress; the frontend can use this to **disable** “quét nhóm” / related buttons until the job finishes and status returns to `ACTIVE`
+
 ## System API
 ### GET `/`
 #### Endpoint
@@ -801,6 +805,7 @@ Behavior:
 - `sessionId`: latest `zalo_login_sessions.id` for the **master** (same pattern as `GET /zalo/actions/groups?sessionId=...`).
 - Master must be **Zalo friends** with the invitee and have permission to add members to that group (Zalo-side rules).
 - If `childZaloAccountId` is sent, that account must exist in `zalo_account_relations` as a **child** of `masterZaloAccountId` (used to resolve `phone` only).
+- After a **successful** Zalo invite, if **`childZaloAccountId`** is set, the server attempts to **enqueue a background child group scan** (same pipeline as `POST /zalo-accounts/:id/child-group-scan`: `getAllGroups` + batched `getGroupInfo`, Redis cache, `zalo_account_groups` mapping by `globalId`). The child’s **`ZaloAccount.status`** becomes **`INACTIVE`** for the duration of that work (and is set back to **`ACTIVE`** when the last chunk finishes, or on error). The client should read **`status`** from account payloads (e.g. list/detail) to hide repeat actions (e.g. “quét nhóm” / invite-driven sync) while **`INACTIVE`**.
 
 #### Request
 - Params: none
@@ -1835,6 +1840,54 @@ Example request:
 - `401`: missing/invalid JWT
 - `404`: one or more child Zalo accounts were not found
 - `404`: master Zalo account not found
+- `500`: unexpected server error
+
+#### Authentication
+- JWT required
+- Guards: `JwtAuthGuard`, `RolesGuard`
+- Required role: `ADMIN`, `USER`
+
+### POST `/zalo-accounts/:id/child-group-scan`
+#### Endpoint
+- Method: `POST`
+- Full path: `/zalo-accounts/:id/child-group-scan` (`id` = child `zalo_accounts.id` UUID)
+- Function: `ZaloAccountsController.childGroupScan` → `ChildGroupSyncService.startChildGroupScan`
+
+#### Description
+**“Quét nhóm” (child only):** validates the child account, checks `sessionId` belongs to the **current app user** and matches the child’s `zaloId`, sets **`ZaloAccount.status`** to **`INACTIVE`**, and enqueues a Bull job. The job loads group grid ids from Zalo via **`getAllGroups`**, then calls **`getGroupInfo`** in batches (default **~20** ids per Zalo call), at most **~10** such calls per job run; remaining work is re-queued after a **~3 minute** delay (configurable; not the master `GROUP_SYNC_CRON` interval). When the last chunk completes successfully, status returns to **`ACTIVE`**. If the child is already **`INACTIVE`**, the API returns **`409`** to avoid double scans.
+
+**Environment:** set **`GROUP_SYNC_ENABLED=true`** (và Redis như job master). Tuỳ chọn điều chỉnh `CHILD_GROUP_SYNC_*` cho batch, delay, cache — xem `.env.example`.
+
+#### Request
+- Params:
+  - `id`: `string`, UUID — child `zalo_accounts.id` (`isMaster` must be `false`)
+- Query: none
+- Body:
+  - `sessionId`: `string`, UUID — a `zalo_login_sessions.id` for the **current user** whose `zaloUid` matches this child’s `zaloId`
+
+Example request:
+
+```json
+{
+  "sessionId": "e2c52ab6-5134-4f9c-9968-3e8b430094aa"
+}
+```
+
+#### Response
+
+```json
+{
+  "enqueued": true,
+  "zaloAccountId": "fd87478e-14ae-46b5-8aec-e3800b800c91",
+  "status": "INACTIVE"
+}
+```
+
+#### Error cases
+- `400`: validation error; account is not a child; child has no `zaloId`; `sessionId` not for current user or not for this Zalo account; feature disabled
+- `401` / `403`: as other `zalo-accounts` routes
+- `404`: Zalo account not found
+- `409`: `status` is already `INACTIVE` (scan already running)
 - `500`: unexpected server error
 
 #### Authentication

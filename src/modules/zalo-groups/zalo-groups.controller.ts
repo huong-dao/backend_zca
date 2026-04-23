@@ -11,7 +11,9 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import type { AuthenticatedUser } from '../../common/utils/authenticated-user';
 import { CreateMultipleZaloGroupsDto } from './dto/create-multiple-zalo-groups.dto';
 import type { CreateMultipleZaloGroupsResult } from './dto/create-multiple-zalo-groups-result.dto';
 import {
@@ -73,8 +75,11 @@ export class ZaloGroupsController {
   }
 
   @Post('invite-member')
-  inviteMemberToGroup(@Body() dto: InviteMemberToZaloGroupDto) {
-    return this.zaloGroupsService.inviteMemberToGroup(dto);
+  inviteMemberToGroup(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: InviteMemberToZaloGroupDto,
+  ) {
+    return this.zaloGroupsService.inviteMemberToGroup(dto, user.id);
   }
 
   @Post('remove-member')

@@ -19,10 +19,6 @@ import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
 import { ZaloLoginSessionsModule } from './modules/zalo-login-sessions/zalo-login-sessions.module';
 import { ZaloActionsModule } from './modules/zalo-actions/zalo-actions.module';
-import { BackgroundJobsModule } from './modules/background-jobs/background-jobs.module';
-
-const groupSyncEnabled = process.env.GROUP_SYNC_ENABLED === 'true';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -41,7 +37,6 @@ const groupSyncEnabled = process.env.GROUP_SYNC_ENABLED === 'true';
     ZaloGroupsModule,
     ZaloLoginSessionsModule,
     ZaloActionsModule,
-    ...(groupSyncEnabled ? [BackgroundJobsModule] : []),
   ],
   controllers: [AppController],
   providers: [

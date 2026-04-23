@@ -28,6 +28,12 @@ export class GroupMetadataSyncScheduler
   ) {}
 
   onModuleInit(): void {
+    if (this.config.get('groupSync.enabled') !== true) {
+      this.logger.log(
+        'Group metadata sync cron disabled (groupSync.enabled is not true).',
+      );
+      return;
+    }
     const pattern =
       this.config.get<string>('groupSync.cron') ?? '0 */3 * * * *';
     const timeZone = this.config.get<string>('groupSync.timezone') || undefined;

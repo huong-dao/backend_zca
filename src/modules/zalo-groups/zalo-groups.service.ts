@@ -18,6 +18,7 @@ import {
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
+import { ChildGroupSyncService } from '../background-jobs/child-group-sync.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import {
   CREATE_MULTIPLE_ZALO_GROUPS_MODE_UPDATE_ORIGIN_NAME,
@@ -114,6 +115,7 @@ export class ZaloGroupsService {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly loginSessions: ZaloLoginSessionsService,
+    private readonly childGroupSync: ChildGroupSyncService,
   ) {}
 
   async findAll(query: FindZaloGroupsDto) {
@@ -266,7 +268,10 @@ export class ZaloGroupsService {
    * Resolves the invitee uid via `findUser(phone)`, then `addUserToGroup` — **no DB rows are created/updated** here;
    * mapping for your app can rely on `ZaloGroup.global_id` + child accounts separately.
    */
-  async inviteMemberToGroup(dto: InviteMemberToZaloGroupDto) {
+  async inviteMemberToGroup(
+    dto: InviteMemberToZaloGroupDto,
+    appUserId: string,
+  ) {
     const master = await this.prismaService.zaloAccount.findFirst({
       where: { id: dto.masterZaloAccountId, isDeleted: false },
       select: { id: true, isMaster: true },
@@ -351,6 +356,19 @@ export class ZaloGroupsService {
     }
 
     const inviteUid = profile.uid;
+
+    if (dto.childZaloAccountId) {
+      try {
+        await this.childGroupSync.enqueueAfterInvite(
+          appUserId,
+          dto.childZaloAccountId,
+        );
+      } catch (e) {
+        this.logger.warn(
+          `Post-invite child scan enqueue failed: ${e instanceof Error ? e.message : String(e)}`,
+        );
+      }
+    }
 
     return {
       success: true as const,

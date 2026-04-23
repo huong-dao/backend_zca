@@ -10,7 +10,11 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
+import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import { Roles } from '../../common/decorators/roles.decorator';
+import type { AuthenticatedUser } from '../../common/utils/authenticated-user';
+import { ChildGroupSyncService } from '../background-jobs/child-group-sync.service';
+import { ChildGroupScanDto } from './dto/child-group-scan.dto';
 import { AddChildAccountDto } from './dto/add-child-account.dto';
 import { CreateZaloAccountDto } from './dto/create-zalo-account.dto';
 import { CreateZaloAccountFriendDto } from './dto/create-zalo-account-friend.dto';
@@ -26,7 +30,10 @@ import { UpdateGroupDataDto } from './dto/update-zalo-account-group-data';
 @Roles('ADMIN', 'USER')
 @Controller('zalo-accounts')
 export class ZaloAccountsController {
-  constructor(private readonly zaloAccountsService: ZaloAccountsService) {}
+  constructor(
+    private readonly zaloAccountsService: ZaloAccountsService,
+    private readonly childGroupSync: ChildGroupSyncService,
+  ) {}
 
   @Post()
   create(@Body() dto: CreateZaloAccountDto) {
@@ -95,6 +102,19 @@ export class ZaloAccountsController {
   @Post('add-child')
   addChild(@Body() dto: AddChildAccountDto) {
     return this.zaloAccountsService.addChild(dto);
+  }
+
+  /**
+   * "Quét nhóm": set child `ZaloAccount.status` to `INACTIVE`, queue getAllGroups + batch getGroupInfo;
+   * when done, status becomes `ACTIVE` again. Frontend can read `status` to hide the scan button while `INACTIVE`.
+   */
+  @Post(':id/child-group-scan')
+  childGroupScan(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() dto: ChildGroupScanDto,
+  ) {
+    return this.childGroupSync.startChildGroupScan(user.id, id, dto.sessionId);
   }
 
   @Put('set-master/:id')
