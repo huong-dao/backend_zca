@@ -1,5 +1,4 @@
-import { config } from 'dotenv';
-config();
+import './bootstrap-env';
 
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
@@ -19,6 +18,7 @@ import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
 import { ZaloLoginSessionsModule } from './modules/zalo-login-sessions/zalo-login-sessions.module';
 import { ZaloActionsModule } from './modules/zalo-actions/zalo-actions.module';
+import { BackgroundJobsModule } from './modules/background-jobs/background-jobs.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,6 +27,7 @@ import { ZaloActionsModule } from './modules/zalo-actions/zalo-actions.module';
       expandVariables: true,
       load: [configuration],
     }),
+    BackgroundJobsModule.register(),
     PrismaModule,
     AuthModule,
     ApiKeysModule,
