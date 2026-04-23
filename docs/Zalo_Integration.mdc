@@ -678,29 +678,34 @@ Used in **Message Module**:
 ### Description
 Delete a message sent by yourself or a group member.
 
-This API allows removing a message from a conversation.  
-By default, the message is only deleted on the current account (local delete).
+In **Zalo (zca-js)**, the second flag controls scope:
+
+- **`onlyMe: false` (recommended default, especially in groups):** try to remove the message so **other members no longer see it** (“xóa cho tất cả” trong nhóm), subject to Zalo permissions and message age.
+- **`onlyMe: true`:** delete only for the current account / local view (“xóa chỉ phía mình”).
+
+**Backend helper** `ZcaApiHelper.deleteMessage` defaults to **`onlyMe: false`**, so a single-argument call targets **everyone in the group thread** by default. Pass `true` as the second argument only when you explicitly want a self-only delete.
 
 ---
 
 ### Method (zca-js)
-api.deleteMessage(options, threadId[, type])
+api.deleteMessage(destination, onlyMe?)
 
 ---
 
 ### Parameters
 
-- options: DeleteMessageDestination  
-  → Message identification object
+- destination: `DeleteMessageDestination`  
+  → Message identification and thread context (zca-js shape; often includes `data` with `cliMsgId` / `msgId` / `uidFrom` plus `threadId` and `type` for the thread — see zca-js types). Use a **group** `threadId` / `type` for group deletions.
 
-- onlyMe: boolean (optional)  
-  → Default = true (delete only for current user)
+- onlyMe: `boolean` (optional in raw zca-js; **our helper default is `false`**)  
+  → `false` = delete for all participants in that thread (group); `true` = delete only for self.
 
-- threadId: string  
-  → ID of user or group
+---
 
-- type: ThreadType (optional)  
-  → Thread type (User | Group)
+#### Backend (this repo)
+
+- **Helper:** `ZcaApiHelper.prototype.deleteMessage` in `src/zalo/zca-api.helper.ts` — `deleteMessage(destination, onlyMe = false)` so **default = delete for everyone**; pass `onlyMe: true` only for a self-only delete.
+- **Types:** `DeleteMessageDestination` and `DeleteMessageResponse` from `zca-js` (also re-exported as `type DeleteMessageDestination` in `src/zalo/index.ts`).
 
 ---
 

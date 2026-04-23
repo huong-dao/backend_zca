@@ -99,9 +99,16 @@ export class ZcaApiHelper {
     return this.api.sendMessage(message, threadId, type);
   }
 
+  /**
+   * Delete a message. Defaults to **removing the message for everyone** in the thread
+   * (typical for **group** chat: no one else should see that message), by passing
+   * `onlyMe: false` to zca-js.
+   *
+   * Set `onlyMe: true` only when you need “delete for me / this device” instead.
+   */
   deleteMessage(
     destination: DeleteMessageDestination,
-    onlyMe?: boolean,
+    onlyMe: boolean = false,
   ): Promise<DeleteMessageResponse> {
     return this.api.deleteMessage(destination, onlyMe);
   }

@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -32,8 +33,19 @@ export class MessagesController {
     return this.messagesService.send(user.id, dto);
   }
 
+  @Delete(':id')
+  remove(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.messagesService.recall(user.id, id);
+  }
+
   @Post('recall/:id')
-  recall(@Param('id', new ParseUUIDPipe()) id: string) {
-    return this.messagesService.recall(id);
+  recall(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.messagesService.recall(user.id, id);
   }
 }

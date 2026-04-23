@@ -22,6 +22,27 @@ const messageSelect = {
   createdAt: true,
 } as const;
 
+const messageWithSenderGroupSelect = {
+  ...messageSelect,
+  sender: {
+    select: {
+      id: true,
+      zaloId: true,
+      name: true,
+      phone: true,
+      isDeleted: true,
+      deletedAt: true,
+    },
+  },
+  group: {
+    select: {
+      id: true,
+      groupName: true,
+      originName: true,
+    },
+  },
+} as const;
+
 @Injectable()
 export class MessagesService {
   constructor(
@@ -41,26 +62,7 @@ export class MessagesService {
         where,
         skip,
         take: limit,
-        select: {
-          ...messageSelect,
-          sender: {
-            select: {
-              id: true,
-              zaloId: true,
-              name: true,
-              phone: true,
-              isDeleted: true,
-              deletedAt: true,
-            },
-          },
-          group: {
-            select: {
-              id: true,
-              groupName: true,
-              originName: true,
-            },
-          },
-        },
+        select: messageWithSenderGroupSelect,
         orderBy: {
           createdAt: 'desc',
         },
@@ -273,20 +275,63 @@ export class MessagesService {
     return { messageZaloId, cliMsgId };
   }
 
-  async recall(id: string) {
-    const message = await this.prismaService.message.findUnique({
+  /**
+   * Soft "delete" for the app: sets `status` to `RECALL` (row kept). Only the
+   * authenticated app user who has a QR session for the message sender’s `zalo_id`
+   * (same child account used to send) can recall.
+   */
+  async recall(appUserId: string, id: string) {
+    const found = await this.prismaService.message.findUnique({
       where: { id },
       select: {
         id: true,
+        status: true,
+        sender: {
+          select: {
+            zaloId: true,
+            isDeleted: true,
+          },
+        },
       },
     });
 
-    if (!message) {
+    if (!found) {
       throw new NotFoundException('Message not found.');
     }
 
-    throw new BadRequestException(
-      'Recalling messages is now handled in the frontend, not by the backend.',
+    if (found.sender.isDeleted) {
+      throw new BadRequestException(
+        'Cannot recall: sender Zalo account was removed.',
+      );
+    }
+
+    const zaloUid = found.sender.zaloId?.trim();
+    if (!zaloUid) {
+      throw new BadRequestException('Cannot recall: sender has no zalo_id.');
+    }
+
+    if (found.status === 'RECALL') {
+      return this.prismaService.message.findUniqueOrThrow({
+        where: { id: found.id },
+        select: messageWithSenderGroupSelect,
+      });
+    }
+
+    if (found.status !== 'SENT') {
+      throw new BadRequestException(
+        `Message cannot be recalled in status ${found.status}.`,
+      );
+    }
+
+    await this.zaloLoginSessions.findLatestFullForAppUserAndZaloUid(
+      appUserId,
+      zaloUid,
     );
+
+    return this.prismaService.message.update({
+      where: { id: found.id },
+      data: { status: 'RECALL' },
+      select: messageWithSenderGroupSelect,
+    });
   }
 }
