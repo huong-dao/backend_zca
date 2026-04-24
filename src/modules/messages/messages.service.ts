@@ -13,7 +13,11 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
-import { extractIdsFromZaloSendResult } from '../../zalo/parse-zalo-send-message-result';
+import {
+  extractIdsFromZaloSendResult,
+  listZaloSendBubbleIds,
+  type ZaloSendBubbleIds,
+} from '../../zalo/parse-zalo-send-message-result';
 import { FindMessagesDto } from './dto/find-messages.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 
@@ -162,7 +166,7 @@ export class MessagesService {
             senderId: dto.zaloAccountId,
             groupId: dto.groupId,
           },
-          orderBy: { createdAt: 'desc' },
+          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           select: { sentAt: true, createdAt: true },
         }),
       ]);
@@ -219,37 +223,90 @@ export class MessagesService {
           : {}),
       });
 
-      const { messageZaloId, cliMsgId } = extractIdsFromZaloSendResult(result);
+      const bubbles = listZaloSendBubbleIds(result);
+      const sentAt = new Date();
+      const createSelect = {
+        id: true,
+        messageZaloId: true,
+        cliMsgId: true,
+        uidFrom: true,
+        content: true,
+        senderId: true,
+        groupId: true,
+        sentAt: true,
+        status: true,
+        createdAt: true,
+      } as const;
 
-      const messageRow = await this.prismaService.message.create({
-        data: {
-          content: contentForDb,
-          senderId: dto.zaloAccountId,
-          groupId: dto.groupId,
-          messageZaloId,
-          cliMsgId,
-          uidFrom: zaloUid,
-          sentAt: new Date(),
-          status: 'SENT',
-        },
-        select: {
-          id: true,
-          messageZaloId: true,
-          cliMsgId: true,
-          uidFrom: true,
-          content: true,
-          senderId: true,
-          groupId: true,
-          sentAt: true,
-          status: true,
-          createdAt: true,
-        },
-      });
+      if (bubbles.length === 0) {
+        const { messageZaloId, cliMsgId } = extractIdsFromZaloSendResult(result);
+        const messageRow = await this.prismaService.message.create({
+          data: {
+            content: contentForDb,
+            senderId: dto.zaloAccountId,
+            groupId: dto.groupId,
+            messageZaloId,
+            cliMsgId,
+            uidFrom: zaloUid,
+            sentAt,
+            status: 'SENT',
+          },
+          select: createSelect,
+        });
+        return { result, message: messageRow, messages: [messageRow] };
+      }
 
-      return { result, message: messageRow };
+      const contents = MessagesService.buildBubbleContents(
+        textPart,
+        fileList,
+        bubbles,
+        contentForDb,
+      );
+      const rows = await this.prismaService.$transaction(
+        bubbles.map((bubble, idx) =>
+          this.prismaService.message.create({
+            data: {
+              content: contents[idx] ?? contentForDb,
+              senderId: dto.zaloAccountId,
+              groupId: dto.groupId,
+              messageZaloId: bubble.messageZaloId,
+              cliMsgId: bubble.cliMsgId,
+              uidFrom: zaloUid,
+              sentAt,
+              status: 'SENT',
+            },
+            select: createSelect,
+          }),
+        ),
+      );
+
+      return { result, message: rows[0], messages: rows };
     } finally {
       await MessagesService.unlinkTempPaths(tempPaths);
     }
+  }
+
+  /**
+   * One line of `content` per Zalo bubble (text first, then each attachment file name).
+   * Matches `listZaloSendBubbleIds` / zca `responses.message` + `responses.attachment[]`.
+   */
+  private static buildBubbleContents(
+    textPart: string,
+    files: Express.Multer.File[],
+    bubbles: ZaloSendBubbleIds[],
+    fallbackSingle: string,
+  ): string[] {
+    if (bubbles.length === 0) {
+      return [fallbackSingle];
+    }
+    return bubbles.map((b) => {
+      if (b.source === 'message') {
+        return textPart.length > 0 ? textPart : '(tin nhắn)';
+      }
+      const i = b.attachmentIndex ?? 0;
+      const name = files[i]?.originalname?.trim() || `file_${i + 1}`;
+      return `Đính kèm: ${name}`;
+    });
   }
 
   private static async writeMulterFilesToTemp(
