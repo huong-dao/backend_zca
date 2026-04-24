@@ -278,17 +278,33 @@ export class PublicZaloSendService {
       };
     }
 
-    const mapping = await this.prisma.zaloAccountGroup.findFirst({
-      where: { zaloAccountId: master.id, groupId: group.id },
-      select: { groupZaloId: true },
-    });
-    if (!mapping?.groupZaloId?.trim()) {
+    /**
+     * `POST /messages/send` dùng `group_zalo_id` theo bản ghi **child** + `groupId`.
+     * Ở đây ưu tiên cùng nguồn đó; nếu chỉ master có mapping (data cũ) thì fallback master.
+     * Dùng grid của master khi child đã có grid đúng ở DB khác sẽ dễ gây Zalo 114 dù gửi từ app thành công.
+     */
+    const [childMap, masterMap] = await Promise.all([
+      this.prisma.zaloAccountGroup.findFirst({
+        where: { zaloAccountId: child.id, groupId: group.id },
+        select: { groupZaloId: true },
+      }),
+      this.prisma.zaloAccountGroup.findFirst({
+        where: { zaloAccountId: master.id, groupId: group.id },
+        select: { groupZaloId: true },
+      }),
+    ]);
+    const groupZaloId = (
+      childMap?.groupZaloId?.trim() ||
+      masterMap?.groupZaloId?.trim() ||
+      ''
+    );
+    if (!groupZaloId) {
       return {
         code: PublicZaloSendCode.MASTER_NOT_FOUND,
-        message: 'Master has no Zalo group_zalo_id mapping for this group.',
+        message:
+          'No Zalo group_zalo_id for this group (neither child nor master mapping in zalo_account_groups).',
       };
     }
-    const groupZaloId = mapping.groupZaloId.trim();
 
     try {
       await this.zaloAccounts.ensureMasterChildFriendshipForAutomation(
