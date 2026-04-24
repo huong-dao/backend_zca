@@ -1,6 +1,5 @@
 import type { API } from 'zca-js';
 import type { AvatarSize } from 'zca-js';
-import type { DeleteMessageDestination, DeleteMessageResponse } from 'zca-js';
 import type { FindUserResponse } from 'zca-js';
 import type { GetAllFriendsResponse } from 'zca-js';
 import type { GetAllGroupsResponse } from 'zca-js';
@@ -97,20 +96,6 @@ export class ZcaApiHelper {
     type?: ThreadType,
   ): Promise<SendMessageResponse> {
     return this.api.sendMessage(message, threadId, type);
-  }
-
-  /**
-   * Delete a message. Defaults to **removing the message for everyone** in the thread
-   * (typical for **group** chat: no one else should see that message), by passing
-   * `onlyMe: false` to zca-js.
-   *
-   * Set `onlyMe: true` only when you need “delete for me / this device” instead.
-   */
-  deleteMessage(
-    destination: DeleteMessageDestination,
-    onlyMe: boolean = false,
-  ): Promise<DeleteMessageResponse> {
-    return this.api.deleteMessage(destination, onlyMe);
   }
 
   getAllFriends(

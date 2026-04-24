@@ -7,6 +7,7 @@ import { ZaloGroupInfoDto } from './dto/zalo-group-info.dto';
 import { ZaloGroupsQueryDto } from './dto/zalo-groups-query.dto';
 import { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dto';
 import { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
+import { ZaloUndoDto } from './dto/zalo-undo.dto';
 import { ZaloActionsService } from './zalo-actions.service';
 
 /** Shared Zalo sessions: JWT required; sessionId is not scoped to current user. */
@@ -53,5 +54,10 @@ export class ZaloActionsController {
   @Post('send-message')
   sendMessage(@Body() dto: ZaloSendMessageDto) {
     return this.zaloActionsService.sendMessage(dto);
+  }
+
+  @Post('undo')
+  undo(@Body() dto: ZaloUndoDto) {
+    return this.zaloActionsService.undo(dto);
   }
 }

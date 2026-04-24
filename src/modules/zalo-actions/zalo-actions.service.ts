@@ -27,6 +27,7 @@ import type { ZaloGetQrDto } from './dto/zalo-get-qr.dto';
 import type { ZaloGroupInfoDto } from './dto/zalo-group-info.dto';
 import type { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dto';
 import type { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
+import type { ZaloUndoDto } from './dto/zalo-undo.dto';
 
 const ZALO_LISTENER_CIPHER_TIMEOUT_MS = 30_000;
 /** Wait for one group self message echo (TMessage) to obtain `cliMsgId` after `sendMessage`. */
@@ -87,6 +88,22 @@ export class ZaloActionsService {
     return this.withSession(dto.sessionId, async (zca) => {
       const groupInfo = await zca.getGroupInfo(dto.groupId);
       return { groupInfo };
+    });
+  }
+
+  /** zca-js `api.undo(payload, threadId, type)` — see `docs/Zalo_Integration.mdc`. */
+  async undo(dto: ZaloUndoDto) {
+    return this.withSession(dto.sessionId, async (zca) => {
+      const threadType = dto.threadType ?? ThreadType.Group;
+      const result = await zca.undo(
+        {
+          msgId: dto.msgId.trim(),
+          cliMsgId: dto.cliMsgId.trim(),
+        },
+        dto.threadId.trim(),
+        threadType,
+      );
+      return { result };
     });
   }
 

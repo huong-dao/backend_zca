@@ -1,7 +1,6 @@
 import {
   Body,
   Controller,
-  Delete,
   Get,
   Param,
   ParseUUIDPipe,
@@ -48,19 +47,12 @@ export class MessagesController {
     return this.messagesService.send(user.id, dto, fileFields?.files);
   }
 
-  @Delete(':id')
-  remove(
+  /** Zalo `api.undo` then `status: RECALL` — see `docs/Zalo_Integration.mdc` (API: undo). */
+  @Post('undo/:id')
+  undo(
     @CurrentUser() user: AuthenticatedUser,
     @Param('id', new ParseUUIDPipe()) id: string,
   ) {
-    return this.messagesService.recall(user.id, id);
-  }
-
-  @Post('recall/:id')
-  recall(
-    @CurrentUser() user: AuthenticatedUser,
-    @Param('id', new ParseUUIDPipe()) id: string,
-  ) {
-    return this.messagesService.recall(user.id, id);
+    return this.messagesService.undo(user.id, id);
   }
 }

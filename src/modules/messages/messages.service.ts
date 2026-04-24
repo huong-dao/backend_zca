@@ -8,6 +8,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import type { Express } from 'express';
+import { ThreadType } from 'zca-js';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
@@ -274,16 +275,19 @@ export class MessagesService {
   }
 
   /**
-   * Soft "delete" for the app: sets `status` to `RECALL` (row kept). Only the
-   * authenticated app user who has a QR session for the message sender’s `zalo_id`
-   * (same child account used to send) can recall.
+   * Thu hồi tin trên Zalo (`api.undo` — `docs/Zalo_Integration.mdc`) rồi gắn `status: RECALL`.
+   * Chỉ user đang có session QR cho `zalo_id` của người gửi mới gọi được.
    */
-  async recall(appUserId: string, id: string) {
+  async undo(appUserId: string, id: string) {
     const found = await this.prismaService.message.findUnique({
       where: { id },
       select: {
         id: true,
         status: true,
+        messageZaloId: true,
+        cliMsgId: true,
+        groupId: true,
+        senderId: true,
         sender: {
           select: {
             zaloId: true,
@@ -300,19 +304,19 @@ export class MessagesService {
 
     if (found.sender.isDeleted) {
       throw new BadRequestException(
-        'Cannot recall: sender Zalo account was removed.',
+        'Cannot undo: sender Zalo account was removed.',
       );
     }
 
     if (found.sender.status !== 'ACTIVE') {
       throw new BadRequestException(
-        'Cannot recall: this Zalo account is not active (status must be ACTIVE).',
+        'Cannot undo: this Zalo account is not active (status must be ACTIVE).',
       );
     }
 
     const zaloUid = found.sender.zaloId?.trim();
     if (!zaloUid) {
-      throw new BadRequestException('Cannot recall: sender has no zalo_id.');
+      throw new BadRequestException('Cannot undo: sender has no zalo_id.');
     }
 
     if (found.status === 'RECALL') {
@@ -324,19 +328,52 @@ export class MessagesService {
 
     if (found.status !== 'SENT') {
       throw new BadRequestException(
-        `Message cannot be recalled in status ${found.status}.`,
+        `Message cannot be undone in status ${found.status}.`,
       );
     }
 
-    await this.zaloLoginSessions.findLatestFullForAppUserAndZaloUid(
-      appUserId,
-      zaloUid,
-    );
+    const msgZalo = found.messageZaloId?.trim() ?? '';
+    const cli = found.cliMsgId?.trim() ?? '';
+    if (!msgZalo || !cli) {
+      throw new BadRequestException(
+        'Cannot undo: message is missing Zalo msgId and/or cliMsgId (required for api.undo).',
+      );
+    }
 
-    return this.prismaService.message.update({
+    const mapping = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId: found.senderId,
+        groupId: found.groupId,
+      },
+      select: { groupZaloId: true },
+    });
+    const groupZaloId = mapping?.groupZaloId?.trim() ?? '';
+    if (!groupZaloId) {
+      throw new BadRequestException(
+        'Cannot undo: ZaloAccountGroup has no group_zalo_id for this sender and group.',
+      );
+    }
+
+    const session =
+      await this.zaloLoginSessions.findLatestFullForAppUserAndZaloUid(
+        appUserId,
+        zaloUid,
+      );
+
+    const { result } = await this.zaloActionsService.undo({
+      sessionId: session.id,
+      msgId: msgZalo,
+      cliMsgId: cli,
+      threadId: groupZaloId,
+      threadType: ThreadType.Group,
+    });
+
+    const messageRow = await this.prismaService.message.update({
       where: { id: found.id },
       data: { status: 'RECALL' },
       select: messageWithSenderGroupSelect,
     });
+
+    return { result, message: messageRow };
   }
 }

@@ -15,5 +15,6 @@ export {
   TextStyle,
   Urgency,
   type MessageContent,
-  type DeleteMessageDestination,
+  type UndoPayload,
+  type UndoResponse,
 } from 'zca-js';
