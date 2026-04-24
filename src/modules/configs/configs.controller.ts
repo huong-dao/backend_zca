@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Put } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { UpdateMessageIntervalDto } from './dto/update-message-interval.dto';
+import { UpsertConfigurationsDto } from './dto/upsert-configurations.dto';
 import { ConfigsService } from './configs.service';
 
 @Roles('ADMIN')
@@ -16,5 +17,11 @@ export class ConfigsController {
   @Put('message-interval')
   updateMessageInterval(@Body() dto: UpdateMessageIntervalDto) {
     return this.configsService.updateMessageInterval(dto);
+  }
+
+  /** Nhiều cặp key/value: đã tồn tại thì `update`, chưa có thì `insert` (per key). */
+  @Put('batch')
+  upsertMany(@Body() dto: UpsertConfigurationsDto) {
+    return this.configsService.upsertMany(dto);
   }
 }

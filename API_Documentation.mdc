@@ -2229,6 +2229,48 @@ Return all configuration key-value pairs.
 - Guards: `JwtAuthGuard`, `RolesGuard`
 - Required role: `ADMIN`
 
+### PUT `/configs/batch`
+#### Endpoint
+- Method: `PUT`
+- Full path: `/configs/batch`
+- Function: `ConfigsController.upsertMany`
+
+#### Description
+Upsert **many** `configurations` rows in one request: for each `{ key, value }`, if `key` already exists it is **updated**; otherwise a new row is **inserted** (unique on `key`). Processed in a **database transaction** (one `upsert` per entry, in array order). Duplicate `key` values in the same body: the **last** occurrence wins for that key.
+
+#### Request
+- Params: none
+- Query: none
+- Body (JSON):
+  - `entries`: `array`, required, min length `1` — each item:
+    - `key`: `string`, required, length 1–255 (trimmed)
+    - `value`: `string`, required, max length 255 (trimmed)
+
+Example:
+
+```json
+{
+  "entries": [
+    { "key": "message_interval", "value": "5" },
+    { "key": "some_other_flag", "value": "on" }
+  ]
+}
+```
+
+#### Response
+Array of saved rows (same shape as `GET /configs` items), **in the same order as `entries`**.
+
+#### Error cases
+- `400`: validation error; empty `entries`
+- `401`: missing/invalid JWT
+- `403`: role is not `ADMIN`
+- `500`: unexpected server error
+
+#### Authentication
+- JWT required
+- Guards: `JwtAuthGuard`, `RolesGuard`
+- Required role: `ADMIN`
+
 ### PUT `/configs/message-interval`
 #### Endpoint
 - Method: `PUT`

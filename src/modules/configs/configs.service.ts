@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { UpdateMessageIntervalDto } from './dto/update-message-interval.dto';
+import { UpsertConfigurationsDto } from './dto/upsert-configurations.dto';
 
 @Injectable()
 export class ConfigsService {
@@ -44,6 +45,28 @@ export class ConfigsService {
       ...configuration,
       minutes: Number.parseInt(configuration.value, 10),
     };
+  }
+
+  /**
+   * Cập nhật hoặc tạo từng cấu hình theo `key` (unique) trong một transaction.
+   */
+  async upsertMany(dto: UpsertConfigurationsDto) {
+    const select = {
+      id: true,
+      key: true,
+      value: true,
+      updatedAt: true,
+    } as const;
+    return this.prismaService.$transaction(
+      dto.entries.map((e) =>
+        this.prismaService.configuration.upsert({
+          where: { key: e.key },
+          create: { key: e.key, value: e.value },
+          update: { value: e.value },
+          select,
+        }),
+      ),
+    );
   }
 
   async getMessageIntervalMinutes() {
