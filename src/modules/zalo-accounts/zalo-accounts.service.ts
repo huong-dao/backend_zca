@@ -347,6 +347,291 @@ export class ZaloAccountsService {
     });
   }
 
+  /**
+   * One master per `ZaloGroup` in this product: the account that has a `ZaloAccountGroup` row
+   * for the group and `isMaster = true`.
+   */
+  async findMasterZaloAccountForGroup(groupId: string) {
+    const map = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        groupId,
+        zaloAccount: { isMaster: true, isDeleted: false, status: 'ACTIVE' },
+      },
+      select: {
+        zaloAccount: {
+          select: {
+            id: true,
+            zaloId: true,
+            phone: true,
+            name: true,
+            isMaster: true,
+            status: true,
+          },
+        },
+      },
+      orderBy: { joinedAt: 'asc' },
+    });
+    return map?.zaloAccount ?? null;
+  }
+
+  /**
+   * Child of the given master with lowest `groupCount`, then stable by `id`.
+   */
+  async findChildZaloWithMinGroupForMaster(masterId: string) {
+    const rels = await this.prismaService.zaloAccountRelation.findMany({
+      where: { masterId },
+      include: {
+        child: {
+          select: {
+            id: true,
+            zaloId: true,
+            phone: true,
+            name: true,
+            isMaster: true,
+            groupCount: true,
+            status: true,
+            isDeleted: true,
+          },
+        },
+      },
+    });
+    const active = rels
+      .map((r) => r.child)
+      .filter(
+        (c) => !c.isDeleted && c.status === 'ACTIVE' && !c.isMaster && c.zaloId,
+      );
+    if (active.length === 0) {
+      return null;
+    }
+    active.sort(
+      (a, b) =>
+        a.groupCount - b.groupCount || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
+    return active[0] ?? null;
+  }
+
+  /**
+   * For DM (no group): one child+master pair with globally lowest `groupCount` (tie-breaker `id`).
+   */
+  async findChildAndMasterForPublicDm() {
+    const rels = await this.prismaService.zaloAccountRelation.findMany({
+      where: {
+        master: { isMaster: true, isDeleted: false, status: 'ACTIVE' },
+        child: { isDeleted: false, isMaster: false, status: 'ACTIVE' },
+      },
+      include: {
+        child: {
+          select: {
+            id: true,
+            zaloId: true,
+            phone: true,
+            name: true,
+            isMaster: true,
+            groupCount: true,
+            status: true,
+            isDeleted: true,
+          },
+        },
+        master: {
+          select: {
+            id: true,
+            zaloId: true,
+            phone: true,
+            name: true,
+            isMaster: true,
+            status: true,
+          },
+        },
+      },
+    });
+    if (rels.length === 0) {
+      return null;
+    }
+    const withZalo = rels.filter((r) => r.child.zaloId);
+    if (withZalo.length === 0) {
+      return null;
+    }
+    withZalo.sort(
+      (a, b) =>
+        a.child.groupCount - b.child.groupCount ||
+        a.child.id.localeCompare(b.child.id),
+    );
+    const b = withZalo[0]!;
+    return { child: b.child, master: b.master };
+  }
+
+  /**
+   * Idempotent: ensure Zalo friendship + `zalo_account_friends` APPROVE (master / child for public send).
+   */
+  async ensureMasterChildFriendshipForAutomation(
+    masterAccountId: string,
+    childAccountId: string,
+  ): Promise<void> {
+    if (masterAccountId === childAccountId) {
+      throw new BadRequestException(
+        'Master and child Zalo account ids must differ.',
+      );
+    }
+
+    const [masterAccount, childAccount, approved] = await Promise.all([
+      this.prismaService.zaloAccount.findFirst({
+        where: { id: masterAccountId, isDeleted: false },
+        select: { id: true, zaloId: true, phone: true, isMaster: true },
+      }),
+      this.prismaService.zaloAccount.findFirst({
+        where: { id: childAccountId, isDeleted: false },
+        select: { id: true, zaloId: true, phone: true, isMaster: true },
+      }),
+      this.prismaService.zaloAccountFriend.findFirst({
+        where: {
+          OR: [
+            { masterId: masterAccountId, friendId: childAccountId },
+            { masterId: childAccountId, friendId: masterAccountId },
+          ],
+          status: 'APPROVE',
+        },
+        select: { id: true },
+      }),
+    ]);
+
+    if (!masterAccount || !childAccount) {
+      throw new NotFoundException('Master or child Zalo account not found.');
+    }
+    if (!masterAccount.isMaster) {
+      throw new BadRequestException('First id must be a master account.');
+    }
+    if (childAccount.isMaster) {
+      throw new BadRequestException('Second id must be a child account.');
+    }
+    if (!masterAccount.zaloId || !childAccount.zaloId) {
+      throw new BadRequestException(
+        'Both Zalo accounts must have zalo_id for friend automation.',
+      );
+    }
+    if (approved) {
+      return;
+    }
+
+    await this.pairZaloAccountsAsFriends(
+      { zaloId: masterAccount.zaloId, phone: masterAccount.phone },
+      { zaloId: childAccount.zaloId, phone: childAccount.phone },
+    );
+
+    const anyRow = await this.prismaService.zaloAccountFriend.findFirst({
+      where: {
+        OR: [
+          { masterId: masterAccountId, friendId: childAccountId },
+          { masterId: childAccountId, friendId: masterAccountId },
+        ],
+      },
+      select: { id: true },
+    });
+
+    if (anyRow) {
+      await this.prismaService.zaloAccountFriend.update({
+        where: { id: anyRow.id },
+        data: { status: 'APPROVE' },
+      });
+    } else {
+      await this.prismaService.zaloAccountFriend.create({
+        data: {
+          masterId: masterAccountId,
+          friendId: childAccountId,
+          status: 'APPROVE',
+        },
+      });
+    }
+  }
+
+  /**
+   * Master zca session: `findUser(phone)` + `addUserToGroup` for the child, then `zalo_account_groups` upsert.
+   */
+  async addChildZaloToGroupByMasterZaloId(params: {
+    masterZaloAccountId: string;
+    childZaloAccountId: string;
+    childPhoneForFindUser: string;
+    groupZaloId: string;
+    groupInternalId: string;
+  }): Promise<void> {
+    const existing = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId: params.childZaloAccountId,
+        groupId: params.groupInternalId,
+      },
+      select: { id: true },
+    });
+    if (existing) {
+      return;
+    }
+
+    const master = await this.prismaService.zaloAccount.findFirst({
+      where: {
+        id: params.masterZaloAccountId,
+        isDeleted: false,
+        isMaster: true,
+        status: 'ACTIVE',
+      },
+      select: { zaloId: true },
+    });
+    if (!master?.zaloId) {
+      throw new BadRequestException('Master has no zalo_id or is not active.');
+    }
+
+    const phone = params.childPhoneForFindUser.trim();
+    if (!phone) {
+      throw new BadRequestException('Child phone is required to add to group.');
+    }
+
+    const zaloResult = await this.withZaloUidSession(
+      master.zaloId,
+      async (zca) => {
+        const p = await zca.findUser(phone);
+        return zca.addUserToGroup(p.uid, params.groupZaloId);
+      },
+    );
+
+    if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
+      throw new BadRequestException(
+        'Zalo addUserToGroup did not complete successfully for the child user.',
+      );
+    }
+
+    await this.prismaService.zaloAccountGroup.upsert({
+      where: {
+        zaloAccountId_groupId: {
+          zaloAccountId: params.childZaloAccountId,
+          groupId: params.groupInternalId,
+        },
+      },
+      create: {
+        zaloAccountId: params.childZaloAccountId,
+        groupId: params.groupInternalId,
+        groupZaloId: params.groupZaloId,
+      },
+      update: { groupZaloId: params.groupZaloId },
+    });
+  }
+
+  private isZaloAddUserToGroupResultOk(result: unknown): boolean {
+    if (result == null || typeof result !== 'object') {
+      return false;
+    }
+    const r = result as Record<string, unknown>;
+    const em = r.errorMembers;
+    if (Array.isArray(em) && em.length > 0) {
+      return false;
+    }
+    const ed = r.error_data;
+    if (ed != null && typeof ed === 'object') {
+      for (const v of Object.values(ed as Record<string, unknown>)) {
+        if (Array.isArray(v) && v.length > 0) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   async createFriend(
     dto: CreateZaloAccountFriendDto,
   ): Promise<CreatedZaloAccountFriend> {

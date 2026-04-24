@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { ApiKeysService } from './api-keys.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
@@ -16,5 +16,10 @@ export class ApiKeysController {
   @Post()
   create(@Body() dto: CreateApiKeyDto) {
     return this.apiKeysService.create(dto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.apiKeysService.remove(id);
   }
 }

@@ -1,0 +1,75 @@
+# Public API: gửi Zalo (tích hợp bên thứ ba)
+
+Tài liệu dành cho bên tích hợp. Endpoint **không dùng JWT**; xác thực bằng **header `x-api-key`** (bản ghi active trong hệ thống).
+
+- **Base path:** `POST /public/zalo/send`
+- **Content-Type:** `multipart/form-data` (có thể gửi không file: chỉ cần field `target` và tùy chọn `content`).
+
+## Form fields
+
+| Field | Bắt buộc | Mô tả |
+|--------|-----------|--------|
+| `target` | Có | Số điện thoại VN hợp lệ (ví dụ `0912345678`, `+84912345678`) **hoặc** tên nhóm Zalo (so khớp chính xác `ZaloGroup.groupName`). |
+| `content` | Có nếu không gửi file | Nội dung text, tối đa 20.000 ký tự. Có thể rỗng nếu có ít nhất một file. |
+| `files` | Tùy chọn, lặp tên field | Tối đa 20 file, mỗi file tối đa 25 MB (theo cấu hình server). |
+
+`target` tối đa 500 ký tự.
+
+## Điều hướng (số vs tên nhóm)
+
+- Nếu `target` **là số VN hợp lệ** → gửi **tin nhắn cá nhân (DM)**; hệ thống chọn một cặp **master/child** toàn cục (child có `groupCount` thấp nhất, còn lại tương tự nội bộ) và dùng **session của tài khoản child** để gửi.
+- Ngược lại → coi `target` là **tên nhóm**: tìm `ZaloGroup` theo `groupName` chính xác, lấy **một master** duy nhất của nhóm (`isMaster = true`), chọn **child** phù hợp, đảm bảo quan hệ bạn bè + thêm child vào nhóm theo quy tắc automation, rồi gửi bằng **session child**.
+
+(Trùng tên nhóm: hiện không xử lý; so khớp theo tên chính xác.)
+
+## HTTP status
+
+Mọi phản hồi từ endpoint này dùng **HTTP 200**. Kết quả nghiệp vụ nằm ở field **`code`** trong JSON.
+
+## Cấu trúc phản hồi
+
+```json
+{
+  "code": 0,
+  "message": "optional",
+  "data": {}
+}
+```
+
+- `code === 0` → thành công; `data` có thể chứa thông tin bổ sung (ví dụ id tin đã lưu).
+- `code !== 0` → thất bại; đọc `message` nếu có.
+
+## Bảng `code`
+
+| `code` | Ý nghĩa |
+|--------|--------|
+| 0 | OK |
+| 1 | API key thiếu / không hợp lệ / không active |
+| 2 | Lỗi validate (độ dài, kiểu field, v.v.) |
+| 3 | `target` rỗng |
+| 4 | Thiếu cả nội dung và file |
+| 5 | Không tìm thấy nhóm theo tên |
+| 6 | Không tìm thấy master cho nhóm |
+| 7 | Không có tài khoản child dùng được |
+| 8 | Child inactive hoặc không gắn Zalo |
+| 9 | Không có session Zalo (child) |
+| 10 | Thiết lập bạn bè master–child thất bại |
+| 11 | Thêm child vào nhóm thất bại (nhánh nhóm) |
+| 12 | `findUser` thất bại (DM) |
+| 13 | Gửi qua Zalo thất bại |
+| 99 | Lỗi nội bộ chưa phân loại |
+
+## Ví dụ tối giản (curl)
+
+```bash
+curl -X POST "https://<host>/public/zalo/send" \
+  -H "x-api-key: <SECRET>" \
+  -F "target=0912345678" \
+  -F "content=Hello"
+```
+
+Gửi kèm file (tên field lặp `files` theo từng file).
+
+---
+
+Module Nest: `PublicZaloSendModule` (tách biệt các flow JWT nội bộ). Luồng lưu `Message` hỗ trợ `groupId` null và `peerPhone` cho DM theo schema/migration mới.

@@ -196,6 +196,7 @@ exports.Prisma.MessageScalarFieldEnum = {
   content: 'content',
   senderId: 'senderId',
   groupId: 'groupId',
+  peerPhone: 'peerPhone',
   parentId: 'parentId',
   sentAt: 'sentAt',
   status: 'status',

@@ -30,6 +30,7 @@ const messageSelect = {
   content: true,
   senderId: true,
   groupId: true,
+  peerPhone: true,
   parentId: true,
   sentAt: true,
   status: true,
@@ -238,6 +239,7 @@ export class MessagesService {
         content: true,
         senderId: true,
         groupId: true,
+        peerPhone: true,
         parentId: true,
         sentAt: true,
         status: true,
@@ -251,6 +253,7 @@ export class MessagesService {
             content: contentForDb,
             senderId: dto.zaloAccountId,
             groupId: dto.groupId,
+            peerPhone: null,
             messageZaloId,
             cliMsgId,
             uidFrom: zaloUid,
@@ -281,6 +284,7 @@ export class MessagesService {
               content,
               senderId: dto.zaloAccountId,
               groupId: dto.groupId,
+              peerPhone: null,
               messageZaloId: bubble.messageZaloId,
               cliMsgId: bubble.cliMsgId,
               uidFrom: zaloUid,
@@ -363,6 +367,7 @@ export class MessagesService {
         messageZaloId: true,
         cliMsgId: true,
         groupId: true,
+        peerPhone: true,
         senderId: true,
         sender: {
           select: {
@@ -450,25 +455,50 @@ export class MessagesService {
       }
     }
 
-    const mapping = await this.prismaService.zaloAccountGroup.findFirst({
-      where: {
-        zaloAccountId: found.senderId,
-        groupId: found.groupId,
-      },
-      select: { groupZaloId: true },
-    });
-    const groupZaloId = mapping?.groupZaloId?.trim() ?? '';
-    if (!groupZaloId) {
-      throw new BadRequestException(
-        'Cannot undo: ZaloAccountGroup has no group_zalo_id for this sender and group.',
-      );
-    }
-
     const session =
       await this.zaloLoginSessions.findLatestFullForAppUserAndZaloUid(
         appUserId,
         zaloUid,
       );
+
+    let threadId: string;
+    let threadType: ThreadType;
+    if (found.groupId) {
+      const mapping = await this.prismaService.zaloAccountGroup.findFirst({
+        where: {
+          zaloAccountId: found.senderId,
+          groupId: found.groupId,
+        },
+        select: { groupZaloId: true },
+      });
+      threadId = mapping?.groupZaloId?.trim() ?? '';
+      if (!threadId) {
+        throw new BadRequestException(
+          'Cannot undo: ZaloAccountGroup has no group_zalo_id for this sender and group.',
+        );
+      }
+      threadType = ThreadType.Group;
+    } else {
+      const phone = found.peerPhone?.trim();
+      if (!phone) {
+        throw new BadRequestException(
+          'Cannot undo: DM message has no peer phone stored.',
+        );
+      }
+      const { user } = await this.zaloActionsService.findUser({
+        sessionId: session.id,
+        phoneNumber: phone,
+      });
+      const u = user as { uid?: string } | undefined;
+      const raw = u?.uid;
+      threadId = raw != null ? String(raw).trim() : '';
+      if (!threadId) {
+        throw new BadRequestException(
+          'Cannot undo: could not resolve peer Zalo id for this DM.',
+        );
+      }
+      threadType = ThreadType.User;
+    }
 
     const zcaResults: unknown[] = [];
     for (const row of toUndo) {
@@ -478,8 +508,8 @@ export class MessagesService {
         sessionId: session.id,
         msgId: msgZalo,
         cliMsgId: cli,
-        threadId: groupZaloId,
-        threadType: ThreadType.Group,
+        threadId,
+        threadType,
       });
       zcaResults.push(result);
     }

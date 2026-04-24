@@ -162,14 +162,17 @@ model Message {
   uidFrom       String?       @map("uid_from") @db.VarChar(255)
   content       String        @db.Text
   senderId      String        @map("sender_id") @db.Uuid
-  groupId       String        @map("group_id") @db.Uuid
+  /// Set for group threads; `null` for 1:1 (DM) sends (e.g. public API with phone target).
+  groupId       String?       @map("group_id") @db.Uuid
+  /// Normalized VN phone for DM peer; `null` for group messages.
+  peerPhone     String?       @map("peer_phone") @db.VarChar(50)
   /// If set, this bubble (e.g. a file) belongs to a multi-bubble send whose text row is `parentId`.
   parentId      String?       @map("parent_id") @db.Uuid
   sentAt        DateTime?     @map("sent_at")
   status        MessageStatus
   createdAt     DateTime      @default(now()) @map("created_at")
   sender        ZaloAccount   @relation(fields: [senderId], references: [id])
-  group         ZaloGroup     @relation(fields: [groupId], references: [id])
+  group         ZaloGroup?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
   parent        Message?      @relation("MessageParent", fields: [parentId], references: [id], onDelete: SetNull)
   childMessages Message[]     @relation("MessageParent")
 

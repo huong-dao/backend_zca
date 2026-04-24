@@ -9800,6 +9800,7 @@ export namespace Prisma {
     content: string | null
     senderId: string | null
     groupId: string | null
+    peerPhone: string | null
     parentId: string | null
     sentAt: Date | null
     status: $Enums.MessageStatus | null
@@ -9814,6 +9815,7 @@ export namespace Prisma {
     content: string | null
     senderId: string | null
     groupId: string | null
+    peerPhone: string | null
     parentId: string | null
     sentAt: Date | null
     status: $Enums.MessageStatus | null
@@ -9828,6 +9830,7 @@ export namespace Prisma {
     content: number
     senderId: number
     groupId: number
+    peerPhone: number
     parentId: number
     sentAt: number
     status: number
@@ -9844,6 +9847,7 @@ export namespace Prisma {
     content?: true
     senderId?: true
     groupId?: true
+    peerPhone?: true
     parentId?: true
     sentAt?: true
     status?: true
@@ -9858,6 +9862,7 @@ export namespace Prisma {
     content?: true
     senderId?: true
     groupId?: true
+    peerPhone?: true
     parentId?: true
     sentAt?: true
     status?: true
@@ -9872,6 +9877,7 @@ export namespace Prisma {
     content?: true
     senderId?: true
     groupId?: true
+    peerPhone?: true
     parentId?: true
     sentAt?: true
     status?: true
@@ -9958,7 +9964,8 @@ export namespace Prisma {
     uidFrom: string | null
     content: string
     senderId: string
-    groupId: string
+    groupId: string | null
+    peerPhone: string | null
     parentId: string | null
     sentAt: Date | null
     status: $Enums.MessageStatus
@@ -9990,12 +9997,13 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     groupId?: boolean
+    peerPhone?: boolean
     parentId?: boolean
     sentAt?: boolean
     status?: boolean
     createdAt?: boolean
     sender?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    group?: boolean | ZaloGroupDefaultArgs<ExtArgs>
+    group?: boolean | Message$groupArgs<ExtArgs>
     parent?: boolean | Message$parentArgs<ExtArgs>
     childMessages?: boolean | Message$childMessagesArgs<ExtArgs>
     _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
@@ -10009,12 +10017,13 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     groupId?: boolean
+    peerPhone?: boolean
     parentId?: boolean
     sentAt?: boolean
     status?: boolean
     createdAt?: boolean
     sender?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    group?: boolean | ZaloGroupDefaultArgs<ExtArgs>
+    group?: boolean | Message$groupArgs<ExtArgs>
     parent?: boolean | Message$parentArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
@@ -10026,12 +10035,13 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     groupId?: boolean
+    peerPhone?: boolean
     parentId?: boolean
     sentAt?: boolean
     status?: boolean
     createdAt?: boolean
     sender?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    group?: boolean | ZaloGroupDefaultArgs<ExtArgs>
+    group?: boolean | Message$groupArgs<ExtArgs>
     parent?: boolean | Message$parentArgs<ExtArgs>
   }, ExtArgs["result"]["message"]>
 
@@ -10043,28 +10053,29 @@ export namespace Prisma {
     content?: boolean
     senderId?: boolean
     groupId?: boolean
+    peerPhone?: boolean
     parentId?: boolean
     sentAt?: boolean
     status?: boolean
     createdAt?: boolean
   }
 
-  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "messageZaloId" | "cliMsgId" | "uidFrom" | "content" | "senderId" | "groupId" | "parentId" | "sentAt" | "status" | "createdAt", ExtArgs["result"]["message"]>
+  export type MessageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "messageZaloId" | "cliMsgId" | "uidFrom" | "content" | "senderId" | "groupId" | "peerPhone" | "parentId" | "sentAt" | "status" | "createdAt", ExtArgs["result"]["message"]>
   export type MessageInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    group?: boolean | ZaloGroupDefaultArgs<ExtArgs>
+    group?: boolean | Message$groupArgs<ExtArgs>
     parent?: boolean | Message$parentArgs<ExtArgs>
     childMessages?: boolean | Message$childMessagesArgs<ExtArgs>
     _count?: boolean | MessageCountOutputTypeDefaultArgs<ExtArgs>
   }
   export type MessageIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    group?: boolean | ZaloGroupDefaultArgs<ExtArgs>
+    group?: boolean | Message$groupArgs<ExtArgs>
     parent?: boolean | Message$parentArgs<ExtArgs>
   }
   export type MessageIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     sender?: boolean | ZaloAccountDefaultArgs<ExtArgs>
-    group?: boolean | ZaloGroupDefaultArgs<ExtArgs>
+    group?: boolean | Message$groupArgs<ExtArgs>
     parent?: boolean | Message$parentArgs<ExtArgs>
   }
 
@@ -10072,7 +10083,7 @@ export namespace Prisma {
     name: "Message"
     objects: {
       sender: Prisma.$ZaloAccountPayload<ExtArgs>
-      group: Prisma.$ZaloGroupPayload<ExtArgs>
+      group: Prisma.$ZaloGroupPayload<ExtArgs> | null
       parent: Prisma.$MessagePayload<ExtArgs> | null
       childMessages: Prisma.$MessagePayload<ExtArgs>[]
     }
@@ -10083,7 +10094,14 @@ export namespace Prisma {
       uidFrom: string | null
       content: string
       senderId: string
-      groupId: string
+      /**
+       * Set for group threads; `null` for 1:1 (DM) sends (e.g. public API with phone target).
+       */
+      groupId: string | null
+      /**
+       * Normalized VN phone for DM peer; `null` for group messages.
+       */
+      peerPhone: string | null
       /**
        * If set, this bubble (e.g. a file) belongs to a multi-bubble send whose text row is `parentId`.
        */
@@ -10486,7 +10504,7 @@ export namespace Prisma {
   export interface Prisma__MessageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     sender<T extends ZaloAccountDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccountDefaultArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    group<T extends ZaloGroupDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ZaloGroupDefaultArgs<ExtArgs>>): Prisma__ZaloGroupClient<$Result.GetResult<Prisma.$ZaloGroupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    group<T extends Message$groupArgs<ExtArgs> = {}>(args?: Subset<T, Message$groupArgs<ExtArgs>>): Prisma__ZaloGroupClient<$Result.GetResult<Prisma.$ZaloGroupPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     parent<T extends Message$parentArgs<ExtArgs> = {}>(args?: Subset<T, Message$parentArgs<ExtArgs>>): Prisma__MessageClient<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     childMessages<T extends Message$childMessagesArgs<ExtArgs> = {}>(args?: Subset<T, Message$childMessagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -10525,6 +10543,7 @@ export namespace Prisma {
     readonly content: FieldRef<"Message", 'String'>
     readonly senderId: FieldRef<"Message", 'String'>
     readonly groupId: FieldRef<"Message", 'String'>
+    readonly peerPhone: FieldRef<"Message", 'String'>
     readonly parentId: FieldRef<"Message", 'String'>
     readonly sentAt: FieldRef<"Message", 'DateTime'>
     readonly status: FieldRef<"Message", 'MessageStatus'>
@@ -10927,6 +10946,25 @@ export namespace Prisma {
      * Limit how many Messages to delete.
      */
     limit?: number
+  }
+
+  /**
+   * Message.group
+   */
+  export type Message$groupArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloGroup
+     */
+    select?: ZaloGroupSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloGroup
+     */
+    omit?: ZaloGroupOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloGroupInclude<ExtArgs> | null
+    where?: ZaloGroupWhereInput
   }
 
   /**
@@ -13089,6 +13127,7 @@ export namespace Prisma {
     content: 'content',
     senderId: 'senderId',
     groupId: 'groupId',
+    peerPhone: 'peerPhone',
     parentId: 'parentId',
     sentAt: 'sentAt',
     status: 'status',
@@ -13809,13 +13848,14 @@ export namespace Prisma {
     uidFrom?: StringNullableFilter<"Message"> | string | null
     content?: StringFilter<"Message"> | string
     senderId?: UuidFilter<"Message"> | string
-    groupId?: UuidFilter<"Message"> | string
+    groupId?: UuidNullableFilter<"Message"> | string | null
+    peerPhone?: StringNullableFilter<"Message"> | string | null
     parentId?: UuidNullableFilter<"Message"> | string | null
     sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
     status?: EnumMessageStatusFilter<"Message"> | $Enums.MessageStatus
     createdAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
-    group?: XOR<ZaloGroupScalarRelationFilter, ZaloGroupWhereInput>
+    group?: XOR<ZaloGroupNullableScalarRelationFilter, ZaloGroupWhereInput> | null
     parent?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
     childMessages?: MessageListRelationFilter
   }
@@ -13827,7 +13867,8 @@ export namespace Prisma {
     uidFrom?: SortOrderInput | SortOrder
     content?: SortOrder
     senderId?: SortOrder
-    groupId?: SortOrder
+    groupId?: SortOrderInput | SortOrder
+    peerPhone?: SortOrderInput | SortOrder
     parentId?: SortOrderInput | SortOrder
     sentAt?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -13848,13 +13889,14 @@ export namespace Prisma {
     uidFrom?: StringNullableFilter<"Message"> | string | null
     content?: StringFilter<"Message"> | string
     senderId?: UuidFilter<"Message"> | string
-    groupId?: UuidFilter<"Message"> | string
+    groupId?: UuidNullableFilter<"Message"> | string | null
+    peerPhone?: StringNullableFilter<"Message"> | string | null
     parentId?: UuidNullableFilter<"Message"> | string | null
     sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
     status?: EnumMessageStatusFilter<"Message"> | $Enums.MessageStatus
     createdAt?: DateTimeFilter<"Message"> | Date | string
     sender?: XOR<ZaloAccountScalarRelationFilter, ZaloAccountWhereInput>
-    group?: XOR<ZaloGroupScalarRelationFilter, ZaloGroupWhereInput>
+    group?: XOR<ZaloGroupNullableScalarRelationFilter, ZaloGroupWhereInput> | null
     parent?: XOR<MessageNullableScalarRelationFilter, MessageWhereInput> | null
     childMessages?: MessageListRelationFilter
   }, "id">
@@ -13866,7 +13908,8 @@ export namespace Prisma {
     uidFrom?: SortOrderInput | SortOrder
     content?: SortOrder
     senderId?: SortOrder
-    groupId?: SortOrder
+    groupId?: SortOrderInput | SortOrder
+    peerPhone?: SortOrderInput | SortOrder
     parentId?: SortOrderInput | SortOrder
     sentAt?: SortOrderInput | SortOrder
     status?: SortOrder
@@ -13886,7 +13929,8 @@ export namespace Prisma {
     uidFrom?: StringNullableWithAggregatesFilter<"Message"> | string | null
     content?: StringWithAggregatesFilter<"Message"> | string
     senderId?: UuidWithAggregatesFilter<"Message"> | string
-    groupId?: UuidWithAggregatesFilter<"Message"> | string
+    groupId?: UuidNullableWithAggregatesFilter<"Message"> | string | null
+    peerPhone?: StringNullableWithAggregatesFilter<"Message"> | string | null
     parentId?: UuidNullableWithAggregatesFilter<"Message"> | string | null
     sentAt?: DateTimeNullableWithAggregatesFilter<"Message"> | Date | string | null
     status?: EnumMessageStatusWithAggregatesFilter<"Message"> | $Enums.MessageStatus
@@ -14503,11 +14547,12 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
     sender: ZaloAccountCreateNestedOneWithoutMessagesInput
-    group: ZaloGroupCreateNestedOneWithoutMessagesInput
+    group?: ZaloGroupCreateNestedOneWithoutMessagesInput
     parent?: MessageCreateNestedOneWithoutChildMessagesInput
     childMessages?: MessageCreateNestedManyWithoutParentInput
   }
@@ -14519,7 +14564,8 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -14533,11 +14579,12 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: ZaloAccountUpdateOneRequiredWithoutMessagesNestedInput
-    group?: ZaloGroupUpdateOneRequiredWithoutMessagesNestedInput
+    group?: ZaloGroupUpdateOneWithoutMessagesNestedInput
     parent?: MessageUpdateOneWithoutChildMessagesNestedInput
     childMessages?: MessageUpdateManyWithoutParentNestedInput
   }
@@ -14549,7 +14596,8 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -14564,7 +14612,8 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -14577,6 +14626,7 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -14589,7 +14639,8 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -15362,6 +15413,11 @@ export namespace Prisma {
     not?: NestedEnumMessageStatusFilter<$PrismaModel> | $Enums.MessageStatus
   }
 
+  export type ZaloGroupNullableScalarRelationFilter = {
+    is?: ZaloGroupWhereInput | null
+    isNot?: ZaloGroupWhereInput | null
+  }
+
   export type MessageNullableScalarRelationFilter = {
     is?: MessageWhereInput | null
     isNot?: MessageWhereInput | null
@@ -15375,6 +15431,7 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     groupId?: SortOrder
+    peerPhone?: SortOrder
     parentId?: SortOrder
     sentAt?: SortOrder
     status?: SortOrder
@@ -15389,6 +15446,7 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     groupId?: SortOrder
+    peerPhone?: SortOrder
     parentId?: SortOrder
     sentAt?: SortOrder
     status?: SortOrder
@@ -15403,6 +15461,7 @@ export namespace Prisma {
     content?: SortOrder
     senderId?: SortOrder
     groupId?: SortOrder
+    peerPhone?: SortOrder
     parentId?: SortOrder
     sentAt?: SortOrder
     status?: SortOrder
@@ -16043,10 +16102,12 @@ export namespace Prisma {
     update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutMessagesInput, ZaloAccountUpdateWithoutMessagesInput>, ZaloAccountUncheckedUpdateWithoutMessagesInput>
   }
 
-  export type ZaloGroupUpdateOneRequiredWithoutMessagesNestedInput = {
+  export type ZaloGroupUpdateOneWithoutMessagesNestedInput = {
     create?: XOR<ZaloGroupCreateWithoutMessagesInput, ZaloGroupUncheckedCreateWithoutMessagesInput>
     connectOrCreate?: ZaloGroupCreateOrConnectWithoutMessagesInput
     upsert?: ZaloGroupUpsertWithoutMessagesInput
+    disconnect?: ZaloGroupWhereInput | boolean
+    delete?: ZaloGroupWhereInput | boolean
     connect?: ZaloGroupWhereUniqueInput
     update?: XOR<XOR<ZaloGroupUpdateToOneWithWhereWithoutMessagesInput, ZaloGroupUpdateWithoutMessagesInput>, ZaloGroupUncheckedUpdateWithoutMessagesInput>
   }
@@ -16587,6 +16648,7 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
@@ -16602,6 +16664,7 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -16672,7 +16735,8 @@ export namespace Prisma {
     uidFrom?: StringNullableFilter<"Message"> | string | null
     content?: StringFilter<"Message"> | string
     senderId?: UuidFilter<"Message"> | string
-    groupId?: UuidFilter<"Message"> | string
+    groupId?: UuidNullableFilter<"Message"> | string | null
+    peerPhone?: StringNullableFilter<"Message"> | string | null
     parentId?: UuidNullableFilter<"Message"> | string | null
     sentAt?: DateTimeNullableFilter<"Message"> | Date | string | null
     status?: EnumMessageStatusFilter<"Message"> | $Enums.MessageStatus
@@ -16945,10 +17009,11 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
-    group: ZaloGroupCreateNestedOneWithoutMessagesInput
+    group?: ZaloGroupCreateNestedOneWithoutMessagesInput
     parent?: MessageCreateNestedOneWithoutChildMessagesInput
     childMessages?: MessageCreateNestedManyWithoutParentInput
   }
@@ -16959,7 +17024,8 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -17568,11 +17634,12 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
     sender: ZaloAccountCreateNestedOneWithoutMessagesInput
-    group: ZaloGroupCreateNestedOneWithoutMessagesInput
+    group?: ZaloGroupCreateNestedOneWithoutMessagesInput
     parent?: MessageCreateNestedOneWithoutChildMessagesInput
   }
 
@@ -17583,7 +17650,8 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -17601,11 +17669,12 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
     sender: ZaloAccountCreateNestedOneWithoutMessagesInput
-    group: ZaloGroupCreateNestedOneWithoutMessagesInput
+    group?: ZaloGroupCreateNestedOneWithoutMessagesInput
     childMessages?: MessageCreateNestedManyWithoutParentInput
   }
 
@@ -17616,7 +17685,8 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
@@ -17734,11 +17804,12 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: ZaloAccountUpdateOneRequiredWithoutMessagesNestedInput
-    group?: ZaloGroupUpdateOneRequiredWithoutMessagesNestedInput
+    group?: ZaloGroupUpdateOneWithoutMessagesNestedInput
     parent?: MessageUpdateOneWithoutChildMessagesNestedInput
   }
 
@@ -17749,7 +17820,8 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -17822,6 +17894,7 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -17855,6 +17928,7 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -17870,6 +17944,7 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -17884,6 +17959,7 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -17915,7 +17991,8 @@ export namespace Prisma {
     cliMsgId?: string | null
     uidFrom?: string | null
     content: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     parentId?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
@@ -17999,10 +18076,11 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    group?: ZaloGroupUpdateOneRequiredWithoutMessagesNestedInput
+    group?: ZaloGroupUpdateOneWithoutMessagesNestedInput
     parent?: MessageUpdateOneWithoutChildMessagesNestedInput
     childMessages?: MessageUpdateManyWithoutParentNestedInput
   }
@@ -18013,7 +18091,8 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -18027,7 +18106,8 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     parentId?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
@@ -18083,7 +18163,8 @@ export namespace Prisma {
     uidFrom?: string | null
     content: string
     senderId: string
-    groupId: string
+    groupId?: string | null
+    peerPhone?: string | null
     sentAt?: Date | string | null
     status: $Enums.MessageStatus
     createdAt?: Date | string
@@ -18095,11 +18176,12 @@ export namespace Prisma {
     cliMsgId?: NullableStringFieldUpdateOperationsInput | string | null
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     sender?: ZaloAccountUpdateOneRequiredWithoutMessagesNestedInput
-    group?: ZaloGroupUpdateOneRequiredWithoutMessagesNestedInput
+    group?: ZaloGroupUpdateOneWithoutMessagesNestedInput
     childMessages?: MessageUpdateManyWithoutParentNestedInput
   }
 
@@ -18110,7 +18192,8 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -18124,7 +18207,8 @@ export namespace Prisma {
     uidFrom?: NullableStringFieldUpdateOperationsInput | string | null
     content?: StringFieldUpdateOperationsInput | string
     senderId?: StringFieldUpdateOperationsInput | string
-    groupId?: StringFieldUpdateOperationsInput | string
+    groupId?: NullableStringFieldUpdateOperationsInput | string | null
+    peerPhone?: NullableStringFieldUpdateOperationsInput | string | null
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string

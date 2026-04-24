@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { randomBytes } from 'node:crypto';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { CreateApiKeyDto } from './dto/create-api-key.dto';
@@ -52,6 +56,18 @@ export class ApiKeysService {
     throw new ConflictException(
       'Unable to generate a unique API key. Please try again.',
     );
+  }
+
+  async remove(id: string) {
+    const existing = await this.prismaService.apiKey.findUnique({
+      where: { id },
+      select: { id: true },
+    });
+    if (!existing) {
+      throw new NotFoundException('API key not found.');
+    }
+    await this.prismaService.apiKey.delete({ where: { id } });
+    return { message: 'API key deleted successfully.' };
   }
 
   async validateSecretKey(secretKey: string) {

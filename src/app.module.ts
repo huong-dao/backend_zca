@@ -17,6 +17,7 @@ import { MessagesModule } from './modules/messages/messages.module';
 import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module';
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
 import { ZaloLoginSessionsModule } from './modules/zalo-login-sessions/zalo-login-sessions.module';
+import { PublicZaloSendModule } from './modules/public-zalo-send/public-zalo-send.module';
 import { ZaloActionsModule } from './modules/zalo-actions/zalo-actions.module';
 import { BackgroundJobsModule } from './modules/background-jobs/background-jobs.module';
 @Module({
@@ -38,6 +39,7 @@ import { BackgroundJobsModule } from './modules/background-jobs/background-jobs.
     ZaloGroupsModule,
     ZaloLoginSessionsModule,
     ZaloActionsModule,
+    PublicZaloSendModule,
   ],
   controllers: [AppController],
   providers: [
