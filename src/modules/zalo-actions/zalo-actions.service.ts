@@ -138,16 +138,43 @@ export class ZaloActionsService {
                 attachments: paths,
               }
             : (dto.text ?? '').trim();
-        let result: SendMessageResponse = await zca.sendMessage(
-          message,
-          dto.threadId.trim(),
-          threadType,
-        );
+        const threadZaloId = dto.threadId.trim();
+        /**
+         * File sends can take a long time; the **text** bubble’s self-echo may arrive
+         * on WebSocket *during* `sendMessage` before we can attach the merge handler.
+         * Buffer self echoes for this thread from **before** the send, then pass them
+         * into `mergeCliMsgFromGroupSelfEchoIfNeeded` so the parent row gets `cliMsgId`.
+         */
+        const preSelfEchoes: unknown[] = [];
+        const preHandler = (raw: unknown) => {
+          ZaloActionsService.pushIfSelfGroupEcho(
+            preSelfEchoes,
+            raw,
+            threadZaloId,
+            64,
+          );
+        };
+        api.listener.on('message', preHandler);
+        let result: SendMessageResponse;
+        try {
+          result = await zca.sendMessage(
+            message,
+            threadZaloId,
+            threadType,
+          );
+        } finally {
+          try {
+            api.listener.removeListener('message', preHandler);
+          } catch {
+            /* ignore */
+          }
+        }
         result = (await this.mergeCliMsgFromGroupSelfEchoIfNeeded(
           api,
-          dto.threadId.trim(),
+          threadZaloId,
           threadType,
           result,
+          preSelfEchoes,
         )) as SendMessageResponse;
         return { result };
       },
@@ -227,11 +254,85 @@ export class ZaloActionsService {
    * the root event, `cliMsgId` only under `data`). We use {@link parseMsgBlock}
    * on the full listener object like we do for zca `message` / `attachment` blocks.
    */
+  /**
+   * True if this listener payload is our own message (root or nested `data`).
+   */
+  private static isSelfZaloEcho(m: Record<string, unknown>): boolean {
+    if (m.isSelf === true) {
+      return true;
+    }
+    const d = m.data;
+    if (d && typeof d === 'object') {
+      const inner = d as Record<string, unknown>;
+      if (inner.isSelf === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /** Append to `out` if `raw` is a self group message for `threadId` (cap length). */
+  private static pushIfSelfGroupEcho(
+    out: unknown[],
+    raw: unknown,
+    threadId: string,
+    max: number,
+  ): void {
+    if (out.length >= max) {
+      return;
+    }
+    if (typeof raw !== 'object' || !raw) {
+      return;
+    }
+    const m = raw as Record<string, unknown>;
+    if (m.type !== ThreadType.Group) {
+      return;
+    }
+    if (String(m.threadId ?? '') !== String(threadId)) {
+      return;
+    }
+    if (!ZaloActionsService.isSelfZaloEcho(m)) {
+      return;
+    }
+    out.push(raw);
+  }
+
+  private static tryMergeEchoIntoCliMap(
+    raw: unknown,
+    threadId: string,
+    needed: Set<string>,
+    collected: Map<string, string>,
+  ): void {
+    if (typeof raw !== 'object' || !raw) {
+      return;
+    }
+    const m = raw as Record<string, unknown>;
+    if (m.type !== ThreadType.Group) {
+      return;
+    }
+    if (String(m.threadId ?? '') !== String(threadId)) {
+      return;
+    }
+    if (!ZaloActionsService.isSelfZaloEcho(m)) {
+      return;
+    }
+    const p = parseMsgBlock(raw);
+    if (!p.messageZaloId || !p.cliMsgId) {
+      return;
+    }
+    if (!needed.has(p.messageZaloId)) {
+      return;
+    }
+    collected.set(p.messageZaloId, p.cliMsgId);
+  }
+
   private async mergeCliMsgFromGroupSelfEchoIfNeeded(
     api: API,
     threadId: string,
     threadType: ThreadType,
     result: SendMessageResponse,
+    /** Echoes that arrived on WS during `sendMessage` before the merge wait began. */
+    preSelfEchoes?: readonly unknown[],
   ): Promise<SendMessageResponse> {
     if (threadType !== ThreadType.Group) {
       return result;
@@ -260,6 +361,15 @@ export class ZaloActionsService {
     return new Promise<SendMessageResponse>((resolve) => {
       const collected = new Map<string, string>();
 
+      for (const raw of preSelfEchoes ?? []) {
+        ZaloActionsService.tryMergeEchoIntoCliMap(
+          raw,
+          threadId,
+          needed,
+          collected,
+        );
+      }
+
       const allFilled = () => {
         for (const id of needed) {
           if (!collected.has(id)) {
@@ -268,6 +378,16 @@ export class ZaloActionsService {
         }
         return true;
       };
+
+      if (allFilled()) {
+        resolve(
+          applyCliMsgIdsToZaloSendResult(
+            result,
+            collected,
+          ) as SendMessageResponse,
+        );
+        return;
+      }
 
       const finish = (timedOut: boolean) => {
         if (timedOut) {
@@ -296,29 +416,13 @@ export class ZaloActionsService {
         finish(true);
       }, ZALO_SELF_ECHO_TIMEOUT_MS);
 
-      const handler = (message: {
-        type: unknown;
-        threadId?: string;
-        isSelf?: boolean;
-        data?: unknown;
-      }) => {
-        if (message.type !== ThreadType.Group) {
-          return;
-        }
-        if (String(message.threadId ?? '') !== String(threadId)) {
-          return;
-        }
-        if (!message.isSelf) {
-          return;
-        }
-        const p = parseMsgBlock(message);
-        if (!p.messageZaloId || !p.cliMsgId) {
-          return;
-        }
-        if (!needed.has(p.messageZaloId)) {
-          return;
-        }
-        collected.set(p.messageZaloId, p.cliMsgId);
+      const handler = (raw: unknown) => {
+        ZaloActionsService.tryMergeEchoIntoCliMap(
+          raw,
+          threadId,
+          needed,
+          collected,
+        );
         if (allFilled()) {
           clearTimeout(timer);
           off();
