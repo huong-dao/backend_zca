@@ -17,6 +17,7 @@ import {
   applyCliMsgIdsToZaloSendResult,
   extractIdsFromZaloSendResult,
   listZaloSendBubbleIds,
+  parseMsgBlock,
 } from '../../zalo/parse-zalo-send-message-result';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -222,7 +223,9 @@ export class ZaloActionsService {
   /**
    * HTTP `sendMessage` may not return a `TMessage` shape. zca’s WebSocket
    * drops self group messages when `selfListen` is false; with `selfListen: true`
-   * the echo includes `data.cliMsgId` (see `TMessage` in zca types).
+   * the echo can carry `msgId` / `cliMsgId` in **mixed** places (e.g. `msgId` on
+   * the root event, `cliMsgId` only under `data`). We use {@link parseMsgBlock}
+   * on the full listener object like we do for zca `message` / `attachment` blocks.
    */
   private async mergeCliMsgFromGroupSelfEchoIfNeeded(
     api: API,
@@ -297,7 +300,7 @@ export class ZaloActionsService {
         type: unknown;
         threadId?: string;
         isSelf?: boolean;
-        data?: { msgId?: string | number; cliMsgId?: string | number };
+        data?: unknown;
       }) => {
         if (message.type !== ThreadType.Group) {
           return;
@@ -308,19 +311,14 @@ export class ZaloActionsService {
         if (!message.isSelf) {
           return;
         }
-        const rawMid = message.data?.msgId;
-        if (rawMid == null || rawMid === '') {
+        const p = parseMsgBlock(message);
+        if (!p.messageZaloId || !p.cliMsgId) {
           return;
         }
-        const msgId = String(rawMid);
-        if (!needed.has(msgId)) {
+        if (!needed.has(p.messageZaloId)) {
           return;
         }
-        const c = message.data?.cliMsgId;
-        if (c == null || c === '') {
-          return;
-        }
-        collected.set(msgId, String(c));
+        collected.set(p.messageZaloId, p.cliMsgId);
         if (allFilled()) {
           clearTimeout(timer);
           off();
