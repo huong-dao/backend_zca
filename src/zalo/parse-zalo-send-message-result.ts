@@ -86,6 +86,71 @@ export function listZaloSendBubbleIds(res: unknown): ZaloSendBubbleIds[] {
   return out;
 }
 
+const ZALO_MSG_ID_KEYS = [
+  'msgId',
+  'messageId',
+  'globalMsgId',
+  'realMsgId',
+] as const;
+
+/**
+ * All distinct id strings for this block (and nested objects, depth-limited) so WebSocket
+ * self-echo can be matched to the HTTP `sendMessage` part even when `msgId` vs `messageId`
+ * / `globalMsgId` differ from {@link parseMsgBlock}’s single “primary” pick.
+ */
+export function allZaloMessageIdCandidatesFromBlock(
+  block: unknown,
+  maxDepth = 5,
+): Set<string> {
+  const s = new Set<string>();
+  const walk = (node: unknown, d: number) => {
+    if (d > maxDepth) {
+      return;
+    }
+    if (node == null || typeof node !== 'object') {
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const it of node) {
+        walk(it, d + 1);
+      }
+      return;
+    }
+    const o = node as Record<string, unknown>;
+    for (const k of ZALO_MSG_ID_KEYS) {
+      if (o[k] != null && o[k] !== '') {
+        s.add(String(o[k]));
+      }
+    }
+    for (const v of Object.values(o)) {
+      if (v && typeof v === 'object') {
+        walk(v, d + 1);
+      }
+    }
+  };
+  walk(block, 0);
+  return s;
+}
+
+/** The raw `result.message` or one `result.attachment[i]` for a bubble. */
+export function getZaloSendResultBlock(
+  b: ZaloSendBubbleIds,
+  res: unknown,
+): unknown {
+  if (!res || typeof res !== 'object') {
+    return null;
+  }
+  const r = res as Record<string, unknown>;
+  if (b.source === 'message') {
+    return r.message ?? null;
+  }
+  const atts = r.attachment;
+  if (!Array.isArray(atts) || b.attachmentIndex == null) {
+    return null;
+  }
+  return atts[b.attachmentIndex] ?? null;
+}
+
 /**
  * Merged “primary” id pair (any non-null from any bubble) — legacy single-row use.
  */
@@ -130,8 +195,29 @@ export function extractIdsFromZaloSendResult(res: unknown): {
  * For each `msgId` in `cliByMsgId`, sets `cliMsgId` on the matching `responses.message` or
  * `responses.attachment[i]` block (each bubble can have a different `cliMsgId` from self-echo).
  */
+function getCliForBlockFromMap(
+  block: unknown,
+  cliByPrimary: ReadonlyMap<string, string>,
+): string | null {
+  const p = parseMsgBlock(block);
+  if (p.messageZaloId) {
+    const c = cliByPrimary.get(p.messageZaloId);
+    if (c != null) {
+      return c;
+    }
+  }
+  for (const id of allZaloMessageIdCandidatesFromBlock(block)) {
+    const c = cliByPrimary.get(id);
+    if (c != null) {
+      return c;
+    }
+  }
+  return null;
+}
+
 export function applyCliMsgIdsToZaloSendResult(
   res: unknown,
+  /** Keys are the bubble “primary” ids (same as persisted `message_zalo_id` per part). */
   cliByMsgId: ReadonlyMap<string, string>,
 ): unknown {
   if (!res || typeof res !== 'object' || cliByMsgId.size === 0) {
@@ -140,12 +226,9 @@ export function applyCliMsgIdsToZaloSendResult(
   const r = { ...(res as Record<string, unknown>) };
   const msg = r.message;
   if (msg && typeof msg === 'object') {
-    const p = parseMsgBlock(msg);
-    if (p.messageZaloId) {
-      const c = cliByMsgId.get(p.messageZaloId);
-      if (c != null) {
-        r.message = { ...(msg as Record<string, unknown>), cliMsgId: c };
-      }
+    const c = getCliForBlockFromMap(msg, cliByMsgId);
+    if (c != null) {
+      r.message = { ...(msg as Record<string, unknown>), cliMsgId: c };
     }
   }
   const atts = r.attachment;
@@ -154,11 +237,7 @@ export function applyCliMsgIdsToZaloSendResult(
       if (!a || typeof a !== 'object') {
         return a;
       }
-      const p = parseMsgBlock(a);
-      if (!p.messageZaloId) {
-        return a;
-      }
-      const c = cliByMsgId.get(p.messageZaloId);
+      const c = getCliForBlockFromMap(a, cliByMsgId);
       if (c == null) {
         return a;
       }

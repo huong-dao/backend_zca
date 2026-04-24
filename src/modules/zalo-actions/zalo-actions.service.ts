@@ -14,8 +14,10 @@ import {
   ZcaApiHelper,
 } from '../../zalo';
 import {
+  allZaloMessageIdCandidatesFromBlock,
   applyCliMsgIdsToZaloSendResult,
   extractIdsFromZaloSendResult,
+  getZaloSendResultBlock,
   listZaloSendBubbleIds,
   parseMsgBlock,
 } from '../../zalo/parse-zalo-send-message-result';
@@ -248,13 +250,6 @@ export class ZaloActionsService {
   }
 
   /**
-   * HTTP `sendMessage` may not return a `TMessage` shape. zca’s WebSocket
-   * drops self group messages when `selfListen` is false; with `selfListen: true`
-   * the echo can carry `msgId` / `cliMsgId` in **mixed** places (e.g. `msgId` on
-   * the root event, `cliMsgId` only under `data`). We use {@link parseMsgBlock}
-   * on the full listener object like we do for zca `message` / `attachment` blocks.
-   */
-  /**
    * True if this listener payload is our own message (root or nested `data`).
    */
   private static isSelfZaloEcho(m: Record<string, unknown>): boolean {
@@ -297,11 +292,16 @@ export class ZaloActionsService {
     out.push(raw);
   }
 
-  private static tryMergeEchoIntoCliMap(
+  /**
+   * Match one self echo to a bubble by **id intersection** (HTTP + WS can use different
+   * `msgId` / `messageId` / `globalMsgId` for the same bubble). `byPrimary` keys are
+   * {@link listZaloSendBubbleIds}’s per-bubble `messageZaloId` (DB `message_zalo_id`).
+   */
+  private static tryMatchSelfEchoToPendingBubbles(
     raw: unknown,
     threadId: string,
-    needed: Set<string>,
-    collected: Map<string, string>,
+    pending: Array<{ primary: string; idCandidates: Set<string>; done: boolean }>,
+    byPrimary: Map<string, string>,
   ): void {
     if (typeof raw !== 'object' || !raw) {
       return;
@@ -317,13 +317,22 @@ export class ZaloActionsService {
       return;
     }
     const p = parseMsgBlock(raw);
-    if (!p.messageZaloId || !p.cliMsgId) {
+    if (!p.cliMsgId) {
       return;
     }
-    if (!needed.has(p.messageZaloId)) {
-      return;
+    const echoIds = allZaloMessageIdCandidatesFromBlock(raw);
+    for (const row of pending) {
+      if (row.done) {
+        continue;
+      }
+      for (const eid of echoIds) {
+        if (row.idCandidates.has(eid)) {
+          row.done = true;
+          byPrimary.set(row.primary, p.cliMsgId);
+          return;
+        }
+      }
     }
-    collected.set(p.messageZaloId, p.cliMsgId);
   }
 
   private async mergeCliMsgFromGroupSelfEchoIfNeeded(
@@ -339,51 +348,66 @@ export class ZaloActionsService {
     }
 
     const bubbles = listZaloSendBubbleIds(result);
-    let needed: Set<string>;
+    const pending: Array<{
+      primary: string;
+      idCandidates: Set<string>;
+      done: boolean;
+    }> = [];
+
     if (bubbles.length > 0) {
-      needed = new Set(
-        bubbles
-          .filter((b) => b.messageZaloId && !b.cliMsgId)
-          .map((b) => b.messageZaloId!),
-      );
+      for (const b of bubbles) {
+        if (b.cliMsgId) {
+          continue;
+        }
+        if (!b.messageZaloId) {
+          continue;
+        }
+        const block = getZaloSendResultBlock(b, result);
+        const idCandidates = allZaloMessageIdCandidatesFromBlock(block);
+        idCandidates.add(b.messageZaloId);
+        pending.push({
+          primary: b.messageZaloId,
+          idCandidates,
+          done: false,
+        });
+      }
     } else {
       const parsed = extractIdsFromZaloSendResult(result);
       if (parsed.cliMsgId || !parsed.messageZaloId) {
         return result;
       }
-      needed = new Set([parsed.messageZaloId]);
+      const idCandidates = allZaloMessageIdCandidatesFromBlock(result);
+      idCandidates.add(parsed.messageZaloId);
+      pending.push({
+        primary: parsed.messageZaloId,
+        idCandidates,
+        done: false,
+      });
     }
 
-    if (needed.size === 0) {
+    if (pending.length === 0) {
       return result;
     }
 
     return new Promise<SendMessageResponse>((resolve) => {
-      const collected = new Map<string, string>();
+      const byPrimary = new Map<string, string>();
 
       for (const raw of preSelfEchoes ?? []) {
-        ZaloActionsService.tryMergeEchoIntoCliMap(
+        ZaloActionsService.tryMatchSelfEchoToPendingBubbles(
           raw,
           threadId,
-          needed,
-          collected,
+          pending,
+          byPrimary,
         );
       }
 
-      const allFilled = () => {
-        for (const id of needed) {
-          if (!collected.has(id)) {
-            return false;
-          }
-        }
-        return true;
-      };
+      const allFilled = () => pending.every((r) => r.done);
 
       if (allFilled()) {
         resolve(
           applyCliMsgIdsToZaloSendResult(
             result,
-            collected,
+            byPrimary,
           ) as SendMessageResponse,
         );
         return;
@@ -392,18 +416,18 @@ export class ZaloActionsService {
       const finish = (timedOut: boolean) => {
         if (timedOut) {
           this.logger.debug(
-            `Zalo: self group echo for cliMsgId merge: got ${
-              collected.size
-            }/${needed.size} within ${ZALO_SELF_ECHO_TIMEOUT_MS}ms; ids=${[
-              ...needed,
+            `Zalo: self group echo for cliMsgId merge: filled ${
+              byPrimary.size
+            }/${pending.length} within ${ZALO_SELF_ECHO_TIMEOUT_MS}ms; pending primary ids=${[
+              ...pending.filter((p) => !p.done).map((p) => p.primary),
             ].join(',')}.`,
           );
         }
-        if (collected.size > 0) {
+        if (byPrimary.size > 0) {
           resolve(
             applyCliMsgIdsToZaloSendResult(
               result,
-              collected,
+              byPrimary,
             ) as SendMessageResponse,
           );
         } else {
@@ -417,11 +441,11 @@ export class ZaloActionsService {
       }, ZALO_SELF_ECHO_TIMEOUT_MS);
 
       const handler = (raw: unknown) => {
-        ZaloActionsService.tryMergeEchoIntoCliMap(
+        ZaloActionsService.tryMatchSelfEchoToPendingBubbles(
           raw,
           threadId,
-          needed,
-          collected,
+          pending,
+          byPrimary,
         );
         if (allFilled()) {
           clearTimeout(timer);
