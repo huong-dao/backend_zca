@@ -38,6 +38,7 @@ Mọi phản hồi từ endpoint này dùng **HTTP 200**. Kết quả nghiệp v
 
 - `code === 0` → thành công; `data` có thể chứa thông tin bổ sung (ví dụ id tin đã lưu).
 - `code !== 0` → thất bại; đọc `message` nếu có.
+- Cấu hình `configurations.message_interval` (phút) áp dụng giống `POST /messages/send`: nếu &gt; 0, không cho child đã gửi gần đây vào **cùng nhóm** (gửi theo tên) hoặc tới **cùng số** (gửi theo phone) lặp lại trước khi hết khoảng cách. Thiếu/invalid cấu hình: `code` 2. Vi phạm khoảng cách: `code` 14.
 
 ## Bảng `code`
 
@@ -57,6 +58,7 @@ Mọi phản hồi từ endpoint này dùng **HTTP 200**. Kết quả nghiệp v
 | 11 | Thêm child vào nhóm thất bại (nhánh nhóm) |
 | 12 | `findUser` thất bại (DM) |
 | 13 | Gửi qua Zalo thất bại |
+| 14 | Gửi quá sớm so với cấu hình `message_interval` (cùng child + cùng nhóm hoặc cùng số DM) — xem `message` |
 | 99 | Lỗi nội bộ chưa phân loại |
 
 ## Ví dụ tối giản (curl)

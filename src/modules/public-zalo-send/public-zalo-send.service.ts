@@ -17,6 +17,7 @@ import {
   normalizeVietnamPhone,
 } from '../../zalo/vietnam-phone';
 import { ApiKeysService } from '../api-keys/api-keys.service';
+import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloAccountsService } from '../zalo-accounts/zalo-accounts.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -45,6 +46,7 @@ export class PublicZaloSendService {
   constructor(
     private readonly apiKeys: ApiKeysService,
     private readonly prisma: PrismaService,
+    private readonly configs: ConfigsService,
     private readonly zaloAccounts: ZaloAccountsService,
     private readonly zaloLoginSessions: ZaloLoginSessionsService,
     private readonly zaloActions: ZaloActionsService,
@@ -207,6 +209,15 @@ export class PublicZaloSendService {
       };
     }
 
+    const intervalDm = await this.checkMessageIntervalForDm({
+      childId: child.id,
+      childName: child.name,
+      peerPhone: normalizedPhone,
+    });
+    if (intervalDm) {
+      return intervalDm;
+    }
+
     return this.runSendAndPersist({
       sessionId,
       threadId: peerUid,
@@ -263,6 +274,16 @@ export class PublicZaloSendService {
         code: PublicZaloSendCode.CHILD_INACTIVE_OR_NO_ZALO,
         message: 'Child account has no phone for group invite / findUser.',
       };
+    }
+
+    const intervalGroup = await this.checkMessageIntervalForGroup({
+      childId: child.id,
+      childName: child.name,
+      groupId: group.id,
+      groupName: group.groupName,
+    });
+    if (intervalGroup) {
+      return intervalGroup;
     }
 
     let sessionId: string;
@@ -479,6 +500,112 @@ export class PublicZaloSendService {
       }
       return out;
     });
+  }
+
+  /**
+   * Giống `MessagesService.send`: đọc `configurations.message_interval` (phút). Nếu &gt; 0
+   * và đã có tin gần đây cùng child + nhóm thì chặn (thứ tự `created_at` desc, `id` desc).
+   */
+  private async checkMessageIntervalForGroup(args: {
+    childId: string;
+    childName: string | null;
+    groupId: string;
+    groupName: string | null;
+  }): Promise<{ code: PublicZaloSendCodeValue; message: string } | null> {
+    let intervalMinutes: number;
+    try {
+      intervalMinutes = await this.configs.getMessageIntervalMinutes();
+    } catch (e) {
+      return {
+        code: PublicZaloSendCode.VALIDATION,
+        message:
+          e instanceof Error
+            ? e.message
+            : 'message_interval configuration is missing or invalid.',
+      };
+    }
+    if (intervalMinutes <= 0) {
+      return null;
+    }
+    const lastMessage = await this.prisma.message.findFirst({
+      where: {
+        senderId: args.childId,
+        groupId: args.groupId,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { sentAt: true, createdAt: true },
+    });
+    if (!lastMessage) {
+      return null;
+    }
+    const lastAt = lastMessage.sentAt ?? lastMessage.createdAt;
+    const intervalMs = intervalMinutes * 60_000;
+    const elapsed = Date.now() - lastAt.getTime();
+    if (elapsed >= intervalMs) {
+      return null;
+    }
+    const childName = args.childName?.trim() || 'Tài khoản này';
+    const groupLabel = args.groupName?.trim() || 'nhóm này';
+    const remainingMs = intervalMs - elapsed;
+    const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60_000));
+    const agoMinutes = Math.floor(elapsed / 60_000);
+    const agoLabel =
+      agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
+    return {
+      code: PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED,
+      message: `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`,
+    };
+  }
+
+  /** Cùng `message_interval`, áp dụng cho DM: cùng child + `peer_phone` (tin mới nhất). */
+  private async checkMessageIntervalForDm(args: {
+    childId: string;
+    childName: string | null;
+    peerPhone: string;
+  }): Promise<{ code: PublicZaloSendCodeValue; message: string } | null> {
+    let intervalMinutes: number;
+    try {
+      intervalMinutes = await this.configs.getMessageIntervalMinutes();
+    } catch (e) {
+      return {
+        code: PublicZaloSendCode.VALIDATION,
+        message:
+          e instanceof Error
+            ? e.message
+            : 'message_interval configuration is missing or invalid.',
+      };
+    }
+    if (intervalMinutes <= 0) {
+      return null;
+    }
+    const lastMessage = await this.prisma.message.findFirst({
+      where: {
+        senderId: args.childId,
+        groupId: null,
+        peerPhone: args.peerPhone,
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { sentAt: true, createdAt: true },
+    });
+    if (!lastMessage) {
+      return null;
+    }
+    const lastAt = lastMessage.sentAt ?? lastMessage.createdAt;
+    const intervalMs = intervalMinutes * 60_000;
+    const elapsed = Date.now() - lastAt.getTime();
+    if (elapsed >= intervalMs) {
+      return null;
+    }
+    const childName = args.childName?.trim() || 'Tài khoản này';
+    const remainingMs = intervalMs - elapsed;
+    const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60_000));
+    const agoMinutes = Math.floor(elapsed / 60_000);
+    const agoLabel =
+      agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
+    return {
+      code: PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED,
+      message: `${childName} vừa gửi tin nhắn tới số ${args.peerPhone} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo tới số này`,
+    };
   }
 
   private static buildContentForDb(

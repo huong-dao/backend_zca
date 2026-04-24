@@ -16,6 +16,8 @@ export const PublicZaloSendCode = {
   ADD_TO_GROUP_FAILED: 11,
   FIND_USER_FAILED: 12,
   SEND_FAILED: 13,
+  /** Cùng logic `message_interval` với `POST /messages/send` (child + nhóm hoặc DM cùng số). */
+  MESSAGE_INTERVAL_NOT_ELAPSED: 14,
   INTERNAL: 99,
 } as const;
 
