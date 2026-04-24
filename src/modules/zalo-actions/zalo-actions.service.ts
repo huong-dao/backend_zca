@@ -14,8 +14,9 @@ import {
   ZcaApiHelper,
 } from '../../zalo';
 import {
+  applyCliMsgIdsToZaloSendResult,
   extractIdsFromZaloSendResult,
-  mergeCliMsgIdIntoZaloSendResult,
+  listZaloSendBubbleIds,
 } from '../../zalo/parse-zalo-send-message-result';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
@@ -232,22 +233,64 @@ export class ZaloActionsService {
     if (threadType !== ThreadType.Group) {
       return result;
     }
-    const parsed = extractIdsFromZaloSendResult(result);
-    if (parsed.cliMsgId) {
+
+    const bubbles = listZaloSendBubbleIds(result);
+    let needed: Set<string>;
+    if (bubbles.length > 0) {
+      needed = new Set(
+        bubbles
+          .filter((b) => b.messageZaloId && !b.cliMsgId)
+          .map((b) => b.messageZaloId!),
+      );
+    } else {
+      const parsed = extractIdsFromZaloSendResult(result);
+      if (parsed.cliMsgId || !parsed.messageZaloId) {
+        return result;
+      }
+      needed = new Set([parsed.messageZaloId]);
+    }
+
+    if (needed.size === 0) {
       return result;
     }
-    if (!parsed.messageZaloId) {
-      return result;
-    }
-    const msgId = parsed.messageZaloId;
 
     return new Promise<SendMessageResponse>((resolve) => {
+      const collected = new Map<string, string>();
+
+      const allFilled = () => {
+        for (const id of needed) {
+          if (!collected.has(id)) {
+            return false;
+          }
+        }
+        return true;
+      };
+
+      const finish = (timedOut: boolean) => {
+        if (timedOut) {
+          this.logger.debug(
+            `Zalo: self group echo for cliMsgId merge: got ${
+              collected.size
+            }/${needed.size} within ${ZALO_SELF_ECHO_TIMEOUT_MS}ms; ids=${[
+              ...needed,
+            ].join(',')}.`,
+          );
+        }
+        if (collected.size > 0) {
+          resolve(
+            applyCliMsgIdsToZaloSendResult(
+              result,
+              collected,
+            ) as SendMessageResponse,
+          );
+        } else {
+          resolve(result);
+        }
+      };
+
       const timer = setTimeout(() => {
         off();
-        this.logger.debug(
-          `Zalo: no self group echo for msgId=${msgId} within ${ZALO_SELF_ECHO_TIMEOUT_MS}ms; cliMsgId not merged.`,
-        );
-        resolve(result);
+        finish(true);
       }, ZALO_SELF_ECHO_TIMEOUT_MS);
 
       const handler = (message: {
@@ -265,22 +308,24 @@ export class ZaloActionsService {
         if (!message.isSelf) {
           return;
         }
-        if (String(message.data?.msgId ?? '') !== String(msgId)) {
+        const rawMid = message.data?.msgId;
+        if (rawMid == null || rawMid === '') {
+          return;
+        }
+        const msgId = String(rawMid);
+        if (!needed.has(msgId)) {
           return;
         }
         const c = message.data?.cliMsgId;
         if (c == null || c === '') {
           return;
         }
-        clearTimeout(timer);
-        off();
-        resolve(
-          mergeCliMsgIdIntoZaloSendResult(
-            result,
-            String(c),
-            msgId,
-          ) as SendMessageResponse,
-        );
+        collected.set(msgId, String(c));
+        if (allFilled()) {
+          clearTimeout(timer);
+          off();
+          finish(false);
+        }
       };
       const off = () => {
         try {

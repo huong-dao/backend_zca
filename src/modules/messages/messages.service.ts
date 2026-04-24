@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import type { Express } from 'express';
 import { ThreadType } from 'zca-js';
+import type { Prisma } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
@@ -29,6 +30,7 @@ const messageSelect = {
   content: true,
   senderId: true,
   groupId: true,
+  parentId: true,
   sentAt: true,
   status: true,
   createdAt: true,
@@ -233,6 +235,7 @@ export class MessagesService {
         content: true,
         senderId: true,
         groupId: true,
+        parentId: true,
         sentAt: true,
         status: true,
         createdAt: true,
@@ -262,11 +265,17 @@ export class MessagesService {
         bubbles,
         contentForDb,
       );
-      const rows = await this.prismaService.$transaction(
-        bubbles.map((bubble, idx) =>
-          this.prismaService.message.create({
+      const rows = await this.prismaService.$transaction(async (tx) => {
+        const out: Prisma.MessageGetPayload<{
+          select: typeof createSelect;
+        }>[] = [];
+        let parentRowId: string | null = null;
+        for (let idx = 0; idx < bubbles.length; idx++) {
+          const bubble = bubbles[idx]!;
+          const content = contents[idx] ?? contentForDb;
+          const row = await tx.message.create({
             data: {
-              content: contents[idx] ?? contentForDb,
+              content,
               senderId: dto.zaloAccountId,
               groupId: dto.groupId,
               messageZaloId: bubble.messageZaloId,
@@ -274,11 +283,17 @@ export class MessagesService {
               uidFrom: zaloUid,
               sentAt,
               status: 'SENT',
+              parentId: idx === 0 ? null : parentRowId!,
             },
             select: createSelect,
-          }),
-        ),
-      );
+          });
+          if (idx === 0) {
+            parentRowId = row.id;
+          }
+          out.push(row);
+        }
+        return out;
+      });
 
       return { result, message: rows[0], messages: rows };
     } finally {
@@ -340,6 +355,7 @@ export class MessagesService {
       where: { id },
       select: {
         id: true,
+        parentId: true,
         status: true,
         messageZaloId: true,
         cliMsgId: true,
@@ -350,6 +366,16 @@ export class MessagesService {
             zaloId: true,
             status: true,
             isDeleted: true,
+          },
+        },
+        childMessages: {
+          where: { status: 'SENT' },
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            messageZaloId: true,
+            cliMsgId: true,
+            status: true,
           },
         },
       },
@@ -389,12 +415,36 @@ export class MessagesService {
       );
     }
 
-    const msgZalo = found.messageZaloId?.trim() ?? '';
-    const cli = found.cliMsgId?.trim() ?? '';
-    if (!msgZalo || !cli) {
-      throw new BadRequestException(
-        'Cannot undo: message is missing Zalo msgId and/or cliMsgId (required for api.undo).',
+    const toUndo: Array<{
+      id: string;
+      messageZaloId: string | null;
+      cliMsgId: string | null;
+    }> = [];
+    if (found.parentId) {
+      toUndo.push({
+        id: found.id,
+        messageZaloId: found.messageZaloId,
+        cliMsgId: found.cliMsgId,
+      });
+    } else {
+      toUndo.push(
+        {
+          id: found.id,
+          messageZaloId: found.messageZaloId,
+          cliMsgId: found.cliMsgId,
+        },
+        ...found.childMessages,
       );
+    }
+
+    for (const row of toUndo) {
+      const msgZalo = row.messageZaloId?.trim() ?? '';
+      const cli = row.cliMsgId?.trim() ?? '';
+      if (!msgZalo || !cli) {
+        throw new BadRequestException(
+          'Cannot undo: message is missing Zalo msgId and/or cliMsgId (required for api.undo).',
+        );
+      }
     }
 
     const mapping = await this.prismaService.zaloAccountGroup.findFirst({
@@ -417,20 +467,43 @@ export class MessagesService {
         zaloUid,
       );
 
-    const { result } = await this.zaloActionsService.undo({
-      sessionId: session.id,
-      msgId: msgZalo,
-      cliMsgId: cli,
-      threadId: groupZaloId,
-      threadType: ThreadType.Group,
-    });
+    const zcaResults: unknown[] = [];
+    for (const row of toUndo) {
+      const msgZalo = row.messageZaloId!.trim();
+      const cli = row.cliMsgId!.trim();
+      const { result } = await this.zaloActionsService.undo({
+        sessionId: session.id,
+        msgId: msgZalo,
+        cliMsgId: cli,
+        threadId: groupZaloId,
+        threadType: ThreadType.Group,
+      });
+      zcaResults.push(result);
+    }
 
-    const messageRow = await this.prismaService.message.update({
-      where: { id: found.id },
+    const idList = toUndo.map((m) => m.id);
+    await this.prismaService.message.updateMany({
+      where: { id: { in: idList } },
       data: { status: 'RECALL' },
-      select: messageWithSenderGroupSelect,
     });
 
-    return { result, message: messageRow };
+    const [messageRow, messages] = await Promise.all([
+      this.prismaService.message.findUniqueOrThrow({
+        where: { id: found.id },
+        select: messageWithSenderGroupSelect,
+      }),
+      this.prismaService.message.findMany({
+        where: { id: { in: idList } },
+        orderBy: { createdAt: 'asc' },
+        select: messageWithSenderGroupSelect,
+      }),
+    ]);
+
+    return {
+      result: zcaResults[zcaResults.length - 1],
+      results: zcaResults,
+      message: messageRow,
+      messages,
+    };
   }
 }

@@ -152,6 +152,9 @@ model ZaloAccountFriend {
   @@map("zalo_account_friends")
 }
 
+/// One row per Zalo bubble. Text + N files in a single send: first bubble has `parent_id` null, file rows
+/// set `parent_id` to the text row (same `sent_at` batch). `POST /messages/undo/:id` on the parent undoes
+/// the parent’s Zalo bubble then each child row’s bubble.
 model Message {
   id            String        @id @default(uuid()) @db.Uuid
   messageZaloId String?       @map("message_zalo_id") @db.VarChar(255)
@@ -160,12 +163,17 @@ model Message {
   content       String        @db.Text
   senderId      String        @map("sender_id") @db.Uuid
   groupId       String        @map("group_id") @db.Uuid
+  /// If set, this bubble (e.g. a file) belongs to a multi-bubble send whose text row is `parentId`.
+  parentId      String?       @map("parent_id") @db.Uuid
   sentAt        DateTime?     @map("sent_at")
   status        MessageStatus
   createdAt     DateTime      @default(now()) @map("created_at")
   sender        ZaloAccount   @relation(fields: [senderId], references: [id])
   group         ZaloGroup     @relation(fields: [groupId], references: [id])
+  parent        Message?      @relation("MessageParent", fields: [parentId], references: [id], onDelete: SetNull)
+  childMessages Message[]     @relation("MessageParent")
 
+  @@index([parentId])
   @@index([senderId, groupId])
   @@map("messages")
 }

@@ -126,7 +126,52 @@ export function extractIdsFromZaloSendResult(res: unknown): {
   return { messageZaloId, cliMsgId };
 }
 
-/** Shallow-merge `cliMsgId` into a copy of the zca `sendMessage` return value for re-parsing. */
+/**
+ * For each `msgId` in `cliByMsgId`, sets `cliMsgId` on the matching `responses.message` or
+ * `responses.attachment[i]` block (each bubble can have a different `cliMsgId` from self-echo).
+ */
+export function applyCliMsgIdsToZaloSendResult(
+  res: unknown,
+  cliByMsgId: ReadonlyMap<string, string>,
+): unknown {
+  if (!res || typeof res !== 'object' || cliByMsgId.size === 0) {
+    return res;
+  }
+  const r = { ...(res as Record<string, unknown>) };
+  const msg = r.message;
+  if (msg && typeof msg === 'object') {
+    const p = parseMsgBlock(msg);
+    if (p.messageZaloId) {
+      const c = cliByMsgId.get(p.messageZaloId);
+      if (c != null) {
+        r.message = { ...(msg as Record<string, unknown>), cliMsgId: c };
+      }
+    }
+  }
+  const atts = r.attachment;
+  if (Array.isArray(atts)) {
+    r.attachment = atts.map((a) => {
+      if (!a || typeof a !== 'object') {
+        return a;
+      }
+      const p = parseMsgBlock(a);
+      if (!p.messageZaloId) {
+        return a;
+      }
+      const c = cliByMsgId.get(p.messageZaloId);
+      if (c == null) {
+        return a;
+      }
+      return { ...(a as Record<string, unknown>), cliMsgId: c };
+    });
+  }
+  return r;
+}
+
+/**
+ * Shallow-merge a single `cliMsgId` into a copy of the zca `sendMessage` return value
+ * (single-bubble or legacy). For text + file bubbles use {@link applyCliMsgIdsToZaloSendResult}.
+ */
 export function mergeCliMsgIdIntoZaloSendResult(
   res: unknown,
   cliMsgId: string,
