@@ -3,6 +3,7 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
+import { once } from 'node:events';
 import { isDeepStrictEqual } from 'node:util';
 import type { API, MessageContent } from 'zca-js';
 import { ThreadType } from 'zca-js';
@@ -22,6 +23,8 @@ import type { ZaloGetQrDto } from './dto/zalo-get-qr.dto';
 import type { ZaloGroupInfoDto } from './dto/zalo-group-info.dto';
 import type { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dto';
 import type { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
+
+const ZALO_LISTENER_CIPHER_TIMEOUT_MS = 30_000;
 
 @Injectable()
 export class ZaloActionsService {
@@ -98,28 +101,36 @@ export class ZaloActionsService {
         );
       }
     }
-    return this.withSession(dto.sessionId, async (zca) => {
-      const threadType = dto.threadType ?? ThreadType.Group;
-      const paths = dto.attachmentLocalPaths;
-      const message: string | MessageContent =
-        paths?.length
-          ? {
-              msg: (dto.text ?? '').trim(),
-              attachments: paths,
-            }
-          : (dto.text ?? '').trim();
-      const result = await zca.sendMessage(
-        message,
-        dto.threadId.trim(),
-        threadType,
-      );
-      return { result };
-    });
+    return this.withSession(
+      dto.sessionId,
+      async (zca) => {
+        const threadType = dto.threadType ?? ThreadType.Group;
+        const paths = dto.attachmentLocalPaths;
+        const message: string | MessageContent =
+          paths?.length
+            ? {
+                msg: (dto.text ?? '').trim(),
+                attachments: paths,
+              }
+            : (dto.text ?? '').trim();
+        const result = await zca.sendMessage(
+          message,
+          dto.threadId.trim(),
+          threadType,
+        );
+        return { result };
+      },
+      {
+        /** zca-js uploadAttachment for non-image / multi-chunk file waits for WS `file_done`. */
+        startZaloListenerForFileUploads: Boolean(dto.attachmentLocalPaths?.length),
+      },
+    );
   }
 
   private async withSession<T>(
     sessionId: string,
     run: (zca: ZcaApiHelper, api: API) => Promise<T>,
+    options?: { startZaloListenerForFileUploads?: boolean },
   ): Promise<T> {
     const full = await this.loginSessions.findOneFullBySessionId(sessionId);
     const prevCreds: ZaloSessionCredentialsPayload = full.credentials;
@@ -137,14 +148,60 @@ export class ZaloActionsService {
     }
 
     const zca = new ZcaApiHelper(api);
+    let zaloListenerStartedForFileUploads = false;
     try {
+      if (options?.startZaloListenerForFileUploads) {
+        api.listener.start({ retryOnClose: true });
+        try {
+          await this.waitForZaloListenerCipherKey(api, ZALO_LISTENER_CIPHER_TIMEOUT_MS);
+        } catch (err) {
+          try {
+            api.listener.stop();
+          } catch {
+            /* ignore */
+          }
+          throw err;
+        }
+        zaloListenerStartedForFileUploads = true;
+      }
       const out = await run(zca, api);
       await this.persistRefreshedCredentials(sessionId, api, prevCreds);
       await this.loginSessions.touchBySessionId(sessionId);
       return out;
     } catch (err) {
-      throwHttpForZaloOperationFailure(err);
+      return throwHttpForZaloOperationFailure(err);
+    } finally {
+      if (zaloListenerStartedForFileUploads) {
+        try {
+          api.listener.stop();
+        } catch {
+          /* ignore */
+        }
+      }
     }
+  }
+
+  /**
+   * zca-js needs the chat WebSocket so `file_done` can resolve pending file uploads
+   * (see `uploadAttachment.js` + `apis/listen.js` in `zca-js`). Same as
+   * `api.listener.start()` in the library README.
+   */
+  private async waitForZaloListenerCipherKey(
+    api: API,
+    timeoutMs: number,
+  ): Promise<void> {
+    const timeout = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        reject(
+          new BadRequestException(
+            `Kết nối WebSocket Zalo (nhận khóa mã hóa) vượt quá ${Math.round(
+              timeoutMs / 1000,
+            )} giây; không thể gửi file đính kèm. Hãy kiểm tra mạng, firewall, hoặc thử lại sau.`,
+          ),
+        );
+      }, timeoutMs);
+    });
+    await Promise.race([once(api.listener, 'cipher_key'), timeout]);
   }
 
   private async persistRefreshedCredentials(

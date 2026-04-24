@@ -665,7 +665,7 @@ Used in **Message Module**:
 #### Backend (this repo)
 
 - **Helper:** `ZcaApiHelper.prototype.sendMessage` in `src/zalo/zca-api.helper.ts` — thin wrapper around `api.sendMessage(message, threadId, type)` from zca-js. The first argument may be a **string** or a **`MessageContent` object** (e.g. `{ msg, attachments: [absolute file paths] }` per the zca-js docs above). Re-export: `ThreadType` from the same module (and `src/zalo/index.ts`).
-- **App send (child account + `messages` row):** `POST /messages/send` with **`multipart/form-data`**: `zaloAccountId`, `groupId`, optional `text`, optional repeated `files`. The service writes uploaded buffers to temp paths, calls `ZcaApiHelper.sendMessage` with `MessageContent` when files are present, then deletes the temp files.
+- **App send (child account + `messages` row):** `POST /messages/send` with **`multipart/form-data`**: `zaloAccountId`, `groupId`, optional `text`, optional repeated `files`. The service writes uploaded buffers to temp paths, calls `ZcaApiHelper.sendMessage` with `MessageContent` when files are present, then deletes the temp files. **Implementation note:** zca-js finishes many file uploads only after a WebSocket `file_done` event; the backend therefore calls `api.listener.start()`, waits for `cipher_key`, runs `sendMessage`, then `api.listener.stop()` (same requirement as the zca-js README for `listener.start()`).
 - **HTTP (stored QR session, raw session):** `POST /zalo/actions/send-message` with JSON body:
   - `sessionId` (UUID) — `zalo_login_sessions.id`
   - `text` (string) — required for JSON calls **unless** the server populates `attachmentLocalPaths` internally (e.g. `MessagesService` for uploads). Plain `text`-only is the typical JSON use case.
