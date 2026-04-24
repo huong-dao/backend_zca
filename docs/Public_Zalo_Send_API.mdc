@@ -31,14 +31,15 @@ Mọi phản hồi từ endpoint này dùng **HTTP 200**. Kết quả nghiệp v
 ```json
 {
   "code": 0,
-  "message": "optional",
+  "message": "Thành công: ... (mô tả tiếng Việt, luôn có)",
   "data": {}
 }
 ```
 
-- `code === 0` → thành công; `data` có thể chứa thông tin bổ sung (ví dụ id tin đã lưu).
-- `code !== 0` → thất bại; đọc `message` nếu có.
-- Cấu hình `configurations.message_interval` (phút) áp dụng giống `POST /messages/send`: nếu &gt; 0, không cho child đã gửi gần đây vào **cùng nhóm** (gửi theo tên) hoặc tới **cùng số** (gửi theo phone) lặp lại trước khi hết khoảng cách. Thiếu/invalid cấu hình: `code` 2. Vi phạm khoảng cách: `code` 14.
+- **`message`**: luôn có, tiếng Việt — mô tả nghĩa của mã; sau dấu `—` (nếu có) là chi tiết bổ sung (lỗi Zalo, tên nhóm, v.v.).
+- `code === 0` → thành công; `data` thường có `result`, `messages` (bản ghi DB), trường lặp tên `message` trong `data` là bản ghi message đầu tiên (khác với `message` ngoài cùng ở response).
+- `code !== 0` → thất bại; đọc `message` để biết lý do.
+- Cấu hình `configurations.message_interval` (phút) áp dụng giống `POST /messages/send`. Với **DM (số điện thoại)**, hệ thống đếm theo cùng tài khoản child gửi + **cùng số** (`Message.peerPhone` lưu khi gửi thành công) để chống spam. Thiếu/invalid cấu hình: `code` 2. Vi phạm khoảng cách: `code` 14.
 
 ## Bảng `code`
 

@@ -23,6 +23,7 @@ import { ZaloAccountsService } from '../zalo-accounts/zalo-accounts.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { PublicZaloSendCode, type PublicZaloSendCodeValue } from './public-zalo-send-codes';
 import type { PublicZaloSendBodyDto } from './dto/public-zalo-send-body.dto';
+import { formatPublicZaloUserMessage } from './public-zalo-user-messages.vi';
 
 const createSelect = {
   id: true,
@@ -52,69 +53,61 @@ export class PublicZaloSendService {
     private readonly zaloActions: ZaloActionsService,
   ) {}
 
+  private msg(
+    code: PublicZaloSendCodeValue,
+    detail?: string,
+    data?: Record<string, unknown>,
+  ): {
+    code: PublicZaloSendCodeValue;
+    message: string;
+    data?: Record<string, unknown>;
+  } {
+    return {
+      code,
+      message: formatPublicZaloUserMessage(code, detail),
+      ...(data !== undefined ? { data } : {}),
+    };
+  }
+
   async send(
     apiKeyHeader: string | undefined,
     body: PublicZaloSendBodyDto,
     files?: Express.Multer.File[],
   ): Promise<{
     code: PublicZaloSendCodeValue;
-    message?: string;
+    message: string;
     data?: Record<string, unknown>;
   }> {
     try {
       if (!apiKeyHeader?.trim()) {
-        return {
-          code: PublicZaloSendCode.INVALID_API_KEY,
-          message: 'x-api-key header is required.',
-        };
+        return this.msg(1, 'Thiếu header x-api-key.');
       }
       const key = await this.apiKeys.validateSecretKey(apiKeyHeader);
       if (!key) {
-        return {
-          code: PublicZaloSendCode.INVALID_API_KEY,
-          message: 'Invalid or inactive API key.',
-        };
+        return this.msg(1, 'API key không hợp lệ hoặc đã tắt (inactive).');
       }
 
       if (body.target != null && typeof body.target !== 'string') {
-        return {
-          code: PublicZaloSendCode.VALIDATION,
-          message: 'target must be a string.',
-        };
+        return this.msg(2, 'Trường target phải là chuỗi.');
       }
       if (body.content != null && typeof body.content !== 'string') {
-        return {
-          code: PublicZaloSendCode.VALIDATION,
-          message: 'content must be a string.',
-        };
+        return this.msg(2, 'Trường content phải là chuỗi.');
       }
       const target = (body.target ?? '').trim();
       if (!target) {
-        return {
-          code: PublicZaloSendCode.TARGET_EMPTY,
-          message: 'target is required.',
-        };
+        return this.msg(3, 'Cần cung cấp target (số VN hoặc tên nhóm).');
       }
       if (target.length > 500) {
-        return {
-          code: PublicZaloSendCode.VALIDATION,
-          message: 'target must be at most 500 characters.',
-        };
+        return this.msg(2, 'target dài tối đa 500 ký tự.');
       }
 
       const textPart = (body.content ?? '').trim();
       if (textPart.length > 20_000) {
-        return {
-          code: PublicZaloSendCode.VALIDATION,
-          message: 'content must be at most 20000 characters.',
-        };
+        return this.msg(2, 'content dài tối đa 20.000 ký tự.');
       }
       const fileList = files?.length ? files : [];
       if (!textPart && !fileList.length) {
-        return {
-          code: PublicZaloSendCode.CONTENT_OR_FILES_REQUIRED,
-          message: 'Provide content and/or file attachments.',
-        };
+        return this.msg(4, 'Cần ít nhất nội dung chữ (content) hoặc tệp đính kèm (files).');
       }
 
       const isPhone = isValidVietnamPhoneForPublicTarget(target);
@@ -131,10 +124,10 @@ export class PublicZaloSendService {
         e instanceof Error ? e.stack : String(e),
         'public zalo send',
       );
-      return {
-        code: PublicZaloSendCode.INTERNAL,
-        message: e instanceof Error ? e.message : 'Unexpected error.',
-      };
+      return this.msg(
+        99,
+        e instanceof Error ? e.message : 'Lỗi ngoại lệ không xác định.',
+      );
     }
   }
 
@@ -145,17 +138,21 @@ export class PublicZaloSendService {
   ) {
     const pair = await this.zaloAccounts.findChildAndMasterForPublicDm();
     if (!pair) {
-      return {
-        code: PublicZaloSendCode.NO_CHILD_ACCOUNT,
-        message: 'No master/child Zalo account pair available for DM.',
-      };
+      return this.msg(7, 'Chưa có cặp tài khoản master/child sẵn sàng cho kênh DM công khai.');
     }
     const { child, master } = pair;
     if (child.status !== 'ACTIVE' || !child.zaloId) {
-      return {
-        code: PublicZaloSendCode.CHILD_INACTIVE_OR_NO_ZALO,
-        message: 'Selected child account is not active or has no zalo_id.',
-      };
+      return this.msg(8, 'Tài khoản child tự chọn chưa active hoặc thiếu zalo_id.');
+    }
+
+    // Giới hạn tần suất: theo cùng child + cùng peerPhone lưu trong bản ghi Message (có thể gọi sớm, không cần session)
+    const intervalDm = await this.checkMessageIntervalForDm({
+      childId: child.id,
+      childName: child.name,
+      peerPhone: normalizedPhone,
+    });
+    if (intervalDm) {
+      return this.msg(intervalDm.code, intervalDm.detail);
     }
 
     let sessionId: string;
@@ -165,10 +162,7 @@ export class PublicZaloSendService {
       );
       sessionId = full.id;
     } catch {
-      return {
-        code: PublicZaloSendCode.NO_ZALO_SESSION,
-        message: 'No stored Zalo session for the child account; scan QR first.',
-      };
+      return this.msg(9, 'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.');
     }
 
     try {
@@ -177,13 +171,12 @@ export class PublicZaloSendService {
         child.id,
       );
     } catch (e) {
-      return {
-        code: PublicZaloSendCode.FRIEND_SETUP_FAILED,
-        message:
-          e instanceof Error
-            ? e.message
-            : 'Failed to ensure friendship with master.',
-      };
+      return this.msg(
+        10,
+        e instanceof Error
+          ? e.message
+          : 'Không đảm bảo được tình bạn master–child trên Zalo.',
+      );
     }
 
     let peerUid: string;
@@ -196,26 +189,15 @@ export class PublicZaloSendService {
       const raw = u?.uid;
       peerUid = raw != null ? String(raw).trim() : '';
       if (!peerUid) {
-        return {
-          code: PublicZaloSendCode.FIND_USER_FAILED,
-          message: 'Could not resolve Zalo user id for the phone number.',
-        };
+        return this.msg(12, 'Không thấy tài khoản Zalo tương ứng với số điện thoại.');
       }
     } catch (e) {
-      return {
-        code: PublicZaloSendCode.FIND_USER_FAILED,
-        message:
-          e instanceof Error ? e.message : 'findUser failed for target phone.',
-      };
-    }
-
-    const intervalDm = await this.checkMessageIntervalForDm({
-      childId: child.id,
-      childName: child.name,
-      peerPhone: normalizedPhone,
-    });
-    if (intervalDm) {
-      return intervalDm;
+      return this.msg(
+        12,
+        e instanceof Error
+          ? e.message
+          : 'Gọi findUser theo số thất bại (kiểm tra số, session).',
+      );
     }
 
     return this.runSendAndPersist({
@@ -237,43 +219,28 @@ export class PublicZaloSendService {
       select: { id: true, groupName: true },
     });
     if (!group) {
-      return {
-        code: PublicZaloSendCode.GROUP_NOT_FOUND,
-        message: `No group with name "${groupName.trim()}".`,
-      };
+      return this.msg(5, `Không có nhóm với tên: "${groupName.trim()}".`);
     }
 
     const master = await this.zaloAccounts.findMasterZaloAccountForGroup(
       group.id,
     );
     if (!master?.zaloId) {
-      return {
-        code: PublicZaloSendCode.MASTER_NOT_FOUND,
-        message: 'No active master account mapped to this group.',
-      };
+      return this.msg(6, 'Không có tài khoản master active liên kết với nhóm này.');
     }
 
     const child = await this.zaloAccounts.findChildZaloWithMinGroupForMaster(
       master.id,
     );
     if (!child) {
-      return {
-        code: PublicZaloSendCode.NO_CHILD_ACCOUNT,
-        message: 'No child account for this master.',
-      };
+      return this.msg(7, 'Master này chưa có tài khoản child dùng để gửi.');
     }
     if (child.status !== 'ACTIVE' || !child.zaloId) {
-      return {
-        code: PublicZaloSendCode.CHILD_INACTIVE_OR_NO_ZALO,
-        message: 'Child account is not active or has no zalo_id.',
-      };
+      return this.msg(8, 'Tài khoản child chưa active hoặc thiếu zalo_id.');
     }
     const childPhone = child.phone?.trim();
     if (!childPhone) {
-      return {
-        code: PublicZaloSendCode.CHILD_INACTIVE_OR_NO_ZALO,
-        message: 'Child account has no phone for group invite / findUser.',
-      };
+      return this.msg(8, 'Tài khoản child cần có số điện thoại (mời nhóm / tìm user).');
     }
 
     const intervalGroup = await this.checkMessageIntervalForGroup({
@@ -283,7 +250,7 @@ export class PublicZaloSendService {
       groupName: group.groupName,
     });
     if (intervalGroup) {
-      return intervalGroup;
+      return this.msg(intervalGroup.code, intervalGroup.detail);
     }
 
     let sessionId: string;
@@ -293,10 +260,7 @@ export class PublicZaloSendService {
       );
       sessionId = full.id;
     } catch {
-      return {
-        code: PublicZaloSendCode.NO_ZALO_SESSION,
-        message: 'No stored Zalo session for the child account; scan QR first.',
-      };
+      return this.msg(9, 'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.');
     }
 
     /**
@@ -320,11 +284,10 @@ export class PublicZaloSendService {
       ''
     );
     if (!groupZaloId) {
-      return {
-        code: PublicZaloSendCode.MASTER_NOT_FOUND,
-        message:
-          'No Zalo group_zalo_id for this group (neither child nor master mapping in zalo_account_groups).',
-      };
+      return this.msg(
+        6,
+        'Thiếu group_zalo_id ở zalo_account_groups (child hoặc master) cho nhóm này.',
+      );
     }
 
     try {
@@ -333,13 +296,12 @@ export class PublicZaloSendService {
         child.id,
       );
     } catch (e) {
-      return {
-        code: PublicZaloSendCode.FRIEND_SETUP_FAILED,
-        message:
-          e instanceof Error
-            ? e.message
-            : 'Failed to ensure friendship with master.',
-      };
+      return this.msg(
+        10,
+        e instanceof Error
+          ? e.message
+          : 'Không đảm bảo được tình bạn master–child trên Zalo.',
+      );
     }
 
     try {
@@ -351,13 +313,12 @@ export class PublicZaloSendService {
         groupInternalId: group.id,
       });
     } catch (e) {
-      return {
-        code: PublicZaloSendCode.ADD_TO_GROUP_FAILED,
-        message:
-          e instanceof Error
-            ? e.message
-            : 'Could not add child to Zalo group.',
-      };
+      return this.msg(
+        11,
+        e instanceof Error
+          ? e.message
+          : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
+      );
     }
 
     return this.runSendAndPersist({
@@ -385,7 +346,7 @@ export class PublicZaloSendService {
     zaloUid: string;
   }): Promise<{
     code: PublicZaloSendCodeValue;
-    message?: string;
+    message: string;
     data?: Record<string, unknown>;
   }> {
     let tempPaths: string[] = [];
@@ -414,19 +375,18 @@ export class PublicZaloSendService {
         ctx.fileList,
       );
 
-      return {
-        code: PublicZaloSendCode.OK,
-        data: {
-          result,
-          messages: rows,
-          message: rows[0] ?? null,
-        },
-      };
+      return this.msg(0, undefined, {
+        result,
+        messages: rows,
+        message: rows[0] ?? null,
+      });
     } catch (e) {
-      return {
-        code: PublicZaloSendCode.SEND_FAILED,
-        message: e instanceof Error ? e.message : 'Zalo sendMessage failed.',
-      };
+      return this.msg(
+        13,
+        e instanceof Error
+          ? e.message
+          : 'Zalo sendMessage thất bại (không có thông tin chi tiết).',
+      );
     } finally {
       await PublicZaloSendService.unlinkTempPaths(tempPaths);
     }
@@ -511,17 +471,21 @@ export class PublicZaloSendService {
     childName: string | null;
     groupId: string;
     groupName: string | null;
-  }): Promise<{ code: PublicZaloSendCodeValue; message: string } | null> {
+  }): Promise<
+    | { code: typeof PublicZaloSendCode.VALIDATION; detail: string }
+    | { code: typeof PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED; detail: string }
+    | null
+  > {
     let intervalMinutes: number;
     try {
       intervalMinutes = await this.configs.getMessageIntervalMinutes();
     } catch (e) {
       return {
         code: PublicZaloSendCode.VALIDATION,
-        message:
+        detail:
           e instanceof Error
             ? e.message
-            : 'message_interval configuration is missing or invalid.',
+            : 'Cấu hình message_interval thiếu hoặc không hợp lệ.',
       };
     }
     if (intervalMinutes <= 0) {
@@ -553,7 +517,7 @@ export class PublicZaloSendService {
       agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
     return {
       code: PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED,
-      message: `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`,
+      detail: `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`,
     };
   }
 
@@ -562,17 +526,21 @@ export class PublicZaloSendService {
     childId: string;
     childName: string | null;
     peerPhone: string;
-  }): Promise<{ code: PublicZaloSendCodeValue; message: string } | null> {
+  }): Promise<
+    | { code: typeof PublicZaloSendCode.VALIDATION; detail: string }
+    | { code: typeof PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED; detail: string }
+    | null
+  > {
     let intervalMinutes: number;
     try {
       intervalMinutes = await this.configs.getMessageIntervalMinutes();
     } catch (e) {
       return {
         code: PublicZaloSendCode.VALIDATION,
-        message:
+        detail:
           e instanceof Error
             ? e.message
-            : 'message_interval configuration is missing or invalid.',
+            : 'Cấu hình message_interval thiếu hoặc không hợp lệ.',
       };
     }
     if (intervalMinutes <= 0) {
@@ -604,7 +572,7 @@ export class PublicZaloSendService {
       agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
     return {
       code: PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED,
-      message: `${childName} vừa gửi tin nhắn tới số ${args.peerPhone} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo tới số này`,
+      detail: `${childName} vừa gửi tin nhắn tới số ${args.peerPhone} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo tới số này`,
     };
   }
 

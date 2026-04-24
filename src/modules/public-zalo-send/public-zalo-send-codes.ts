@@ -1,5 +1,5 @@
 /**
- * Mọi response HTTP 200: `{ code, message?, data? }` — xem `docs/Public_Zalo_Send_API.mdc`.
+ * Mọi response HTTP 200: `{ code, message, data? }` — `message` luôn có (tiếng Việt mô tả theo mã + chi tiết nếu có). Xem `docs/Public_Zalo_Send_API.mdc`.
  */
 export const PublicZaloSendCode = {
   OK: 0,
