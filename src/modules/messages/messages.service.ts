@@ -70,7 +70,10 @@ export class MessagesService {
   async findAll(query: FindMessagesDto) {
     const { status, page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
-    const where = status ? { status } : undefined;
+    const where = {
+      ...(status && { status }),
+      parentId: null,
+    };
 
     const [total, data] = await this.prismaService.$transaction([
       this.prismaService.message.count({ where }),
