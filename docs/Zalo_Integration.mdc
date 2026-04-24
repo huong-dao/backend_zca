@@ -708,6 +708,9 @@ api.deleteMessage(destination, onlyMe?)
 
 - **Helper:** `ZcaApiHelper.prototype.deleteMessage` in `src/zalo/zca-api.helper.ts` — `deleteMessage(destination, onlyMe = false)` so **default = delete for everyone**; pass `onlyMe: true` only for a self-only delete.
 - **Types:** `DeleteMessageDestination` and `DeleteMessageResponse` from `zca-js` (also re-exported as `type DeleteMessageDestination` in `src/zalo/index.ts`).
+- **Persisting ids after `sendMessage`:** The HTTP response from `sendMessage` is **not** the same as WebSocket `TMessage` (your model lists `msgId` / `cliMsgId` on the wire format). The server may omit `cliMsgId` in the `sendmsg` body or only return **`clientId`**. The backend maps `msgId` / `realMsgId` / `globalMsgId` → `Message.messageZaloId` and `cliMsgId` / `clientId` (and nested `data`) → `Message.cliMsgId`. **Important — zca default `selfListen: false`:** the listener **drops your own** group message events, so you never get a `TMessage` echo and cannot recover `cliMsgId` from the socket. This repo turns **`selfListen: true`** when building the `API` for `sendMessage`, starts the WebSocket, then after a successful send waits (up to ~12s) for a **self** group `message` event whose `data.msgId` matches the `sendMessage` result and copies `data.cliMsgId` into the stored `result` before saving to the DB. If the echo is slow or never arrives, `cliMsgId` may still be null.
+- **Own message in a group, delete for everyone:** In zca-js, `api.deleteMessage` with `onlyMe: false` **refuses** when the sender is the current account: it throws and tells you to use **`api.undo({ msgId, cliMsgId }, threadId, ThreadType.Group)`** instead. `UndoPayload` also needs both `msgId` and `cliMsgId` (same as stored in the DB for successful sends).
+- **Someone else’s message in a group** (or self + `onlyMe: true`): `deleteMessage` is used as in the type definitions.
 
 ---
 

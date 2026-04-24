@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { once } from 'node:events';
 import { isDeepStrictEqual } from 'node:util';
-import type { API, MessageContent } from 'zca-js';
+import type { API, MessageContent, SendMessageResponse } from 'zca-js';
 import { ThreadType } from 'zca-js';
 import {
   badRequestForZaloSessionRestoreFailure,
@@ -13,6 +13,10 @@ import {
   throwHttpForZaloOperationFailure,
   ZcaApiHelper,
 } from '../../zalo';
+import {
+  extractIdsFromZaloSendResult,
+  mergeCliMsgIdIntoZaloSendResult,
+} from '../../zalo/parse-zalo-send-message-result';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { PrismaService } from '../../database/prisma/prisma.service';
@@ -25,6 +29,8 @@ import type { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dt
 import type { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
 
 const ZALO_LISTENER_CIPHER_TIMEOUT_MS = 30_000;
+/** Wait for one group self message echo (TMessage) to obtain `cliMsgId` after `sendMessage`. */
+const ZALO_SELF_ECHO_TIMEOUT_MS = 12_000;
 
 @Injectable()
 export class ZaloActionsService {
@@ -103,7 +109,7 @@ export class ZaloActionsService {
     }
     return this.withSession(
       dto.sessionId,
-      async (zca) => {
+      async (zca, api) => {
         const threadType = dto.threadType ?? ThreadType.Group;
         const paths = dto.attachmentLocalPaths;
         const message: string | MessageContent =
@@ -113,16 +119,27 @@ export class ZaloActionsService {
                 attachments: paths,
               }
             : (dto.text ?? '').trim();
-        const result = await zca.sendMessage(
+        let result: SendMessageResponse = await zca.sendMessage(
           message,
           dto.threadId.trim(),
           threadType,
         );
+        result = (await this.mergeCliMsgFromGroupSelfEchoIfNeeded(
+          api,
+          dto.threadId.trim(),
+          threadType,
+          result,
+        )) as SendMessageResponse;
         return { result };
       },
       {
-        /** zca-js uploadAttachment for non-image / multi-chunk file waits for WS `file_done`. */
-        startZaloListenerForFileUploads: Boolean(dto.attachmentLocalPaths?.length),
+        /**
+         * zca: WebSocket is required for file upload completion and for `file_done`
+         * (see `uploadAttachment`). `selfListen: true` is also required for the
+         * listener to emit **your own** group messages (TMessage) — otherwise
+         * `cliMsgId` is only in that echo, not the HTTP `sendMessage` body.
+         */
+        useZaloListener: true,
       },
     );
   }
@@ -130,14 +147,17 @@ export class ZaloActionsService {
   private async withSession<T>(
     sessionId: string,
     run: (zca: ZcaApiHelper, api: API) => Promise<T>,
-    options?: { startZaloListenerForFileUploads?: boolean },
+    options?: { useZaloListener?: boolean },
   ): Promise<T> {
     const full = await this.loginSessions.findOneFullBySessionId(sessionId);
     const prevCreds: ZaloSessionCredentialsPayload = full.credentials;
 
     let api: API;
     try {
-      api = await createZcaApiFromCredentials(prevCreds);
+      api = await createZcaApiFromCredentials(
+        prevCreds,
+        options?.useZaloListener ? { selfListen: true } : undefined,
+      );
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       this.logger.error(
@@ -148,9 +168,9 @@ export class ZaloActionsService {
     }
 
     const zca = new ZcaApiHelper(api);
-    let zaloListenerStartedForFileUploads = false;
+    let zaloListenerStarted = false;
     try {
-      if (options?.startZaloListenerForFileUploads) {
+      if (options?.useZaloListener) {
         api.listener.start({ retryOnClose: true });
         try {
           await this.waitForZaloListenerCipherKey(api, ZALO_LISTENER_CIPHER_TIMEOUT_MS);
@@ -162,7 +182,7 @@ export class ZaloActionsService {
           }
           throw err;
         }
-        zaloListenerStartedForFileUploads = true;
+        zaloListenerStarted = true;
       }
       const out = await run(zca, api);
       await this.persistRefreshedCredentials(sessionId, api, prevCreds);
@@ -171,7 +191,7 @@ export class ZaloActionsService {
     } catch (err) {
       return throwHttpForZaloOperationFailure(err);
     } finally {
-      if (zaloListenerStartedForFileUploads) {
+      if (zaloListenerStarted) {
         try {
           api.listener.stop();
         } catch {
@@ -179,6 +199,81 @@ export class ZaloActionsService {
         }
       }
     }
+  }
+
+  /**
+   * HTTP `sendMessage` may not return a `TMessage` shape. zca’s WebSocket
+   * drops self group messages when `selfListen` is false; with `selfListen: true`
+   * the echo includes `data.cliMsgId` (see `TMessage` in zca types).
+   */
+  private async mergeCliMsgFromGroupSelfEchoIfNeeded(
+    api: API,
+    threadId: string,
+    threadType: ThreadType,
+    result: SendMessageResponse,
+  ): Promise<SendMessageResponse> {
+    if (threadType !== ThreadType.Group) {
+      return result;
+    }
+    const parsed = extractIdsFromZaloSendResult(result);
+    if (parsed.cliMsgId) {
+      return result;
+    }
+    if (!parsed.messageZaloId) {
+      return result;
+    }
+    const msgId = parsed.messageZaloId;
+
+    return new Promise<SendMessageResponse>((resolve) => {
+      const timer = setTimeout(() => {
+        off();
+        this.logger.debug(
+          `Zalo: no self group echo for msgId=${msgId} within ${ZALO_SELF_ECHO_TIMEOUT_MS}ms; cliMsgId not merged.`,
+        );
+        resolve(result);
+      }, ZALO_SELF_ECHO_TIMEOUT_MS);
+
+      const handler = (message: {
+        type: unknown;
+        threadId?: string;
+        isSelf?: boolean;
+        data?: { msgId?: string | number; cliMsgId?: string | number };
+      }) => {
+        if (message.type !== ThreadType.Group) {
+          return;
+        }
+        if (String(message.threadId ?? '') !== String(threadId)) {
+          return;
+        }
+        if (!message.isSelf) {
+          return;
+        }
+        if (String(message.data?.msgId ?? '') !== String(msgId)) {
+          return;
+        }
+        const c = message.data?.cliMsgId;
+        if (c == null || c === '') {
+          return;
+        }
+        clearTimeout(timer);
+        off();
+        resolve(
+          mergeCliMsgIdIntoZaloSendResult(
+            result,
+            String(c),
+            msgId,
+          ) as SendMessageResponse,
+        );
+      };
+      const off = () => {
+        try {
+          api.listener.removeListener('message', handler);
+        } catch {
+          /* ignore */
+        }
+      };
+      api.listener.on('message', handler);
+    });
   }
 
   /**

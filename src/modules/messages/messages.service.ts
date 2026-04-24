@@ -12,6 +12,7 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
+import { extractIdsFromZaloSendResult } from '../../zalo/parse-zalo-send-message-result';
 import { FindMessagesDto } from './dto/find-messages.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 
@@ -217,8 +218,7 @@ export class MessagesService {
           : {}),
       });
 
-      const { messageZaloId, cliMsgId } =
-        MessagesService.extractIdsFromZaloSendResult(result);
+      const { messageZaloId, cliMsgId } = extractIdsFromZaloSendResult(result);
 
       const messageRow = await this.prismaService.message.create({
         data: {
@@ -271,63 +271,6 @@ export class MessagesService {
     await Promise.all(
       paths.map((p) => unlink(p).catch(() => undefined)),
     );
-  }
-
-  /** Best-effort parse of zca-js `sendMessage` return (shape may vary by version). */
-  private static extractIdsFromZaloSendResult(res: unknown): {
-    messageZaloId: string | null;
-    cliMsgId: string | null;
-  } {
-    if (!res || typeof res !== 'object') {
-      return { messageZaloId: null, cliMsgId: null };
-    }
-    const r = res as Record<string, unknown>;
-
-    const fromMsgBlock = (block: unknown) => {
-      if (!block || typeof block !== 'object') {
-        return {
-          messageZaloId: null as string | null,
-          cliMsgId: null as string | null,
-        };
-      }
-      const m = block as Record<string, unknown>;
-      const messageZaloId =
-        m.msgId != null
-          ? String(m.msgId)
-          : m.messageId != null
-            ? String(m.messageId)
-            : null;
-      const cliMsgId =
-        m.cliMsgId != null
-          ? String(m.cliMsgId)
-          : m.cli_msg_id != null
-            ? String(m.cli_msg_id)
-            : null;
-      return { messageZaloId, cliMsgId };
-    };
-
-    let messageZaloId: string | null = null;
-    let cliMsgId: string | null = null;
-
-    const main = fromMsgBlock(r.message);
-    messageZaloId = main.messageZaloId;
-    cliMsgId = main.cliMsgId;
-
-    const atts = r.attachment;
-    if (!messageZaloId && Array.isArray(atts)) {
-      for (const a of atts) {
-        const parsed = fromMsgBlock(a);
-        if (parsed.messageZaloId) {
-          messageZaloId = parsed.messageZaloId;
-          if (!cliMsgId && parsed.cliMsgId) {
-            cliMsgId = parsed.cliMsgId;
-          }
-          break;
-        }
-      }
-    }
-
-    return { messageZaloId, cliMsgId };
   }
 
   /**
