@@ -1,0 +1,117 @@
+---
+description: Tổng quan mọi job nền (BullMQ + cron enqueue) trong backend_zca
+---
+
+## Phạm vi
+
+Toàn bộ job nền hiện tại nằm trong **`BackgroundJobsModule`** (`src/modules/background-jobs/`). Hệ thống dùng **BullMQ + Redis**.
+
+- Khi **`GROUP_SYNC_ENABLED` ≠ `true`**: module **không** đăng ký BullMQ, worker, cron; chỉ có stub `ChildGroupSyncDisabledService` (API quét nhóm trả lỗi “disabled”).
+- Khi **`GROUP_SYNC_ENABLED=true`** và cấu hình Redis: **2 queue** hoạt động như bảng dưới.
+
+Không có job `@nestjs/schedule` `@Cron` decorator khác; lịch master dùng **`cron` + `SchedulerRegistry`** trong `GroupMetadataSyncScheduler`.
+
+---
+
+## Danh sách job (theo queue)
+
+| Queue (Redis/BullMQ) | Tên job | Processor | Tác dụng chính |
+|----------------------|---------|-----------|----------------|
+| `group-metadata-sync` | `tick` | `GroupMetadataSyncProcessor` | Đồng bộ **tên nhóm** + **`globalId`** cho `ZaloGroup` pending, qua tài khoản **master** + `getGroupInfo` (batch). |
+| `child-group-scan` | `sync` | `ChildGroupSyncProcessor` | **Quét nhóm** tài khoản **child**: `getAllGroups` → batch `getGroupInfo` (cache Redis) → map `globalId` → `ZaloGroup` / `ZaloAccountGroup`; có **tiếp tục** sau delay nếu còn grid id. |
+
+---
+
+## 1. Group metadata sync (`group-metadata-sync` / `tick`)
+
+### Tác dụng
+
+Tự động bổ sung metadata từ Zalo cho các `ZaloGroup` còn thiếu (`isUpdateName = false` hoặc `globalId` null/rỗng), dùng session của **master** (`ZaloAccountGroup` + `zalo_accounts.is_master`).
+
+### Trigger / flow
+
+```mermaid
+flowchart LR
+  Cron["CronGroupMetadataSync\n(SchedulerRegistry)"] --> Enqueue["queue.add('tick')"]
+  Enqueue --> Worker["GroupMetadataSyncProcessor\nconcurrency=1"]
+  Worker --> Batch["GroupMetadataSyncService\nrunSyncBatch()"]
+  Batch --> DB[(Prisma: ZaloGroup\nZaloAccountGroup...)]
+  Batch --> Zalo["zca-js getGroupInfo"]
+```
+
+1. **`GroupMetadataSyncScheduler`** (`onModuleInit`): đăng ký `CronJob` theo `GROUP_SYNC_CRON` / `GROUP_SYNC_TZ`; mỗi lần fire chỉ **`queue.add('tick', {})`**.
+2. **`GroupMetadataSyncProcessor`** nhận job, gọi **`runSyncBatch()`**:
+   - Đọc tối đa `maxGroupsPerFetch` nhóm pending, sort `createdAt asc`.
+   - Với từng nhóm, resolve **master** + `groupZaloId`; gom theo `zaloUid`.
+   - Trong một lần chạy: tối đa **`maxGetGroupInfoCallsPerRun`** lần gọi `getGroupInfo`, mỗi lần tối đa **`getGroupInfoBatchSize`** id (chunk). Hết quota thì phần còn lại chờ tick sau.
+   - Không có session → skip (log); conflict `globalId` → xử lý theo logic service.
+
+### Cấu hình (env) — chính
+
+- `GROUP_SYNC_ENABLED`, `GROUP_SYNC_CRON`, `GROUP_SYNC_TZ`
+- `GROUP_SYNC_GET_GROUP_INFO_BATCH`, `GROUP_SYNC_MAX_INFO_CALLS_PER_RUN`, `GROUP_SYNC_MAX_GROUPS_PER_FETCH`
+- `BULL_REDIS_*`
+
+### Code tham chiếu
+
+- `group-sync.scheduler.ts`, `group-sync.processor.ts`, `group-metadata-sync.service.ts`, `constants.ts` (`GROUP_METADATA_SYNC_QUEUE`)
+
+Chi tiết vận hành: `docs/Background_Jobs_Group_Sync.mdc`.
+
+---
+
+## 2. Child group scan (`child-group-scan` / `sync`)
+
+### Tác dụng
+
+Đồng bộ **danh sách nhóm trên thiết bị child** với `ZaloGroup` đã biết từ master: gọi `getAllGroups`, rồi batch `getGroupInfo`, dùng **Redis cache** (`zca:gi:…`), tạo/cập nhật liên kết `ZaloAccountGroup` khi có `globalId` và master đã map group đó. Trong khi chạy, **`ZaloAccount.status = INACTIVE`** (UI có thể ẩn nút quét).
+
+### Trigger / flow
+
+```mermaid
+flowchart TD
+  A["POST .../zalo-accounts/:id/child-group-scan\nstartChildGroupScan"] --> Q["queue.add('sync', payload)"]
+  B["Sau mời vào nhóm (có childZaloAccountId)\nenqueueAfterInvite"] --> Q
+  Q --> W["ChildGroupSyncProcessor\nconcurrency=2"]
+  W --> R["ChildGroupSyncService\nrunScanFromJob → runScanPayload"]
+  R --> G1["getAllGroups\n(workGridIds null)"]
+  R --> G2["batch getGroupInfo +\ncache + tryLink..."]
+  G2 --> More{"Còn grid id\nsau giới hạn lần chạy?"}
+  More -->|có| Delay["queue.add('sync', workGridIds,\ndelay=continueDelayMs)"]
+  More -->|không| Active["status → ACTIVE"]
+  Delay --> W
+```
+
+1. **Người dùng / app**: `POST` **`/zalo-accounts/:id/child-group-scan`** (`zalo-accounts.controller.ts`) → `startChildGroupScan` → validate (phải child, chưa `INACTIVE`, session khớp) → set `INACTIVE` → enqueue `sync` với `workGridIds: null`.
+2. **Sau invite child vào nhóm** (`zalo-groups.service.ts`, khi có `childZaloAccountId`): `enqueueAfterInvite` → nếu đã có session và child chưa đang quét → `INACTIVE` + enqueue `sync`.
+3. **Worker** `runScanPayload`:
+   - Nếu `workGridIds === null`: `getAllGroups` → danh sách grid id chưa có trong `ZaloAccountGroup` của child.
+   - Giảm tải bằng cache Redis; gọi `getGroupInfo` theo batch/giới hạn giống master (config `childGroupSync.*`).
+   - Nếu còn id: **enqueue job `sync` mới** với `delay` (`CHILD_GROUP_SYNC_CONTINUE_DELAY_MS`), **`jobId` UUID** để tránh kẹt re-enqueue.
+4. Kết thúc (không lên lịch tiếp) hoặc lỗi có xử lý: **`status` → `ACTIVE`**.
+
+### Cấu hình (env) — chính
+
+- Cùng cờ Redis **`GROUP_SYNC_ENABLED`** + `BULL_REDIS_*`
+- `CHILD_GROUP_SYNC_GET_GROUP_INFO_BATCH`, `CHILD_GROUP_SYNC_MAX_INFO_CALLS_PER_RUN`, `CHILD_GROUP_SYNC_CONTINUE_DELAY_MS`, `CHILD_GROUP_SYNC_CACHE_TTL_SEC`
+
+### Code tham chiếu
+
+- `child-group-sync.service.ts`, `child-group-sync.processor.ts`, `child-group-sync-disabled.service.ts`, `constants.ts` (`CHILD_GROUP_SCAN_QUEUE`)
+
+---
+
+## Log để theo dõi
+
+| Thành phần | Logger prefix |
+|------------|----------------|
+| Cron enqueue master | `GroupMetadataSyncScheduler` |
+| Batch đồng bộ master | `GroupMetadataSyncService` |
+| Lỗi worker master | `GroupMetadataSyncProcessor` |
+| Quét child | `ChildGroupSyncService` / `ChildGroupSyncProcessor` |
+
+---
+
+## Module tổng
+
+- `src/modules/background-jobs/background-jobs.module.ts` — đăng ký Bull, queue, scheduler, processors (khi bật).
