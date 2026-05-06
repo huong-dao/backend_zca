@@ -424,6 +424,29 @@ export class ChildGroupSyncService {
   }
 
   /**
+   * Same shape as {@link UpdateGroupDataDto.groupData}: Zalo `groupId` → `origin_name`.
+   * @see docs/Zalo_Integration.mdc (getAllGroups / gridVerMap).
+   */
+  private groupDataFromGridVerMap(gridVerMap: unknown): Record<string, string> {
+    if (
+      gridVerMap == null ||
+      typeof gridVerMap !== 'object' ||
+      Array.isArray(gridVerMap)
+    ) {
+      return {};
+    }
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(gridVerMap as Record<string, unknown>)) {
+      const key = k.trim();
+      if (!key) {
+        continue;
+      }
+      out[key] = v == null ? '' : String(v);
+    }
+    return out;
+  }
+
+  /**
    * Build list of grid ids to resolve (excludes child already has ZaloAccountGroup for that group_zalo_id).
    */
   private async buildWorkListFromGetAllGroups(
@@ -438,6 +461,16 @@ export class ChildGroupSyncService {
       }),
       'getAllGroups',
     );
+    const groupData = this.groupDataFromGridVerMap(gridVerMap);
+    const updated = await this.prisma.zaloAccount.updateMany({
+      where: { id: zaloAccountId, isDeleted: false },
+      data: { groupData },
+    });
+    if (updated.count === 0) {
+      this.logger.warn(
+        `Child scan: getAllGroups wrote groupData but no zalo_account row updated (zaloAccountId=${zaloAccountId}).`,
+      );
+    }
     const keys = Object.keys(
       (gridVerMap as Record<string, string>) || {},
     ).filter((k) => k.length > 0);
