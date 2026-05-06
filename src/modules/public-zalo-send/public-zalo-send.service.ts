@@ -17,6 +17,7 @@ import {
   normalizeVietnamPhone,
 } from '../../zalo/vietnam-phone';
 import { ApiKeysService } from '../api-keys/api-keys.service';
+import { ChildGroupGridResolveService } from '../child-group-grid-resolve/child-group-grid-resolve.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloAccountsService } from '../zalo-accounts/zalo-accounts.service';
@@ -51,6 +52,7 @@ export class PublicZaloSendService {
     private readonly zaloAccounts: ZaloAccountsService,
     private readonly zaloLoginSessions: ZaloLoginSessionsService,
     private readonly zaloActions: ZaloActionsService,
+    private readonly childGroupGridResolve: ChildGroupGridResolveService,
   ) {}
 
   private msg(
@@ -229,9 +231,11 @@ export class PublicZaloSendService {
       return this.msg(6, 'Không có tài khoản master active liên kết với nhóm này.');
     }
 
-    const child = await this.zaloAccounts.findChildZaloWithMinGroupForMaster(
-      master.id,
-    );
+    const childPreferInGroup =
+      await this.zaloAccounts.findChildZaloInGroupForMaster(master.id, group.id);
+    const child =
+      childPreferInGroup ??
+      (await this.zaloAccounts.findChildZaloWithMinGroupForMaster(master.id));
     if (!child) {
       return this.msg(7, 'Master này chưa có tài khoản child dùng để gửi.');
     }
@@ -239,7 +243,7 @@ export class PublicZaloSendService {
       return this.msg(8, 'Tài khoản child chưa active hoặc thiếu zalo_id.');
     }
     const childPhone = child.phone?.trim();
-    if (!childPhone) {
+    if (!childPhone && childPreferInGroup == null) {
       return this.msg(8, 'Tài khoản child cần có số điện thoại (mời nhóm / tìm user).');
     }
 
@@ -263,12 +267,7 @@ export class PublicZaloSendService {
       return this.msg(9, 'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.');
     }
 
-    /**
-     * `POST /messages/send` dùng `group_zalo_id` theo bản ghi **child** + `groupId`.
-     * Ở đây ưu tiên cùng nguồn đó; nếu chỉ master có mapping (data cũ) thì fallback master.
-     * Dùng grid của master khi child đã có grid đúng ở DB khác sẽ dễ gây Zalo 114 dù gửi từ app thành công.
-     */
-    const [childMap, masterMap] = await Promise.all([
+    const [childMapRow, masterMapRow] = await Promise.all([
       this.prisma.zaloAccountGroup.findFirst({
         where: { zaloAccountId: child.id, groupId: group.id },
         select: { groupZaloId: true },
@@ -278,17 +277,6 @@ export class PublicZaloSendService {
         select: { groupZaloId: true },
       }),
     ]);
-    const groupZaloId = (
-      childMap?.groupZaloId?.trim() ||
-      masterMap?.groupZaloId?.trim() ||
-      ''
-    );
-    if (!groupZaloId) {
-      return this.msg(
-        6,
-        'Thiếu group_zalo_id ở zalo_account_groups (child hoặc master) cho nhóm này.',
-      );
-    }
 
     try {
       await this.zaloAccounts.ensureMasterChildFriendshipForAutomation(
@@ -304,26 +292,58 @@ export class PublicZaloSendService {
       );
     }
 
-    try {
-      await this.zaloAccounts.addChildZaloToGroupByMasterZaloId({
-        masterZaloAccountId: master.id,
-        childZaloAccountId: child.id,
-        childPhoneForFindUser: childPhone,
-        groupZaloId,
-        groupInternalId: group.id,
-      });
-    } catch (e) {
-      return this.msg(
-        11,
-        e instanceof Error
-          ? e.message
-          : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
-      );
+    const childGridExisting = childMapRow?.groupZaloId?.trim() ?? '';
+    let groupZaloIdForSend: string;
+    if (childGridExisting) {
+      groupZaloIdForSend = childGridExisting;
+    } else {
+      const masterGroupZaloId = masterMapRow?.groupZaloId?.trim() ?? '';
+      if (!masterGroupZaloId) {
+        return this.msg(
+          6,
+          'Thiếu group_zalo_id ở master trong zalo_account_groups — cần để mời child vào nhóm trên Zalo.',
+        );
+      }
+
+      try {
+        await this.zaloAccounts.addChildZaloToGroupByMasterZaloId({
+          masterZaloAccountId: master.id,
+          childZaloAccountId: child.id,
+          childPhoneForFindUser: childPhone ?? '',
+          groupZaloId: masterGroupZaloId,
+          groupInternalId: group.id,
+        });
+      } catch (e) {
+        return this.msg(
+          11,
+          e instanceof Error
+            ? e.message
+            : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
+        );
+      }
+
+      try {
+        groupZaloIdForSend =
+          await this.childGroupGridResolve.resolveChildGroupZaloIdAfterMasterInvite(
+            {
+              zaloAccountId: child.id,
+              groupId: group.id,
+              sessionId,
+            },
+          );
+      } catch (e) {
+        return this.msg(
+          11,
+          e instanceof Error
+            ? e.message
+            : 'Không map được group_zalo_id phía child sau khi mời vào nhóm.',
+        );
+      }
     }
 
     return this.runSendAndPersist({
       sessionId,
-      threadId: groupZaloId,
+      threadId: groupZaloIdForSend,
       threadType: ThreadType.Group,
       textPart,
       fileList,

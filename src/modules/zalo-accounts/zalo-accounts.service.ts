@@ -411,6 +411,50 @@ export class ZaloAccountsService {
   }
 
   /**
+   * Master's child accounts that already have a `zalo_account_groups` row for `groupId`.
+   * Same eligibility filters as {@link findChildZaloWithMinGroupForMaster}; tie-break: lowest `groupCount`, then `id`.
+   */
+  async findChildZaloInGroupForMaster(masterId: string, groupId: string) {
+    const maps = await this.prismaService.zaloAccountGroup.findMany({
+      where: {
+        groupId,
+        zaloAccount: {
+          isDeleted: false,
+          isMaster: false,
+          status: 'ACTIVE',
+          zaloId: { not: null },
+          masters: { some: { masterId } },
+        },
+      },
+      select: {
+        zaloAccount: {
+          select: {
+            id: true,
+            zaloId: true,
+            phone: true,
+            name: true,
+            isMaster: true,
+            groupCount: true,
+            status: true,
+            isDeleted: true,
+          },
+        },
+      },
+    });
+    const active = maps
+      .map((m) => m.zaloAccount)
+      .filter((c) => Boolean(c.zaloId?.trim()));
+    if (active.length === 0) {
+      return null;
+    }
+    active.sort(
+      (a, b) =>
+        a.groupCount - b.groupCount || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
+    );
+    return active[0] ?? null;
+  }
+
+  /**
    * For DM (no group): one child+master pair with globally lowest `groupCount` (tie-breaker `id`).
    */
   async findChildAndMasterForPublicDm() {
@@ -544,7 +588,8 @@ export class ZaloAccountsService {
   }
 
   /**
-   * Master zca session: `findUser(phone)` + `addUserToGroup` for the child, then `zalo_account_groups` upsert.
+   * Master session: `findUser(phone)` + `addUserToGroup` — chỉ mời child vào nhóm trên Zalo.
+   * Không ghi `zalo_account_groups` — `group_zalo_id` phía child cần resolve sau (ví dụ public-zalo-send gọi `ChildGroupGridResolveService`).
    */
   async addChildZaloToGroupByMasterZaloId(params: {
     masterZaloAccountId: string;
@@ -595,21 +640,6 @@ export class ZaloAccountsService {
         'Zalo addUserToGroup did not complete successfully for the child user.',
       );
     }
-
-    await this.prismaService.zaloAccountGroup.upsert({
-      where: {
-        zaloAccountId_groupId: {
-          zaloAccountId: params.childZaloAccountId,
-          groupId: params.groupInternalId,
-        },
-      },
-      create: {
-        zaloAccountId: params.childZaloAccountId,
-        groupId: params.groupInternalId,
-        groupZaloId: params.groupZaloId,
-      },
-      update: { groupZaloId: params.groupZaloId },
-    });
   }
 
   private isZaloAddUserToGroupResultOk(result: unknown): boolean {
