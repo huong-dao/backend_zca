@@ -4,7 +4,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '../../../generated/prisma';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import type { UpsertZaloLoginSessionDto } from './dto/upsert-zalo-login-session.dto';
 import { ZaloSessionCryptoService } from './zalo-session-crypto.service';

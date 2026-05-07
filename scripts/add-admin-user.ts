@@ -13,15 +13,9 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 
 async function main(): Promise<void> {
-  const { join } = require('node:path');
-  const { createRequire } = require('node:module');
   const bcrypt = require('bcrypt');
   const { PrismaPg } = require('@prisma/adapter-pg');
-
-  const nodeRequire = createRequire(__filename);
-  const { PrismaClient, UserRole } = nodeRequire(
-    join(process.cwd(), 'generated/prisma'),
-  );
+  const { PrismaClient, UserRole } = require('@prisma/client');
 
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {

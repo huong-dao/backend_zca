@@ -1,16 +1,6 @@
 import { PrismaPg } from '@prisma/adapter-pg';
-import { createRequire } from 'node:module';
-import { join } from 'node:path';
 import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
-import type { PrismaClient as GeneratedPrismaClient } from '../../../generated/prisma';
-
-const runtimeRequire = createRequire(__filename);
-
-const { PrismaClient } = runtimeRequire(
-  join(process.cwd(), 'generated/prisma'),
-) as {
-  PrismaClient: new (options?: object) => GeneratedPrismaClient;
-};
+import { PrismaClient } from '@prisma/client';
 
 @Injectable()
 export class PrismaService

@@ -9,7 +9,7 @@ import {
 } from '@nestjs/common';
 import type { Express } from 'express';
 import { ThreadType } from 'zca-js';
-import type { Prisma } from '../../../generated/prisma';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';

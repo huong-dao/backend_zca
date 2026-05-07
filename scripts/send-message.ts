@@ -26,14 +26,10 @@ function safeJson(obj: unknown): string {
 
 async function runSendMessage(): Promise<void> {
   const { createDecipheriv } = require('node:crypto');
-  const { createRequire } = require('node:module');
-  const { join } = require('node:path');
   const { PrismaPg } = require('@prisma/adapter-pg');
+  const { PrismaClient } = require('@prisma/client');
   const { createZcaApiFromCredentials } = require('../src/zalo/create-zca-api');
   const { ThreadType, ZcaApiHelper } = require('../src/zalo/zca-api.helper');
-
-  const nodeRequire = createRequire(__filename);
-  const { PrismaClient } = nodeRequire(join(process.cwd(), 'generated/prisma'));
 
   const ALGO = 'aes-256-gcm';
   const IV_LENGTH = 12;

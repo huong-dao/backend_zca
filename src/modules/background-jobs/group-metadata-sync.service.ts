@@ -10,7 +10,7 @@ import { ConfigService } from '@nestjs/config';
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
-import type { Prisma } from '../../../generated/prisma';
+import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
   badRequestForZaloSessionRestoreFailure,

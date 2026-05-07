@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   BackgroundJobStatus,
   BackgroundJobType,
-} from '../../../generated/prisma';
+} from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { childGroupScanJobKey, GROUP_METADATA_SYNC_JOB_KEY } from './constants';
 

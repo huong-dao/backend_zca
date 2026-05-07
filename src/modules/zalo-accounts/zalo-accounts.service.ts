@@ -10,7 +10,7 @@ import {
 import { isDeepStrictEqual } from 'node:util';
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
-import type { Prisma, ZaloAccountStatus } from '../../../generated/prisma';
+import type { Prisma, ZaloAccountStatus } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
   badRequestForZaloSessionRestoreFailure,
