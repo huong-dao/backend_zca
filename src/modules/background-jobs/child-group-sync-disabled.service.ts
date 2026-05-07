@@ -6,7 +6,7 @@ import { BadRequestException, Injectable } from '@nestjs/common';
  */
 @Injectable()
 export class ChildGroupSyncDisabledService {
-  async startChildGroupScan(
+  startChildGroupScan(
     _appUserId: string,
     _zaloAccountId: string,
     _sessionId: string,
@@ -23,10 +23,12 @@ export class ChildGroupSyncDisabledService {
     );
   }
 
-  async enqueueAfterInvite(
+  enqueueAfterInvite(
     _appUserId: string,
     _childZaloAccountId: string,
   ): Promise<void> {
-    return;
+    void _appUserId;
+    void _childZaloAccountId;
+    return Promise.resolve();
   }
 }

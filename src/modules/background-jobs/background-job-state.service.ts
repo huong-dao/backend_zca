@@ -4,10 +4,7 @@ import {
   BackgroundJobType,
 } from '../../../generated/prisma';
 import { PrismaService } from '../../database/prisma/prisma.service';
-import {
-  childGroupScanJobKey,
-  GROUP_METADATA_SYNC_JOB_KEY,
-} from './constants';
+import { childGroupScanJobKey, GROUP_METADATA_SYNC_JOB_KEY } from './constants';
 
 export type GroupMetadataSyncJobStatusDto = {
   jobKey: string;

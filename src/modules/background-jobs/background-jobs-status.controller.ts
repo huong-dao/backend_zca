@@ -13,7 +13,8 @@ export class BackgroundJobsStatusController {
 
   @Get('group-metadata-sync/status')
   getGroupMetadataSyncStatus() {
-    const groupSyncEnabled = this.config.get<boolean>('groupSync.enabled') === true;
+    const groupSyncEnabled =
+      this.config.get<boolean>('groupSync.enabled') === true;
     return this.jobState.getGroupMetadataSyncStatus(groupSyncEnabled);
   }
 

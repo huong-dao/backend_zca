@@ -72,9 +72,7 @@ export class ChildGroupSyncService {
       host: this.config.get<string>('groupSync.redis.host') ?? '127.0.0.1',
       port: this.config.get<number>('groupSync.redis.port') ?? 6379,
       password: this.config.get<string | undefined>('groupSync.redis.password'),
-      username: this.config.get<string | undefined>(
-        'groupSync.redis.username',
-      ),
+      username: this.config.get<string | undefined>('groupSync.redis.username'),
       maxRetriesPerRequest: null,
     });
   }
@@ -92,9 +90,7 @@ export class ChildGroupSyncService {
       const t = setTimeout(
         () =>
           reject(
-            new Error(
-              `Zalo child scan API timeout after ${ms}ms (${label}).`,
-            ),
+            new Error(`Zalo child scan API timeout after ${ms}ms (${label}).`),
           ),
         ms,
       );
@@ -103,9 +99,9 @@ export class ChildGroupSyncService {
           clearTimeout(t);
           resolve(v);
         })
-        .catch((e) => {
+        .catch((e: unknown) => {
           clearTimeout(t);
-          reject(e);
+          reject(e instanceof Error ? e : new Error(String(e)));
         });
     });
   }
@@ -121,13 +117,21 @@ export class ChildGroupSyncService {
     this.assertEnabled();
     const account = await this.prisma.zaloAccount.findFirst({
       where: { id: zaloAccountId, isDeleted: false },
-      select: { id: true, isMaster: true, zaloId: true, status: true, name: true },
+      select: {
+        id: true,
+        isMaster: true,
+        zaloId: true,
+        status: true,
+        name: true,
+      },
     });
     if (!account) {
       throw new NotFoundException('Zalo account not found.');
     }
     if (account.isMaster) {
-      throw new BadRequestException('Only a child Zalo account can be scanned.');
+      throw new BadRequestException(
+        'Only a child Zalo account can be scanned.',
+      );
     }
     if (account.status === 'INACTIVE') {
       throw new ConflictException(
@@ -147,10 +151,14 @@ export class ChildGroupSyncService {
       select: { id: true, userId: true, zaloUid: true },
     });
     if (!sessionRow || sessionRow.userId !== appUserId) {
-      throw new BadRequestException('sessionId is not valid for the current user.');
+      throw new BadRequestException(
+        'sessionId is not valid for the current user.',
+      );
     }
     if (sessionRow.zaloUid !== zaloUid) {
-      throw new BadRequestException('sessionId does not belong to this Zalo account.');
+      throw new BadRequestException(
+        'sessionId does not belong to this Zalo account.',
+      );
     }
 
     await this.prisma.zaloAccount.update({
@@ -173,7 +181,9 @@ export class ChildGroupSyncService {
         removeOnFail: 20,
       },
     );
-    this.logger.log(`Child group scan enqueued: zaloAccountId=${zaloAccountId}`);
+    this.logger.log(
+      `Child group scan enqueued: zaloAccountId=${zaloAccountId}`,
+    );
 
     return { enqueued: true, zaloAccountId, status: 'INACTIVE' };
   }
@@ -293,9 +303,7 @@ export class ChildGroupSyncService {
   }
 
   /** @returns true if a delayed continuation was scheduled (child stays INACTIVE). */
-  private async runScanPayload(
-    p: ChildGroupScanJobPayload,
-  ): Promise<boolean> {
+  private async runScanPayload(p: ChildGroupScanJobPayload): Promise<boolean> {
     const { zaloAccountId, sessionId, appUserId } = p;
     const account = await this.prisma.zaloAccount.findFirst({
       where: { id: zaloAccountId, isDeleted: false },
@@ -314,22 +322,19 @@ export class ChildGroupSyncService {
       return false;
     }
 
-    const batchSize = this.config.get<number>(
-      'childGroupSync.getGroupInfoBatchSize',
-    ) ?? 20;
-    const maxCalls = this.config.get<number>(
-      'childGroupSync.maxGetGroupInfoCallsPerRun',
-    ) ?? 10;
-    const delay = this.config.get<number>('childGroupSync.continueDelayMs') ?? 180_000;
-    const ttl = this.config.get<number>('childGroupSync.cacheTtlSec') ?? 604_800;
+    const batchSize =
+      this.config.get<number>('childGroupSync.getGroupInfoBatchSize') ?? 20;
+    const maxCalls =
+      this.config.get<number>('childGroupSync.maxGetGroupInfoCallsPerRun') ??
+      10;
+    const delay =
+      this.config.get<number>('childGroupSync.continueDelayMs') ?? 180_000;
+    const ttl =
+      this.config.get<number>('childGroupSync.cacheTtlSec') ?? 604_800;
 
     let workList: string[] =
       p.workGridIds == null
-        ? await this.buildWorkListFromGetAllGroups(
-            sessionId,
-            zaloAccountId,
-            zaloUid,
-          )
+        ? await this.buildWorkListFromGetAllGroups(sessionId, zaloAccountId)
         : [...p.workGridIds];
 
     workList = await this.applyCacheAndShrink(
@@ -337,7 +342,6 @@ export class ChildGroupSyncService {
       zaloAccountId,
       masterIds,
       workList,
-      ttl,
     );
     if (workList.length === 0) {
       this.logger.log(
@@ -373,8 +377,7 @@ export class ChildGroupSyncService {
       if (chunk.length === 0) {
         break;
       }
-      const arg: string | string[] =
-        chunk.length === 1 ? chunk[0]! : chunk;
+      const arg: string | string[] = chunk.length === 1 ? chunk[0] : chunk;
       const res = await this.withZaloCallTimeout(
         zca.getGroupInfo(arg),
         `getGroupInfo(${String(Array.isArray(arg) ? arg.length : 1)} ids)`,
@@ -441,12 +444,21 @@ export class ChildGroupSyncService {
       return {};
     }
     const out: Record<string, string> = {};
-    for (const [k, v] of Object.entries(gridVerMap as Record<string, unknown>)) {
+    for (const [k, v] of Object.entries(
+      gridVerMap as Record<string, unknown>,
+    )) {
       const key = k.trim();
       if (!key) {
         continue;
       }
-      out[key] = v == null ? '' : String(v);
+      out[key] =
+        v == null
+          ? ''
+          : typeof v === 'string' ||
+              typeof v === 'number' ||
+              typeof v === 'boolean'
+            ? String(v)
+            : JSON.stringify(v);
     }
     return out;
   }
@@ -457,7 +469,6 @@ export class ChildGroupSyncService {
   private async buildWorkListFromGetAllGroups(
     sessionId: string,
     zaloAccountId: string,
-    zaloUid: string,
   ): Promise<string[]> {
     const { gridVerMap } = await this.withZaloCallTimeout(
       this.withZaloSessionShort(sessionId, async (zca) => {
@@ -522,11 +533,7 @@ export class ChildGroupSyncService {
         e instanceof Error ? e.message : 'Zalo API error',
       );
     } finally {
-      await this.persistCreds(
-        sessionId,
-        ap,
-        full.credentials as ZaloSessionCredentialsPayload,
-      );
+      await this.persistCreds(sessionId, ap, full.credentials);
       await this.loginSessions.touchBySessionId(sessionId);
     }
   }
@@ -561,9 +568,7 @@ export class ChildGroupSyncService {
     return isDeepStrictEqual(next, prev) ? prev : next;
   }
 
-  private readGrid(
-    res: unknown,
-  ): Record<string, GridInfoEntry> | undefined {
+  private readGrid(res: unknown): Record<string, GridInfoEntry> | undefined {
     if (res == null || typeof res !== 'object') {
       return undefined;
     }
@@ -618,7 +623,6 @@ export class ChildGroupSyncService {
     zaloAccountId: string,
     masterIds: string[],
     workList: string[],
-    ttl: number,
   ): Promise<string[]> {
     const next: string[] = [];
     for (const gridId of workList) {
@@ -678,7 +682,7 @@ export class ChildGroupSyncService {
         select: { id: true, groupName: true },
       });
       if (unSynced.length === 1) {
-        const only = unSynced[0]!;
+        const only = unSynced[0];
         const nameFromZ =
           typeof entry.name === 'string' && entry.name.trim()
             ? entry.name.trim()
