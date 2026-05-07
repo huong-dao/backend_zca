@@ -172,6 +172,16 @@ exports.Prisma.ZaloAccountScalarFieldEnum = {
   updatedAt: 'updatedAt'
 };
 
+exports.Prisma.BackgroundJobStateScalarFieldEnum = {
+  jobKey: 'jobKey',
+  jobType: 'jobType',
+  zaloAccountId: 'zaloAccountId',
+  status: 'status',
+  startedAt: 'startedAt',
+  finishedAt: 'finishedAt',
+  updatedAt: 'updatedAt'
+};
+
 exports.Prisma.ZaloAccountGroupScalarFieldEnum = {
   id: 'id',
   groupZaloId: 'groupZaloId',
@@ -257,6 +267,16 @@ exports.ZaloAccountStatus = exports.$Enums.ZaloAccountStatus = {
   INACTIVE: 'INACTIVE'
 };
 
+exports.BackgroundJobType = exports.$Enums.BackgroundJobType = {
+  GROUP_METADATA_SYNC: 'GROUP_METADATA_SYNC',
+  CHILD_GROUP_SCAN: 'CHILD_GROUP_SCAN'
+};
+
+exports.BackgroundJobStatus = exports.$Enums.BackgroundJobStatus = {
+  IDLE: 'IDLE',
+  RUNNING: 'RUNNING'
+};
+
 exports.ZaloAccountFriendStatus = exports.$Enums.ZaloAccountFriendStatus = {
   PENDING: 'PENDING',
   APPROVE: 'APPROVE',
@@ -275,6 +295,7 @@ exports.Prisma.ModelName = {
   ZaloGroup: 'ZaloGroup',
   ZaloAccountRelation: 'ZaloAccountRelation',
   ZaloAccount: 'ZaloAccount',
+  BackgroundJobState: 'BackgroundJobState',
   ZaloAccountGroup: 'ZaloAccountGroup',
   ZaloAccountFriend: 'ZaloAccountFriend',
   Message: 'Message',

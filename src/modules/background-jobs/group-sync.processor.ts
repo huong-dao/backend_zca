@@ -1,6 +1,7 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import type { Job } from 'bullmq';
+import { BackgroundJobStateService } from './background-job-state.service';
 import { GROUP_METADATA_SYNC_QUEUE } from './constants';
 import { GroupMetadataSyncService } from './group-metadata-sync.service';
 
@@ -11,7 +12,10 @@ import { GroupMetadataSyncService } from './group-metadata-sync.service';
 export class GroupMetadataSyncProcessor extends WorkerHost {
   private readonly logger = new Logger(GroupMetadataSyncProcessor.name);
 
-  constructor(private readonly groupMetadataSync: GroupMetadataSyncService) {
+  constructor(
+    private readonly groupMetadataSync: GroupMetadataSyncService,
+    private readonly jobState: BackgroundJobStateService,
+  ) {
     super();
   }
 
@@ -21,6 +25,11 @@ export class GroupMetadataSyncProcessor extends WorkerHost {
         `Unexpected job name "${job.name}", still running batch.`,
       );
     }
-    return this.groupMetadataSync.runSyncBatch();
+    await this.jobState.markGroupMetadataSyncRunning();
+    try {
+      return await this.groupMetadataSync.runSyncBatch();
+    } finally {
+      await this.jobState.markGroupMetadataSyncIdle();
+    }
   }
 }

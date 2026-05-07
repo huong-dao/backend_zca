@@ -3,6 +3,8 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { ZaloLoginSessionsModule } from '../zalo-login-sessions/zalo-login-sessions.module';
+import { BackgroundJobStateService } from './background-job-state.service';
+import { BackgroundJobsStatusController } from './background-jobs-status.controller';
 import { CHILD_GROUP_SCAN_QUEUE, GROUP_METADATA_SYNC_QUEUE } from './constants';
 import { ChildGroupSyncProcessor } from './child-group-sync.processor';
 import { ChildGroupSyncDisabledService } from './child-group-sync-disabled.service';
@@ -22,13 +24,15 @@ export class BackgroundJobsModule {
       return {
         module: BackgroundJobsModule,
         global: true,
+        controllers: [BackgroundJobsStatusController],
         providers: [
+          BackgroundJobStateService,
           {
             provide: ChildGroupSyncService,
             useClass: ChildGroupSyncDisabledService,
           },
         ],
-        exports: [ChildGroupSyncService],
+        exports: [ChildGroupSyncService, BackgroundJobStateService],
       };
     }
 
@@ -82,14 +86,16 @@ export class BackgroundJobsModule {
           },
         }),
       ],
+      controllers: [BackgroundJobsStatusController],
       providers: [
+        BackgroundJobStateService,
         GroupMetadataSyncService,
         GroupMetadataSyncProcessor,
         GroupMetadataSyncScheduler,
         ChildGroupSyncService,
         ChildGroupSyncProcessor,
       ],
-      exports: [ChildGroupSyncService],
+      exports: [ChildGroupSyncService, BackgroundJobStateService],
     };
   }
 }

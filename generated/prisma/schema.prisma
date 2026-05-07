@@ -30,6 +30,17 @@ enum ZaloAccountStatus {
   INACTIVE
 }
 
+/// BullMQ / cron background jobs: expose RUNNING vs IDLE to the frontend.
+enum BackgroundJobType {
+  GROUP_METADATA_SYNC
+  CHILD_GROUP_SCAN
+}
+
+enum BackgroundJobStatus {
+  IDLE
+  RUNNING
+}
+
 model User {
   id        String   @id @default(uuid()) @db.Uuid
   email     String   @unique @db.VarChar(255)
@@ -114,12 +125,32 @@ model ZaloAccount {
   groupMaps ZaloAccountGroup[]
   messages  Message[]
 
+  backgroundJobStates BackgroundJobState[]
+
   friends  ZaloAccountFriend[] @relation("MasterFriends")
   friendOf ZaloAccountFriend[] @relation("FriendOf")
 
   @@index([isDeleted])
   @@index([status])
   @@map("zalo_accounts")
+}
+
+/// One row per logical job instance key: `group-metadata-sync` or `child-group-scan:<zaloAccountUuid>`.
+model BackgroundJobState {
+  jobKey        String              @id @map("job_key") @db.VarChar(160)
+  jobType       BackgroundJobType   @map("job_type")
+  zaloAccountId String?             @map("zalo_account_id") @db.Uuid
+  status        BackgroundJobStatus
+  startedAt     DateTime?           @map("started_at")
+  finishedAt    DateTime?           @map("finished_at")
+  updatedAt     DateTime            @updatedAt @map("updated_at")
+
+  zaloAccount ZaloAccount? @relation(fields: [zaloAccountId], references: [id], onDelete: Cascade)
+
+  @@index([jobType])
+  @@index([zaloAccountId])
+  @@index([jobType, status])
+  @@map("background_job_states")
 }
 
 model ZaloAccountGroup {

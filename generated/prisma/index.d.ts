@@ -39,6 +39,11 @@ export type ZaloAccountRelation = $Result.DefaultSelection<Prisma.$ZaloAccountRe
  */
 export type ZaloAccount = $Result.DefaultSelection<Prisma.$ZaloAccountPayload>
 /**
+ * Model BackgroundJobState
+ * One row per logical job instance key: `group-metadata-sync` or `child-group-scan:<zaloAccountUuid>`.
+ */
+export type BackgroundJobState = $Result.DefaultSelection<Prisma.$BackgroundJobStatePayload>
+/**
  * Model ZaloAccountGroup
  * 
  */
@@ -103,6 +108,22 @@ export const ZaloAccountStatus: {
 
 export type ZaloAccountStatus = (typeof ZaloAccountStatus)[keyof typeof ZaloAccountStatus]
 
+
+export const BackgroundJobType: {
+  GROUP_METADATA_SYNC: 'GROUP_METADATA_SYNC',
+  CHILD_GROUP_SCAN: 'CHILD_GROUP_SCAN'
+};
+
+export type BackgroundJobType = (typeof BackgroundJobType)[keyof typeof BackgroundJobType]
+
+
+export const BackgroundJobStatus: {
+  IDLE: 'IDLE',
+  RUNNING: 'RUNNING'
+};
+
+export type BackgroundJobStatus = (typeof BackgroundJobStatus)[keyof typeof BackgroundJobStatus]
+
 }
 
 export type UserRole = $Enums.UserRole
@@ -120,6 +141,14 @@ export const ZaloAccountFriendStatus: typeof $Enums.ZaloAccountFriendStatus
 export type ZaloAccountStatus = $Enums.ZaloAccountStatus
 
 export const ZaloAccountStatus: typeof $Enums.ZaloAccountStatus
+
+export type BackgroundJobType = $Enums.BackgroundJobType
+
+export const BackgroundJobType: typeof $Enums.BackgroundJobType
+
+export type BackgroundJobStatus = $Enums.BackgroundJobStatus
+
+export const BackgroundJobStatus: typeof $Enums.BackgroundJobStatus
 
 /**
  * ##  Prisma Client ʲˢ
@@ -291,6 +320,16 @@ export class PrismaClient<
     * ```
     */
   get zaloAccount(): Prisma.ZaloAccountDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.backgroundJobState`: Exposes CRUD operations for the **BackgroundJobState** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more BackgroundJobStates
+    * const backgroundJobStates = await prisma.backgroundJobState.findMany()
+    * ```
+    */
+  get backgroundJobState(): Prisma.BackgroundJobStateDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.zaloAccountGroup`: Exposes CRUD operations for the **ZaloAccountGroup** model.
@@ -780,6 +819,7 @@ export namespace Prisma {
     ZaloGroup: 'ZaloGroup',
     ZaloAccountRelation: 'ZaloAccountRelation',
     ZaloAccount: 'ZaloAccount',
+    BackgroundJobState: 'BackgroundJobState',
     ZaloAccountGroup: 'ZaloAccountGroup',
     ZaloAccountFriend: 'ZaloAccountFriend',
     Message: 'Message',
@@ -800,7 +840,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "zaloLoginSession" | "zaloGroup" | "zaloAccountRelation" | "zaloAccount" | "zaloAccountGroup" | "zaloAccountFriend" | "message" | "apiKey" | "configuration"
+      modelProps: "user" | "zaloLoginSession" | "zaloGroup" | "zaloAccountRelation" | "zaloAccount" | "backgroundJobState" | "zaloAccountGroup" | "zaloAccountFriend" | "message" | "apiKey" | "configuration"
       txIsolationLevel: Prisma.TransactionIsolationLevel
     }
     model: {
@@ -1171,6 +1211,80 @@ export namespace Prisma {
           count: {
             args: Prisma.ZaloAccountCountArgs<ExtArgs>
             result: $Utils.Optional<ZaloAccountCountAggregateOutputType> | number
+          }
+        }
+      }
+      BackgroundJobState: {
+        payload: Prisma.$BackgroundJobStatePayload<ExtArgs>
+        fields: Prisma.BackgroundJobStateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.BackgroundJobStateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.BackgroundJobStateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>
+          }
+          findFirst: {
+            args: Prisma.BackgroundJobStateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.BackgroundJobStateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>
+          }
+          findMany: {
+            args: Prisma.BackgroundJobStateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>[]
+          }
+          create: {
+            args: Prisma.BackgroundJobStateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>
+          }
+          createMany: {
+            args: Prisma.BackgroundJobStateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          createManyAndReturn: {
+            args: Prisma.BackgroundJobStateCreateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>[]
+          }
+          delete: {
+            args: Prisma.BackgroundJobStateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>
+          }
+          update: {
+            args: Prisma.BackgroundJobStateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>
+          }
+          deleteMany: {
+            args: Prisma.BackgroundJobStateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.BackgroundJobStateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateManyAndReturn: {
+            args: Prisma.BackgroundJobStateUpdateManyAndReturnArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>[]
+          }
+          upsert: {
+            args: Prisma.BackgroundJobStateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$BackgroundJobStatePayload>
+          }
+          aggregate: {
+            args: Prisma.BackgroundJobStateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateBackgroundJobState>
+          }
+          groupBy: {
+            args: Prisma.BackgroundJobStateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<BackgroundJobStateGroupByOutputType>[]
+          }
+          count: {
+            args: Prisma.BackgroundJobStateCountArgs<ExtArgs>
+            result: $Utils.Optional<BackgroundJobStateCountAggregateOutputType> | number
           }
         }
       }
@@ -1657,6 +1771,7 @@ export namespace Prisma {
     zaloGroup?: ZaloGroupOmit
     zaloAccountRelation?: ZaloAccountRelationOmit
     zaloAccount?: ZaloAccountOmit
+    backgroundJobState?: BackgroundJobStateOmit
     zaloAccountGroup?: ZaloAccountGroupOmit
     zaloAccountFriend?: ZaloAccountFriendOmit
     message?: MessageOmit
@@ -1817,6 +1932,7 @@ export namespace Prisma {
     children: number
     groupMaps: number
     messages: number
+    backgroundJobStates: number
     friends: number
     friendOf: number
   }
@@ -1826,6 +1942,7 @@ export namespace Prisma {
     children?: boolean | ZaloAccountCountOutputTypeCountChildrenArgs
     groupMaps?: boolean | ZaloAccountCountOutputTypeCountGroupMapsArgs
     messages?: boolean | ZaloAccountCountOutputTypeCountMessagesArgs
+    backgroundJobStates?: boolean | ZaloAccountCountOutputTypeCountBackgroundJobStatesArgs
     friends?: boolean | ZaloAccountCountOutputTypeCountFriendsArgs
     friendOf?: boolean | ZaloAccountCountOutputTypeCountFriendOfArgs
   }
@@ -1867,6 +1984,13 @@ export namespace Prisma {
    */
   export type ZaloAccountCountOutputTypeCountMessagesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: MessageWhereInput
+  }
+
+  /**
+   * ZaloAccountCountOutputType without action
+   */
+  export type ZaloAccountCountOutputTypeCountBackgroundJobStatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BackgroundJobStateWhereInput
   }
 
   /**
@@ -6552,6 +6676,7 @@ export namespace Prisma {
     children?: boolean | ZaloAccount$childrenArgs<ExtArgs>
     groupMaps?: boolean | ZaloAccount$groupMapsArgs<ExtArgs>
     messages?: boolean | ZaloAccount$messagesArgs<ExtArgs>
+    backgroundJobStates?: boolean | ZaloAccount$backgroundJobStatesArgs<ExtArgs>
     friends?: boolean | ZaloAccount$friendsArgs<ExtArgs>
     friendOf?: boolean | ZaloAccount$friendOfArgs<ExtArgs>
     _count?: boolean | ZaloAccountCountOutputTypeDefaultArgs<ExtArgs>
@@ -6608,6 +6733,7 @@ export namespace Prisma {
     children?: boolean | ZaloAccount$childrenArgs<ExtArgs>
     groupMaps?: boolean | ZaloAccount$groupMapsArgs<ExtArgs>
     messages?: boolean | ZaloAccount$messagesArgs<ExtArgs>
+    backgroundJobStates?: boolean | ZaloAccount$backgroundJobStatesArgs<ExtArgs>
     friends?: boolean | ZaloAccount$friendsArgs<ExtArgs>
     friendOf?: boolean | ZaloAccount$friendOfArgs<ExtArgs>
     _count?: boolean | ZaloAccountCountOutputTypeDefaultArgs<ExtArgs>
@@ -6622,6 +6748,7 @@ export namespace Prisma {
       children: Prisma.$ZaloAccountRelationPayload<ExtArgs>[]
       groupMaps: Prisma.$ZaloAccountGroupPayload<ExtArgs>[]
       messages: Prisma.$MessagePayload<ExtArgs>[]
+      backgroundJobStates: Prisma.$BackgroundJobStatePayload<ExtArgs>[]
       friends: Prisma.$ZaloAccountFriendPayload<ExtArgs>[]
       friendOf: Prisma.$ZaloAccountFriendPayload<ExtArgs>[]
     }
@@ -7042,6 +7169,7 @@ export namespace Prisma {
     children<T extends ZaloAccount$childrenArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$childrenArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountRelationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     groupMaps<T extends ZaloAccount$groupMapsArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$groupMapsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountGroupPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     messages<T extends ZaloAccount$messagesArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$messagesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$MessagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    backgroundJobStates<T extends ZaloAccount$backgroundJobStatesArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$backgroundJobStatesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     friends<T extends ZaloAccount$friendsArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$friendsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     friendOf<T extends ZaloAccount$friendOfArgs<ExtArgs> = {}>(args?: Subset<T, ZaloAccount$friendOfArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ZaloAccountFriendPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -7574,6 +7702,30 @@ export namespace Prisma {
   }
 
   /**
+   * ZaloAccount.backgroundJobStates
+   */
+  export type ZaloAccount$backgroundJobStatesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    where?: BackgroundJobStateWhereInput
+    orderBy?: BackgroundJobStateOrderByWithRelationInput | BackgroundJobStateOrderByWithRelationInput[]
+    cursor?: BackgroundJobStateWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: BackgroundJobStateScalarFieldEnum | BackgroundJobStateScalarFieldEnum[]
+  }
+
+  /**
    * ZaloAccount.friends
    */
   export type ZaloAccount$friendsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -7637,6 +7789,1114 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: ZaloAccountInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model BackgroundJobState
+   */
+
+  export type AggregateBackgroundJobState = {
+    _count: BackgroundJobStateCountAggregateOutputType | null
+    _min: BackgroundJobStateMinAggregateOutputType | null
+    _max: BackgroundJobStateMaxAggregateOutputType | null
+  }
+
+  export type BackgroundJobStateMinAggregateOutputType = {
+    jobKey: string | null
+    jobType: $Enums.BackgroundJobType | null
+    zaloAccountId: string | null
+    status: $Enums.BackgroundJobStatus | null
+    startedAt: Date | null
+    finishedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BackgroundJobStateMaxAggregateOutputType = {
+    jobKey: string | null
+    jobType: $Enums.BackgroundJobType | null
+    zaloAccountId: string | null
+    status: $Enums.BackgroundJobStatus | null
+    startedAt: Date | null
+    finishedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type BackgroundJobStateCountAggregateOutputType = {
+    jobKey: number
+    jobType: number
+    zaloAccountId: number
+    status: number
+    startedAt: number
+    finishedAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type BackgroundJobStateMinAggregateInputType = {
+    jobKey?: true
+    jobType?: true
+    zaloAccountId?: true
+    status?: true
+    startedAt?: true
+    finishedAt?: true
+    updatedAt?: true
+  }
+
+  export type BackgroundJobStateMaxAggregateInputType = {
+    jobKey?: true
+    jobType?: true
+    zaloAccountId?: true
+    status?: true
+    startedAt?: true
+    finishedAt?: true
+    updatedAt?: true
+  }
+
+  export type BackgroundJobStateCountAggregateInputType = {
+    jobKey?: true
+    jobType?: true
+    zaloAccountId?: true
+    status?: true
+    startedAt?: true
+    finishedAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type BackgroundJobStateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BackgroundJobState to aggregate.
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BackgroundJobStates to fetch.
+     */
+    orderBy?: BackgroundJobStateOrderByWithRelationInput | BackgroundJobStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: BackgroundJobStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BackgroundJobStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BackgroundJobStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned BackgroundJobStates
+    **/
+    _count?: true | BackgroundJobStateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: BackgroundJobStateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: BackgroundJobStateMaxAggregateInputType
+  }
+
+  export type GetBackgroundJobStateAggregateType<T extends BackgroundJobStateAggregateArgs> = {
+        [P in keyof T & keyof AggregateBackgroundJobState]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateBackgroundJobState[P]>
+      : GetScalarType<T[P], AggregateBackgroundJobState[P]>
+  }
+
+
+
+
+  export type BackgroundJobStateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: BackgroundJobStateWhereInput
+    orderBy?: BackgroundJobStateOrderByWithAggregationInput | BackgroundJobStateOrderByWithAggregationInput[]
+    by: BackgroundJobStateScalarFieldEnum[] | BackgroundJobStateScalarFieldEnum
+    having?: BackgroundJobStateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: BackgroundJobStateCountAggregateInputType | true
+    _min?: BackgroundJobStateMinAggregateInputType
+    _max?: BackgroundJobStateMaxAggregateInputType
+  }
+
+  export type BackgroundJobStateGroupByOutputType = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    zaloAccountId: string | null
+    status: $Enums.BackgroundJobStatus
+    startedAt: Date | null
+    finishedAt: Date | null
+    updatedAt: Date
+    _count: BackgroundJobStateCountAggregateOutputType | null
+    _min: BackgroundJobStateMinAggregateOutputType | null
+    _max: BackgroundJobStateMaxAggregateOutputType | null
+  }
+
+  type GetBackgroundJobStateGroupByPayload<T extends BackgroundJobStateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<BackgroundJobStateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof BackgroundJobStateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], BackgroundJobStateGroupByOutputType[P]>
+            : GetScalarType<T[P], BackgroundJobStateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type BackgroundJobStateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    jobKey?: boolean
+    jobType?: boolean
+    zaloAccountId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    updatedAt?: boolean
+    zaloAccount?: boolean | BackgroundJobState$zaloAccountArgs<ExtArgs>
+  }, ExtArgs["result"]["backgroundJobState"]>
+
+  export type BackgroundJobStateSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    jobKey?: boolean
+    jobType?: boolean
+    zaloAccountId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    updatedAt?: boolean
+    zaloAccount?: boolean | BackgroundJobState$zaloAccountArgs<ExtArgs>
+  }, ExtArgs["result"]["backgroundJobState"]>
+
+  export type BackgroundJobStateSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    jobKey?: boolean
+    jobType?: boolean
+    zaloAccountId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    updatedAt?: boolean
+    zaloAccount?: boolean | BackgroundJobState$zaloAccountArgs<ExtArgs>
+  }, ExtArgs["result"]["backgroundJobState"]>
+
+  export type BackgroundJobStateSelectScalar = {
+    jobKey?: boolean
+    jobType?: boolean
+    zaloAccountId?: boolean
+    status?: boolean
+    startedAt?: boolean
+    finishedAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type BackgroundJobStateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"jobKey" | "jobType" | "zaloAccountId" | "status" | "startedAt" | "finishedAt" | "updatedAt", ExtArgs["result"]["backgroundJobState"]>
+  export type BackgroundJobStateInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    zaloAccount?: boolean | BackgroundJobState$zaloAccountArgs<ExtArgs>
+  }
+  export type BackgroundJobStateIncludeCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    zaloAccount?: boolean | BackgroundJobState$zaloAccountArgs<ExtArgs>
+  }
+  export type BackgroundJobStateIncludeUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    zaloAccount?: boolean | BackgroundJobState$zaloAccountArgs<ExtArgs>
+  }
+
+  export type $BackgroundJobStatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "BackgroundJobState"
+    objects: {
+      zaloAccount: Prisma.$ZaloAccountPayload<ExtArgs> | null
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      jobKey: string
+      jobType: $Enums.BackgroundJobType
+      zaloAccountId: string | null
+      status: $Enums.BackgroundJobStatus
+      startedAt: Date | null
+      finishedAt: Date | null
+      updatedAt: Date
+    }, ExtArgs["result"]["backgroundJobState"]>
+    composites: {}
+  }
+
+  type BackgroundJobStateGetPayload<S extends boolean | null | undefined | BackgroundJobStateDefaultArgs> = $Result.GetResult<Prisma.$BackgroundJobStatePayload, S>
+
+  type BackgroundJobStateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<BackgroundJobStateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: BackgroundJobStateCountAggregateInputType | true
+    }
+
+  export interface BackgroundJobStateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['BackgroundJobState'], meta: { name: 'BackgroundJobState' } }
+    /**
+     * Find zero or one BackgroundJobState that matches the filter.
+     * @param {BackgroundJobStateFindUniqueArgs} args - Arguments to find a BackgroundJobState
+     * @example
+     * // Get one BackgroundJobState
+     * const backgroundJobState = await prisma.backgroundJobState.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends BackgroundJobStateFindUniqueArgs>(args: SelectSubset<T, BackgroundJobStateFindUniqueArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one BackgroundJobState that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {BackgroundJobStateFindUniqueOrThrowArgs} args - Arguments to find a BackgroundJobState
+     * @example
+     * // Get one BackgroundJobState
+     * const backgroundJobState = await prisma.backgroundJobState.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends BackgroundJobStateFindUniqueOrThrowArgs>(args: SelectSubset<T, BackgroundJobStateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BackgroundJobState that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateFindFirstArgs} args - Arguments to find a BackgroundJobState
+     * @example
+     * // Get one BackgroundJobState
+     * const backgroundJobState = await prisma.backgroundJobState.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends BackgroundJobStateFindFirstArgs>(args?: SelectSubset<T, BackgroundJobStateFindFirstArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first BackgroundJobState that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateFindFirstOrThrowArgs} args - Arguments to find a BackgroundJobState
+     * @example
+     * // Get one BackgroundJobState
+     * const backgroundJobState = await prisma.backgroundJobState.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends BackgroundJobStateFindFirstOrThrowArgs>(args?: SelectSubset<T, BackgroundJobStateFindFirstOrThrowArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more BackgroundJobStates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all BackgroundJobStates
+     * const backgroundJobStates = await prisma.backgroundJobState.findMany()
+     * 
+     * // Get first 10 BackgroundJobStates
+     * const backgroundJobStates = await prisma.backgroundJobState.findMany({ take: 10 })
+     * 
+     * // Only select the `jobKey`
+     * const backgroundJobStateWithJobKeyOnly = await prisma.backgroundJobState.findMany({ select: { jobKey: true } })
+     * 
+     */
+    findMany<T extends BackgroundJobStateFindManyArgs>(args?: SelectSubset<T, BackgroundJobStateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a BackgroundJobState.
+     * @param {BackgroundJobStateCreateArgs} args - Arguments to create a BackgroundJobState.
+     * @example
+     * // Create one BackgroundJobState
+     * const BackgroundJobState = await prisma.backgroundJobState.create({
+     *   data: {
+     *     // ... data to create a BackgroundJobState
+     *   }
+     * })
+     * 
+     */
+    create<T extends BackgroundJobStateCreateArgs>(args: SelectSubset<T, BackgroundJobStateCreateArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many BackgroundJobStates.
+     * @param {BackgroundJobStateCreateManyArgs} args - Arguments to create many BackgroundJobStates.
+     * @example
+     * // Create many BackgroundJobStates
+     * const backgroundJobState = await prisma.backgroundJobState.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends BackgroundJobStateCreateManyArgs>(args?: SelectSubset<T, BackgroundJobStateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create many BackgroundJobStates and returns the data saved in the database.
+     * @param {BackgroundJobStateCreateManyAndReturnArgs} args - Arguments to create many BackgroundJobStates.
+     * @example
+     * // Create many BackgroundJobStates
+     * const backgroundJobState = await prisma.backgroundJobState.createManyAndReturn({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Create many BackgroundJobStates and only return the `jobKey`
+     * const backgroundJobStateWithJobKeyOnly = await prisma.backgroundJobState.createManyAndReturn({
+     *   select: { jobKey: true },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    createManyAndReturn<T extends BackgroundJobStateCreateManyAndReturnArgs>(args?: SelectSubset<T, BackgroundJobStateCreateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "createManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Delete a BackgroundJobState.
+     * @param {BackgroundJobStateDeleteArgs} args - Arguments to delete one BackgroundJobState.
+     * @example
+     * // Delete one BackgroundJobState
+     * const BackgroundJobState = await prisma.backgroundJobState.delete({
+     *   where: {
+     *     // ... filter to delete one BackgroundJobState
+     *   }
+     * })
+     * 
+     */
+    delete<T extends BackgroundJobStateDeleteArgs>(args: SelectSubset<T, BackgroundJobStateDeleteArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one BackgroundJobState.
+     * @param {BackgroundJobStateUpdateArgs} args - Arguments to update one BackgroundJobState.
+     * @example
+     * // Update one BackgroundJobState
+     * const backgroundJobState = await prisma.backgroundJobState.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends BackgroundJobStateUpdateArgs>(args: SelectSubset<T, BackgroundJobStateUpdateArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more BackgroundJobStates.
+     * @param {BackgroundJobStateDeleteManyArgs} args - Arguments to filter BackgroundJobStates to delete.
+     * @example
+     * // Delete a few BackgroundJobStates
+     * const { count } = await prisma.backgroundJobState.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends BackgroundJobStateDeleteManyArgs>(args?: SelectSubset<T, BackgroundJobStateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BackgroundJobStates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many BackgroundJobStates
+     * const backgroundJobState = await prisma.backgroundJobState.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends BackgroundJobStateUpdateManyArgs>(args: SelectSubset<T, BackgroundJobStateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more BackgroundJobStates and returns the data updated in the database.
+     * @param {BackgroundJobStateUpdateManyAndReturnArgs} args - Arguments to update many BackgroundJobStates.
+     * @example
+     * // Update many BackgroundJobStates
+     * const backgroundJobState = await prisma.backgroundJobState.updateManyAndReturn({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * 
+     * // Update zero or more BackgroundJobStates and only return the `jobKey`
+     * const backgroundJobStateWithJobKeyOnly = await prisma.backgroundJobState.updateManyAndReturn({
+     *   select: { jobKey: true },
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * 
+     */
+    updateManyAndReturn<T extends BackgroundJobStateUpdateManyAndReturnArgs>(args: SelectSubset<T, BackgroundJobStateUpdateManyAndReturnArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "updateManyAndReturn", GlobalOmitOptions>>
+
+    /**
+     * Create or update one BackgroundJobState.
+     * @param {BackgroundJobStateUpsertArgs} args - Arguments to update or create a BackgroundJobState.
+     * @example
+     * // Update or create a BackgroundJobState
+     * const backgroundJobState = await prisma.backgroundJobState.upsert({
+     *   create: {
+     *     // ... data to create a BackgroundJobState
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the BackgroundJobState we want to update
+     *   }
+     * })
+     */
+    upsert<T extends BackgroundJobStateUpsertArgs>(args: SelectSubset<T, BackgroundJobStateUpsertArgs<ExtArgs>>): Prisma__BackgroundJobStateClient<$Result.GetResult<Prisma.$BackgroundJobStatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+
+    /**
+     * Count the number of BackgroundJobStates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateCountArgs} args - Arguments to filter BackgroundJobStates to count.
+     * @example
+     * // Count the number of BackgroundJobStates
+     * const count = await prisma.backgroundJobState.count({
+     *   where: {
+     *     // ... the filter for the BackgroundJobStates we want to count
+     *   }
+     * })
+    **/
+    count<T extends BackgroundJobStateCountArgs>(
+      args?: Subset<T, BackgroundJobStateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], BackgroundJobStateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a BackgroundJobState.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends BackgroundJobStateAggregateArgs>(args: Subset<T, BackgroundJobStateAggregateArgs>): Prisma.PrismaPromise<GetBackgroundJobStateAggregateType<T>>
+
+    /**
+     * Group by BackgroundJobState.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {BackgroundJobStateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends BackgroundJobStateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: BackgroundJobStateGroupByArgs['orderBy'] }
+        : { orderBy?: BackgroundJobStateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, BackgroundJobStateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetBackgroundJobStateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the BackgroundJobState model
+   */
+  readonly fields: BackgroundJobStateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for BackgroundJobState.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__BackgroundJobStateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    zaloAccount<T extends BackgroundJobState$zaloAccountArgs<ExtArgs> = {}>(args?: Subset<T, BackgroundJobState$zaloAccountArgs<ExtArgs>>): Prisma__ZaloAccountClient<$Result.GetResult<Prisma.$ZaloAccountPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the BackgroundJobState model
+   */
+  interface BackgroundJobStateFieldRefs {
+    readonly jobKey: FieldRef<"BackgroundJobState", 'String'>
+    readonly jobType: FieldRef<"BackgroundJobState", 'BackgroundJobType'>
+    readonly zaloAccountId: FieldRef<"BackgroundJobState", 'String'>
+    readonly status: FieldRef<"BackgroundJobState", 'BackgroundJobStatus'>
+    readonly startedAt: FieldRef<"BackgroundJobState", 'DateTime'>
+    readonly finishedAt: FieldRef<"BackgroundJobState", 'DateTime'>
+    readonly updatedAt: FieldRef<"BackgroundJobState", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * BackgroundJobState findUnique
+   */
+  export type BackgroundJobStateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * Filter, which BackgroundJobState to fetch.
+     */
+    where: BackgroundJobStateWhereUniqueInput
+  }
+
+  /**
+   * BackgroundJobState findUniqueOrThrow
+   */
+  export type BackgroundJobStateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * Filter, which BackgroundJobState to fetch.
+     */
+    where: BackgroundJobStateWhereUniqueInput
+  }
+
+  /**
+   * BackgroundJobState findFirst
+   */
+  export type BackgroundJobStateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * Filter, which BackgroundJobState to fetch.
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BackgroundJobStates to fetch.
+     */
+    orderBy?: BackgroundJobStateOrderByWithRelationInput | BackgroundJobStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BackgroundJobStates.
+     */
+    cursor?: BackgroundJobStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BackgroundJobStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BackgroundJobStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BackgroundJobStates.
+     */
+    distinct?: BackgroundJobStateScalarFieldEnum | BackgroundJobStateScalarFieldEnum[]
+  }
+
+  /**
+   * BackgroundJobState findFirstOrThrow
+   */
+  export type BackgroundJobStateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * Filter, which BackgroundJobState to fetch.
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BackgroundJobStates to fetch.
+     */
+    orderBy?: BackgroundJobStateOrderByWithRelationInput | BackgroundJobStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for BackgroundJobStates.
+     */
+    cursor?: BackgroundJobStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BackgroundJobStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BackgroundJobStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BackgroundJobStates.
+     */
+    distinct?: BackgroundJobStateScalarFieldEnum | BackgroundJobStateScalarFieldEnum[]
+  }
+
+  /**
+   * BackgroundJobState findMany
+   */
+  export type BackgroundJobStateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * Filter, which BackgroundJobStates to fetch.
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of BackgroundJobStates to fetch.
+     */
+    orderBy?: BackgroundJobStateOrderByWithRelationInput | BackgroundJobStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing BackgroundJobStates.
+     */
+    cursor?: BackgroundJobStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` BackgroundJobStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` BackgroundJobStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of BackgroundJobStates.
+     */
+    distinct?: BackgroundJobStateScalarFieldEnum | BackgroundJobStateScalarFieldEnum[]
+  }
+
+  /**
+   * BackgroundJobState create
+   */
+  export type BackgroundJobStateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * The data needed to create a BackgroundJobState.
+     */
+    data: XOR<BackgroundJobStateCreateInput, BackgroundJobStateUncheckedCreateInput>
+  }
+
+  /**
+   * BackgroundJobState createMany
+   */
+  export type BackgroundJobStateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many BackgroundJobStates.
+     */
+    data: BackgroundJobStateCreateManyInput | BackgroundJobStateCreateManyInput[]
+    skipDuplicates?: boolean
+  }
+
+  /**
+   * BackgroundJobState createManyAndReturn
+   */
+  export type BackgroundJobStateCreateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelectCreateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * The data used to create many BackgroundJobStates.
+     */
+    data: BackgroundJobStateCreateManyInput | BackgroundJobStateCreateManyInput[]
+    skipDuplicates?: boolean
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateIncludeCreateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BackgroundJobState update
+   */
+  export type BackgroundJobStateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * The data needed to update a BackgroundJobState.
+     */
+    data: XOR<BackgroundJobStateUpdateInput, BackgroundJobStateUncheckedUpdateInput>
+    /**
+     * Choose, which BackgroundJobState to update.
+     */
+    where: BackgroundJobStateWhereUniqueInput
+  }
+
+  /**
+   * BackgroundJobState updateMany
+   */
+  export type BackgroundJobStateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update BackgroundJobStates.
+     */
+    data: XOR<BackgroundJobStateUpdateManyMutationInput, BackgroundJobStateUncheckedUpdateManyInput>
+    /**
+     * Filter which BackgroundJobStates to update
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * Limit how many BackgroundJobStates to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * BackgroundJobState updateManyAndReturn
+   */
+  export type BackgroundJobStateUpdateManyAndReturnArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelectUpdateManyAndReturn<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * The data used to update BackgroundJobStates.
+     */
+    data: XOR<BackgroundJobStateUpdateManyMutationInput, BackgroundJobStateUncheckedUpdateManyInput>
+    /**
+     * Filter which BackgroundJobStates to update
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * Limit how many BackgroundJobStates to update.
+     */
+    limit?: number
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateIncludeUpdateManyAndReturn<ExtArgs> | null
+  }
+
+  /**
+   * BackgroundJobState upsert
+   */
+  export type BackgroundJobStateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * The filter to search for the BackgroundJobState to update in case it exists.
+     */
+    where: BackgroundJobStateWhereUniqueInput
+    /**
+     * In case the BackgroundJobState found by the `where` argument doesn't exist, create a new BackgroundJobState with this data.
+     */
+    create: XOR<BackgroundJobStateCreateInput, BackgroundJobStateUncheckedCreateInput>
+    /**
+     * In case the BackgroundJobState was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<BackgroundJobStateUpdateInput, BackgroundJobStateUncheckedUpdateInput>
+  }
+
+  /**
+   * BackgroundJobState delete
+   */
+  export type BackgroundJobStateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
+    /**
+     * Filter which BackgroundJobState to delete.
+     */
+    where: BackgroundJobStateWhereUniqueInput
+  }
+
+  /**
+   * BackgroundJobState deleteMany
+   */
+  export type BackgroundJobStateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which BackgroundJobStates to delete
+     */
+    where?: BackgroundJobStateWhereInput
+    /**
+     * Limit how many BackgroundJobStates to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * BackgroundJobState.zaloAccount
+   */
+  export type BackgroundJobState$zaloAccountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the ZaloAccount
+     */
+    select?: ZaloAccountSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the ZaloAccount
+     */
+    omit?: ZaloAccountOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: ZaloAccountInclude<ExtArgs> | null
+    where?: ZaloAccountWhereInput
+  }
+
+  /**
+   * BackgroundJobState without action
+   */
+  export type BackgroundJobStateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the BackgroundJobState
+     */
+    select?: BackgroundJobStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the BackgroundJobState
+     */
+    omit?: BackgroundJobStateOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: BackgroundJobStateInclude<ExtArgs> | null
   }
 
 
@@ -13097,6 +14357,19 @@ export namespace Prisma {
   export type ZaloAccountScalarFieldEnum = (typeof ZaloAccountScalarFieldEnum)[keyof typeof ZaloAccountScalarFieldEnum]
 
 
+  export const BackgroundJobStateScalarFieldEnum: {
+    jobKey: 'jobKey',
+    jobType: 'jobType',
+    zaloAccountId: 'zaloAccountId',
+    status: 'status',
+    startedAt: 'startedAt',
+    finishedAt: 'finishedAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type BackgroundJobStateScalarFieldEnum = (typeof BackgroundJobStateScalarFieldEnum)[keyof typeof BackgroundJobStateScalarFieldEnum]
+
+
   export const ZaloAccountGroupScalarFieldEnum: {
     id: 'id',
     groupZaloId: 'groupZaloId',
@@ -13313,6 +14586,34 @@ export namespace Prisma {
    * Reference to a field of type 'Int[]'
    */
   export type ListIntFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'Int[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'BackgroundJobType'
+   */
+  export type EnumBackgroundJobTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BackgroundJobType'>
+    
+
+
+  /**
+   * Reference to a field of type 'BackgroundJobType[]'
+   */
+  export type ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BackgroundJobType[]'>
+    
+
+
+  /**
+   * Reference to a field of type 'BackgroundJobStatus'
+   */
+  export type EnumBackgroundJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BackgroundJobStatus'>
+    
+
+
+  /**
+   * Reference to a field of type 'BackgroundJobStatus[]'
+   */
+  export type ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel> = FieldRefInputType<$PrismaModel, 'BackgroundJobStatus[]'>
     
 
 
@@ -13633,6 +14934,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationListRelationFilter
     groupMaps?: ZaloAccountGroupListRelationFilter
     messages?: MessageListRelationFilter
+    backgroundJobStates?: BackgroundJobStateListRelationFilter
     friends?: ZaloAccountFriendListRelationFilter
     friendOf?: ZaloAccountFriendListRelationFilter
   }
@@ -13654,6 +14956,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationOrderByRelationAggregateInput
     groupMaps?: ZaloAccountGroupOrderByRelationAggregateInput
     messages?: MessageOrderByRelationAggregateInput
+    backgroundJobStates?: BackgroundJobStateOrderByRelationAggregateInput
     friends?: ZaloAccountFriendOrderByRelationAggregateInput
     friendOf?: ZaloAccountFriendOrderByRelationAggregateInput
   }
@@ -13678,6 +14981,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationListRelationFilter
     groupMaps?: ZaloAccountGroupListRelationFilter
     messages?: MessageListRelationFilter
+    backgroundJobStates?: BackgroundJobStateListRelationFilter
     friends?: ZaloAccountFriendListRelationFilter
     friendOf?: ZaloAccountFriendListRelationFilter
   }, "id" | "zaloId">
@@ -13718,6 +15022,71 @@ export namespace Prisma {
     groupData?: JsonNullableWithAggregatesFilter<"ZaloAccount">
     createdAt?: DateTimeWithAggregatesFilter<"ZaloAccount"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ZaloAccount"> | Date | string
+  }
+
+  export type BackgroundJobStateWhereInput = {
+    AND?: BackgroundJobStateWhereInput | BackgroundJobStateWhereInput[]
+    OR?: BackgroundJobStateWhereInput[]
+    NOT?: BackgroundJobStateWhereInput | BackgroundJobStateWhereInput[]
+    jobKey?: StringFilter<"BackgroundJobState"> | string
+    jobType?: EnumBackgroundJobTypeFilter<"BackgroundJobState"> | $Enums.BackgroundJobType
+    zaloAccountId?: UuidNullableFilter<"BackgroundJobState"> | string | null
+    status?: EnumBackgroundJobStatusFilter<"BackgroundJobState"> | $Enums.BackgroundJobStatus
+    startedAt?: DateTimeNullableFilter<"BackgroundJobState"> | Date | string | null
+    finishedAt?: DateTimeNullableFilter<"BackgroundJobState"> | Date | string | null
+    updatedAt?: DateTimeFilter<"BackgroundJobState"> | Date | string
+    zaloAccount?: XOR<ZaloAccountNullableScalarRelationFilter, ZaloAccountWhereInput> | null
+  }
+
+  export type BackgroundJobStateOrderByWithRelationInput = {
+    jobKey?: SortOrder
+    jobType?: SortOrder
+    zaloAccountId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    startedAt?: SortOrderInput | SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    zaloAccount?: ZaloAccountOrderByWithRelationInput
+  }
+
+  export type BackgroundJobStateWhereUniqueInput = Prisma.AtLeast<{
+    jobKey?: string
+    AND?: BackgroundJobStateWhereInput | BackgroundJobStateWhereInput[]
+    OR?: BackgroundJobStateWhereInput[]
+    NOT?: BackgroundJobStateWhereInput | BackgroundJobStateWhereInput[]
+    jobType?: EnumBackgroundJobTypeFilter<"BackgroundJobState"> | $Enums.BackgroundJobType
+    zaloAccountId?: UuidNullableFilter<"BackgroundJobState"> | string | null
+    status?: EnumBackgroundJobStatusFilter<"BackgroundJobState"> | $Enums.BackgroundJobStatus
+    startedAt?: DateTimeNullableFilter<"BackgroundJobState"> | Date | string | null
+    finishedAt?: DateTimeNullableFilter<"BackgroundJobState"> | Date | string | null
+    updatedAt?: DateTimeFilter<"BackgroundJobState"> | Date | string
+    zaloAccount?: XOR<ZaloAccountNullableScalarRelationFilter, ZaloAccountWhereInput> | null
+  }, "jobKey">
+
+  export type BackgroundJobStateOrderByWithAggregationInput = {
+    jobKey?: SortOrder
+    jobType?: SortOrder
+    zaloAccountId?: SortOrderInput | SortOrder
+    status?: SortOrder
+    startedAt?: SortOrderInput | SortOrder
+    finishedAt?: SortOrderInput | SortOrder
+    updatedAt?: SortOrder
+    _count?: BackgroundJobStateCountOrderByAggregateInput
+    _max?: BackgroundJobStateMaxOrderByAggregateInput
+    _min?: BackgroundJobStateMinOrderByAggregateInput
+  }
+
+  export type BackgroundJobStateScalarWhereWithAggregatesInput = {
+    AND?: BackgroundJobStateScalarWhereWithAggregatesInput | BackgroundJobStateScalarWhereWithAggregatesInput[]
+    OR?: BackgroundJobStateScalarWhereWithAggregatesInput[]
+    NOT?: BackgroundJobStateScalarWhereWithAggregatesInput | BackgroundJobStateScalarWhereWithAggregatesInput[]
+    jobKey?: StringWithAggregatesFilter<"BackgroundJobState"> | string
+    jobType?: EnumBackgroundJobTypeWithAggregatesFilter<"BackgroundJobState"> | $Enums.BackgroundJobType
+    zaloAccountId?: UuidNullableWithAggregatesFilter<"BackgroundJobState"> | string | null
+    status?: EnumBackgroundJobStatusWithAggregatesFilter<"BackgroundJobState"> | $Enums.BackgroundJobStatus
+    startedAt?: DateTimeNullableWithAggregatesFilter<"BackgroundJobState"> | Date | string | null
+    finishedAt?: DateTimeNullableWithAggregatesFilter<"BackgroundJobState"> | Date | string | null
+    updatedAt?: DateTimeWithAggregatesFilter<"BackgroundJobState"> | Date | string
   }
 
   export type ZaloAccountGroupWhereInput = {
@@ -14321,6 +15690,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
@@ -14342,6 +15712,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
@@ -14363,6 +15734,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
   }
@@ -14384,6 +15756,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
@@ -14430,6 +15803,75 @@ export namespace Prisma {
     groupCount?: IntFieldUpdateOperationsInput | number
     groupData?: NullableJsonNullValueInput | InputJsonValue
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BackgroundJobStateCreateInput = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    status: $Enums.BackgroundJobStatus
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+    updatedAt?: Date | string
+    zaloAccount?: ZaloAccountCreateNestedOneWithoutBackgroundJobStatesInput
+  }
+
+  export type BackgroundJobStateUncheckedCreateInput = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    zaloAccountId?: string | null
+    status: $Enums.BackgroundJobStatus
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type BackgroundJobStateUpdateInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    zaloAccount?: ZaloAccountUpdateOneWithoutBackgroundJobStatesNestedInput
+  }
+
+  export type BackgroundJobStateUncheckedUpdateInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    zaloAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BackgroundJobStateCreateManyInput = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    zaloAccountId?: string | null
+    status: $Enums.BackgroundJobStatus
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type BackgroundJobStateUpdateManyMutationInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BackgroundJobStateUncheckedUpdateManyInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    zaloAccountId?: NullableStringFieldUpdateOperationsInput | string | null
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -15183,6 +16625,12 @@ export namespace Prisma {
     none?: ZaloAccountRelationWhereInput
   }
 
+  export type BackgroundJobStateListRelationFilter = {
+    every?: BackgroundJobStateWhereInput
+    some?: BackgroundJobStateWhereInput
+    none?: BackgroundJobStateWhereInput
+  }
+
   export type ZaloAccountFriendListRelationFilter = {
     every?: ZaloAccountFriendWhereInput
     some?: ZaloAccountFriendWhereInput
@@ -15190,6 +16638,10 @@ export namespace Prisma {
   }
 
   export type ZaloAccountRelationOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type BackgroundJobStateOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -15314,6 +16766,102 @@ export namespace Prisma {
     _max?: NestedJsonNullableFilter<$PrismaModel>
   }
 
+  export type EnumBackgroundJobTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobType | EnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobTypeFilter<$PrismaModel> | $Enums.BackgroundJobType
+  }
+
+  export type UuidNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type EnumBackgroundJobStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobStatus | EnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobStatusFilter<$PrismaModel> | $Enums.BackgroundJobStatus
+  }
+
+  export type ZaloAccountNullableScalarRelationFilter = {
+    is?: ZaloAccountWhereInput | null
+    isNot?: ZaloAccountWhereInput | null
+  }
+
+  export type BackgroundJobStateCountOrderByAggregateInput = {
+    jobKey?: SortOrder
+    jobType?: SortOrder
+    zaloAccountId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BackgroundJobStateMaxOrderByAggregateInput = {
+    jobKey?: SortOrder
+    jobType?: SortOrder
+    zaloAccountId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type BackgroundJobStateMinOrderByAggregateInput = {
+    jobKey?: SortOrder
+    jobType?: SortOrder
+    zaloAccountId?: SortOrder
+    status?: SortOrder
+    startedAt?: SortOrder
+    finishedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type EnumBackgroundJobTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobType | EnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobTypeWithAggregatesFilter<$PrismaModel> | $Enums.BackgroundJobType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBackgroundJobTypeFilter<$PrismaModel>
+    _max?: NestedEnumBackgroundJobTypeFilter<$PrismaModel>
+  }
+
+  export type UuidNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    mode?: QueryMode
+    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type EnumBackgroundJobStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobStatus | EnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobStatusWithAggregatesFilter<$PrismaModel> | $Enums.BackgroundJobStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBackgroundJobStatusFilter<$PrismaModel>
+    _max?: NestedEnumBackgroundJobStatusFilter<$PrismaModel>
+  }
+
   export type ZaloGroupScalarRelationFilter = {
     is?: ZaloGroupWhereInput
     isNot?: ZaloGroupWhereInput
@@ -15394,18 +16942,6 @@ export namespace Prisma {
     _max?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
   }
 
-  export type UuidNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
-  }
-
   export type EnumMessageStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageStatus | EnumMessageStatusFieldRefInput<$PrismaModel>
     in?: $Enums.MessageStatus[] | ListEnumMessageStatusFieldRefInput<$PrismaModel>
@@ -15466,21 +17002,6 @@ export namespace Prisma {
     sentAt?: SortOrder
     status?: SortOrder
     createdAt?: SortOrder
-  }
-
-  export type UuidNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    mode?: QueryMode
-    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type EnumMessageStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -15758,6 +17279,13 @@ export namespace Prisma {
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
   }
 
+  export type BackgroundJobStateCreateNestedManyWithoutZaloAccountInput = {
+    create?: XOR<BackgroundJobStateCreateWithoutZaloAccountInput, BackgroundJobStateUncheckedCreateWithoutZaloAccountInput> | BackgroundJobStateCreateWithoutZaloAccountInput[] | BackgroundJobStateUncheckedCreateWithoutZaloAccountInput[]
+    connectOrCreate?: BackgroundJobStateCreateOrConnectWithoutZaloAccountInput | BackgroundJobStateCreateOrConnectWithoutZaloAccountInput[]
+    createMany?: BackgroundJobStateCreateManyZaloAccountInputEnvelope
+    connect?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+  }
+
   export type ZaloAccountFriendCreateNestedManyWithoutMasterInput = {
     create?: XOR<ZaloAccountFriendCreateWithoutMasterInput, ZaloAccountFriendUncheckedCreateWithoutMasterInput> | ZaloAccountFriendCreateWithoutMasterInput[] | ZaloAccountFriendUncheckedCreateWithoutMasterInput[]
     connectOrCreate?: ZaloAccountFriendCreateOrConnectWithoutMasterInput | ZaloAccountFriendCreateOrConnectWithoutMasterInput[]
@@ -15798,6 +17326,13 @@ export namespace Prisma {
     connectOrCreate?: MessageCreateOrConnectWithoutSenderInput | MessageCreateOrConnectWithoutSenderInput[]
     createMany?: MessageCreateManySenderInputEnvelope
     connect?: MessageWhereUniqueInput | MessageWhereUniqueInput[]
+  }
+
+  export type BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput = {
+    create?: XOR<BackgroundJobStateCreateWithoutZaloAccountInput, BackgroundJobStateUncheckedCreateWithoutZaloAccountInput> | BackgroundJobStateCreateWithoutZaloAccountInput[] | BackgroundJobStateUncheckedCreateWithoutZaloAccountInput[]
+    connectOrCreate?: BackgroundJobStateCreateOrConnectWithoutZaloAccountInput | BackgroundJobStateCreateOrConnectWithoutZaloAccountInput[]
+    createMany?: BackgroundJobStateCreateManyZaloAccountInputEnvelope
+    connect?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
   }
 
   export type ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput = {
@@ -15886,6 +17421,20 @@ export namespace Prisma {
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
+  export type BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput = {
+    create?: XOR<BackgroundJobStateCreateWithoutZaloAccountInput, BackgroundJobStateUncheckedCreateWithoutZaloAccountInput> | BackgroundJobStateCreateWithoutZaloAccountInput[] | BackgroundJobStateUncheckedCreateWithoutZaloAccountInput[]
+    connectOrCreate?: BackgroundJobStateCreateOrConnectWithoutZaloAccountInput | BackgroundJobStateCreateOrConnectWithoutZaloAccountInput[]
+    upsert?: BackgroundJobStateUpsertWithWhereUniqueWithoutZaloAccountInput | BackgroundJobStateUpsertWithWhereUniqueWithoutZaloAccountInput[]
+    createMany?: BackgroundJobStateCreateManyZaloAccountInputEnvelope
+    set?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    disconnect?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    delete?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    connect?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    update?: BackgroundJobStateUpdateWithWhereUniqueWithoutZaloAccountInput | BackgroundJobStateUpdateWithWhereUniqueWithoutZaloAccountInput[]
+    updateMany?: BackgroundJobStateUpdateManyWithWhereWithoutZaloAccountInput | BackgroundJobStateUpdateManyWithWhereWithoutZaloAccountInput[]
+    deleteMany?: BackgroundJobStateScalarWhereInput | BackgroundJobStateScalarWhereInput[]
+  }
+
   export type ZaloAccountFriendUpdateManyWithoutMasterNestedInput = {
     create?: XOR<ZaloAccountFriendCreateWithoutMasterInput, ZaloAccountFriendUncheckedCreateWithoutMasterInput> | ZaloAccountFriendCreateWithoutMasterInput[] | ZaloAccountFriendUncheckedCreateWithoutMasterInput[]
     connectOrCreate?: ZaloAccountFriendCreateOrConnectWithoutMasterInput | ZaloAccountFriendCreateOrConnectWithoutMasterInput[]
@@ -15970,6 +17519,20 @@ export namespace Prisma {
     deleteMany?: MessageScalarWhereInput | MessageScalarWhereInput[]
   }
 
+  export type BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput = {
+    create?: XOR<BackgroundJobStateCreateWithoutZaloAccountInput, BackgroundJobStateUncheckedCreateWithoutZaloAccountInput> | BackgroundJobStateCreateWithoutZaloAccountInput[] | BackgroundJobStateUncheckedCreateWithoutZaloAccountInput[]
+    connectOrCreate?: BackgroundJobStateCreateOrConnectWithoutZaloAccountInput | BackgroundJobStateCreateOrConnectWithoutZaloAccountInput[]
+    upsert?: BackgroundJobStateUpsertWithWhereUniqueWithoutZaloAccountInput | BackgroundJobStateUpsertWithWhereUniqueWithoutZaloAccountInput[]
+    createMany?: BackgroundJobStateCreateManyZaloAccountInputEnvelope
+    set?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    disconnect?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    delete?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    connect?: BackgroundJobStateWhereUniqueInput | BackgroundJobStateWhereUniqueInput[]
+    update?: BackgroundJobStateUpdateWithWhereUniqueWithoutZaloAccountInput | BackgroundJobStateUpdateWithWhereUniqueWithoutZaloAccountInput[]
+    updateMany?: BackgroundJobStateUpdateManyWithWhereWithoutZaloAccountInput | BackgroundJobStateUpdateManyWithWhereWithoutZaloAccountInput[]
+    deleteMany?: BackgroundJobStateScalarWhereInput | BackgroundJobStateScalarWhereInput[]
+  }
+
   export type ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput = {
     create?: XOR<ZaloAccountFriendCreateWithoutMasterInput, ZaloAccountFriendUncheckedCreateWithoutMasterInput> | ZaloAccountFriendCreateWithoutMasterInput[] | ZaloAccountFriendUncheckedCreateWithoutMasterInput[]
     connectOrCreate?: ZaloAccountFriendCreateOrConnectWithoutMasterInput | ZaloAccountFriendCreateOrConnectWithoutMasterInput[]
@@ -15996,6 +17559,30 @@ export namespace Prisma {
     update?: ZaloAccountFriendUpdateWithWhereUniqueWithoutFriendInput | ZaloAccountFriendUpdateWithWhereUniqueWithoutFriendInput[]
     updateMany?: ZaloAccountFriendUpdateManyWithWhereWithoutFriendInput | ZaloAccountFriendUpdateManyWithWhereWithoutFriendInput[]
     deleteMany?: ZaloAccountFriendScalarWhereInput | ZaloAccountFriendScalarWhereInput[]
+  }
+
+  export type ZaloAccountCreateNestedOneWithoutBackgroundJobStatesInput = {
+    create?: XOR<ZaloAccountCreateWithoutBackgroundJobStatesInput, ZaloAccountUncheckedCreateWithoutBackgroundJobStatesInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutBackgroundJobStatesInput
+    connect?: ZaloAccountWhereUniqueInput
+  }
+
+  export type EnumBackgroundJobTypeFieldUpdateOperationsInput = {
+    set?: $Enums.BackgroundJobType
+  }
+
+  export type EnumBackgroundJobStatusFieldUpdateOperationsInput = {
+    set?: $Enums.BackgroundJobStatus
+  }
+
+  export type ZaloAccountUpdateOneWithoutBackgroundJobStatesNestedInput = {
+    create?: XOR<ZaloAccountCreateWithoutBackgroundJobStatesInput, ZaloAccountUncheckedCreateWithoutBackgroundJobStatesInput>
+    connectOrCreate?: ZaloAccountCreateOrConnectWithoutBackgroundJobStatesInput
+    upsert?: ZaloAccountUpsertWithoutBackgroundJobStatesInput
+    disconnect?: ZaloAccountWhereInput | boolean
+    delete?: ZaloAccountWhereInput | boolean
+    connect?: ZaloAccountWhereUniqueInput
+    update?: XOR<XOR<ZaloAccountUpdateToOneWithWhereWithoutBackgroundJobStatesInput, ZaloAccountUpdateWithoutBackgroundJobStatesInput>, ZaloAccountUncheckedUpdateWithoutBackgroundJobStatesInput>
   }
 
   export type ZaloAccountCreateNestedOneWithoutGroupMapsInput = {
@@ -16446,6 +18033,65 @@ export namespace Prisma {
     not?: InputJsonValue | JsonFieldRefInput<$PrismaModel> | JsonNullValueFilter
   }
 
+  export type NestedEnumBackgroundJobTypeFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobType | EnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobTypeFilter<$PrismaModel> | $Enums.BackgroundJobType
+  }
+
+  export type NestedUuidNullableFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
+  }
+
+  export type NestedEnumBackgroundJobStatusFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobStatus | EnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobStatusFilter<$PrismaModel> | $Enums.BackgroundJobStatus
+  }
+
+  export type NestedEnumBackgroundJobTypeWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobType | EnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobType[] | ListEnumBackgroundJobTypeFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobTypeWithAggregatesFilter<$PrismaModel> | $Enums.BackgroundJobType
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBackgroundJobTypeFilter<$PrismaModel>
+    _max?: NestedEnumBackgroundJobTypeFilter<$PrismaModel>
+  }
+
+  export type NestedUuidNullableWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: string | StringFieldRefInput<$PrismaModel> | null
+    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
+    lt?: string | StringFieldRefInput<$PrismaModel>
+    lte?: string | StringFieldRefInput<$PrismaModel>
+    gt?: string | StringFieldRefInput<$PrismaModel>
+    gte?: string | StringFieldRefInput<$PrismaModel>
+    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
+    _count?: NestedIntNullableFilter<$PrismaModel>
+    _min?: NestedStringNullableFilter<$PrismaModel>
+    _max?: NestedStringNullableFilter<$PrismaModel>
+  }
+
+  export type NestedEnumBackgroundJobStatusWithAggregatesFilter<$PrismaModel = never> = {
+    equals?: $Enums.BackgroundJobStatus | EnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    in?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    notIn?: $Enums.BackgroundJobStatus[] | ListEnumBackgroundJobStatusFieldRefInput<$PrismaModel>
+    not?: NestedEnumBackgroundJobStatusWithAggregatesFilter<$PrismaModel> | $Enums.BackgroundJobStatus
+    _count?: NestedIntFilter<$PrismaModel>
+    _min?: NestedEnumBackgroundJobStatusFilter<$PrismaModel>
+    _max?: NestedEnumBackgroundJobStatusFilter<$PrismaModel>
+  }
+
   export type NestedEnumZaloAccountFriendStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.ZaloAccountFriendStatus | EnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
     in?: $Enums.ZaloAccountFriendStatus[] | ListEnumZaloAccountFriendStatusFieldRefInput<$PrismaModel>
@@ -16463,36 +18109,11 @@ export namespace Prisma {
     _max?: NestedEnumZaloAccountFriendStatusFilter<$PrismaModel>
   }
 
-  export type NestedUuidNullableFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedUuidNullableFilter<$PrismaModel> | string | null
-  }
-
   export type NestedEnumMessageStatusFilter<$PrismaModel = never> = {
     equals?: $Enums.MessageStatus | EnumMessageStatusFieldRefInput<$PrismaModel>
     in?: $Enums.MessageStatus[] | ListEnumMessageStatusFieldRefInput<$PrismaModel>
     notIn?: $Enums.MessageStatus[] | ListEnumMessageStatusFieldRefInput<$PrismaModel>
     not?: NestedEnumMessageStatusFilter<$PrismaModel> | $Enums.MessageStatus
-  }
-
-  export type NestedUuidNullableWithAggregatesFilter<$PrismaModel = never> = {
-    equals?: string | StringFieldRefInput<$PrismaModel> | null
-    in?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    notIn?: string[] | ListStringFieldRefInput<$PrismaModel> | null
-    lt?: string | StringFieldRefInput<$PrismaModel>
-    lte?: string | StringFieldRefInput<$PrismaModel>
-    gt?: string | StringFieldRefInput<$PrismaModel>
-    gte?: string | StringFieldRefInput<$PrismaModel>
-    not?: NestedUuidNullableWithAggregatesFilter<$PrismaModel> | string | null
-    _count?: NestedIntNullableFilter<$PrismaModel>
-    _min?: NestedStringNullableFilter<$PrismaModel>
-    _max?: NestedStringNullableFilter<$PrismaModel>
   }
 
   export type NestedEnumMessageStatusWithAggregatesFilter<$PrismaModel = never> = {
@@ -16759,6 +18380,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
@@ -16779,6 +18401,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
@@ -16804,6 +18427,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
@@ -16824,6 +18448,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
@@ -16860,6 +18485,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
   }
@@ -16880,6 +18506,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
@@ -16911,6 +18538,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
   }
@@ -16931,6 +18559,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
@@ -17040,6 +18669,34 @@ export namespace Prisma {
 
   export type MessageCreateManySenderInputEnvelope = {
     data: MessageCreateManySenderInput | MessageCreateManySenderInput[]
+    skipDuplicates?: boolean
+  }
+
+  export type BackgroundJobStateCreateWithoutZaloAccountInput = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    status: $Enums.BackgroundJobStatus
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type BackgroundJobStateUncheckedCreateWithoutZaloAccountInput = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    status: $Enums.BackgroundJobStatus
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
+  export type BackgroundJobStateCreateOrConnectWithoutZaloAccountInput = {
+    where: BackgroundJobStateWhereUniqueInput
+    create: XOR<BackgroundJobStateCreateWithoutZaloAccountInput, BackgroundJobStateUncheckedCreateWithoutZaloAccountInput>
+  }
+
+  export type BackgroundJobStateCreateManyZaloAccountInputEnvelope = {
+    data: BackgroundJobStateCreateManyZaloAccountInput | BackgroundJobStateCreateManyZaloAccountInput[]
     skipDuplicates?: boolean
   }
 
@@ -17165,6 +18822,35 @@ export namespace Prisma {
     data: XOR<MessageUpdateManyMutationInput, MessageUncheckedUpdateManyWithoutSenderInput>
   }
 
+  export type BackgroundJobStateUpsertWithWhereUniqueWithoutZaloAccountInput = {
+    where: BackgroundJobStateWhereUniqueInput
+    update: XOR<BackgroundJobStateUpdateWithoutZaloAccountInput, BackgroundJobStateUncheckedUpdateWithoutZaloAccountInput>
+    create: XOR<BackgroundJobStateCreateWithoutZaloAccountInput, BackgroundJobStateUncheckedCreateWithoutZaloAccountInput>
+  }
+
+  export type BackgroundJobStateUpdateWithWhereUniqueWithoutZaloAccountInput = {
+    where: BackgroundJobStateWhereUniqueInput
+    data: XOR<BackgroundJobStateUpdateWithoutZaloAccountInput, BackgroundJobStateUncheckedUpdateWithoutZaloAccountInput>
+  }
+
+  export type BackgroundJobStateUpdateManyWithWhereWithoutZaloAccountInput = {
+    where: BackgroundJobStateScalarWhereInput
+    data: XOR<BackgroundJobStateUpdateManyMutationInput, BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountInput>
+  }
+
+  export type BackgroundJobStateScalarWhereInput = {
+    AND?: BackgroundJobStateScalarWhereInput | BackgroundJobStateScalarWhereInput[]
+    OR?: BackgroundJobStateScalarWhereInput[]
+    NOT?: BackgroundJobStateScalarWhereInput | BackgroundJobStateScalarWhereInput[]
+    jobKey?: StringFilter<"BackgroundJobState"> | string
+    jobType?: EnumBackgroundJobTypeFilter<"BackgroundJobState"> | $Enums.BackgroundJobType
+    zaloAccountId?: UuidNullableFilter<"BackgroundJobState"> | string | null
+    status?: EnumBackgroundJobStatusFilter<"BackgroundJobState"> | $Enums.BackgroundJobStatus
+    startedAt?: DateTimeNullableFilter<"BackgroundJobState"> | Date | string | null
+    finishedAt?: DateTimeNullableFilter<"BackgroundJobState"> | Date | string | null
+    updatedAt?: DateTimeFilter<"BackgroundJobState"> | Date | string
+  }
+
   export type ZaloAccountFriendUpsertWithWhereUniqueWithoutMasterInput = {
     where: ZaloAccountFriendWhereUniqueInput
     update: XOR<ZaloAccountFriendUpdateWithoutMasterInput, ZaloAccountFriendUncheckedUpdateWithoutMasterInput>
@@ -17208,6 +18894,106 @@ export namespace Prisma {
     data: XOR<ZaloAccountFriendUpdateManyMutationInput, ZaloAccountFriendUncheckedUpdateManyWithoutFriendInput>
   }
 
+  export type ZaloAccountCreateWithoutBackgroundJobStatesInput = {
+    id?: string
+    zaloId?: string | null
+    phone?: string | null
+    name?: string | null
+    isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
+    groupCount?: number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
+    groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
+    messages?: MessageCreateNestedManyWithoutSenderInput
+    friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
+    friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
+  }
+
+  export type ZaloAccountUncheckedCreateWithoutBackgroundJobStatesInput = {
+    id?: string
+    zaloId?: string | null
+    phone?: string | null
+    name?: string | null
+    isMaster?: boolean
+    status?: $Enums.ZaloAccountStatus
+    isDeleted?: boolean
+    deletedAt?: Date | string | null
+    groupCount?: number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
+    children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
+    groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
+    messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
+    friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
+  }
+
+  export type ZaloAccountCreateOrConnectWithoutBackgroundJobStatesInput = {
+    where: ZaloAccountWhereUniqueInput
+    create: XOR<ZaloAccountCreateWithoutBackgroundJobStatesInput, ZaloAccountUncheckedCreateWithoutBackgroundJobStatesInput>
+  }
+
+  export type ZaloAccountUpsertWithoutBackgroundJobStatesInput = {
+    update: XOR<ZaloAccountUpdateWithoutBackgroundJobStatesInput, ZaloAccountUncheckedUpdateWithoutBackgroundJobStatesInput>
+    create: XOR<ZaloAccountCreateWithoutBackgroundJobStatesInput, ZaloAccountUncheckedCreateWithoutBackgroundJobStatesInput>
+    where?: ZaloAccountWhereInput
+  }
+
+  export type ZaloAccountUpdateToOneWithWhereWithoutBackgroundJobStatesInput = {
+    where?: ZaloAccountWhereInput
+    data: XOR<ZaloAccountUpdateWithoutBackgroundJobStatesInput, ZaloAccountUncheckedUpdateWithoutBackgroundJobStatesInput>
+  }
+
+  export type ZaloAccountUpdateWithoutBackgroundJobStatesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
+    friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
+  }
+
+  export type ZaloAccountUncheckedUpdateWithoutBackgroundJobStatesInput = {
+    id?: StringFieldUpdateOperationsInput | string
+    zaloId?: NullableStringFieldUpdateOperationsInput | string | null
+    phone?: NullableStringFieldUpdateOperationsInput | string | null
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    isMaster?: BoolFieldUpdateOperationsInput | boolean
+    status?: EnumZaloAccountStatusFieldUpdateOperationsInput | $Enums.ZaloAccountStatus
+    isDeleted?: BoolFieldUpdateOperationsInput | boolean
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    groupCount?: IntFieldUpdateOperationsInput | number
+    groupData?: NullableJsonNullValueInput | InputJsonValue
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
+    children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
+    groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
+    messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
+    friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
+  }
+
   export type ZaloAccountCreateWithoutGroupMapsInput = {
     id?: string
     zaloId?: string | null
@@ -17224,6 +19010,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
     children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     messages?: MessageCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
@@ -17244,6 +19031,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
     children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
@@ -17307,6 +19095,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
     children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
   }
@@ -17327,6 +19116,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
     children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
@@ -17381,6 +19171,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
 
@@ -17401,6 +19192,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
 
@@ -17426,6 +19218,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
     messages?: MessageCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
   }
 
@@ -17446,6 +19239,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
     messages?: MessageUncheckedCreateNestedManyWithoutSenderInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
   }
 
@@ -17482,6 +19276,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
   }
 
@@ -17502,6 +19297,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
 
@@ -17533,6 +19329,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
   }
 
@@ -17553,6 +19350,7 @@ export namespace Prisma {
     children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
     messages?: MessageUncheckedUpdateManyWithoutSenderNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
   }
 
@@ -17572,6 +19370,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationCreateNestedManyWithoutChildInput
     children?: ZaloAccountRelationCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupCreateNestedManyWithoutZaloAccountInput
+    backgroundJobStates?: BackgroundJobStateCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendCreateNestedManyWithoutFriendInput
   }
@@ -17592,6 +19391,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUncheckedCreateNestedManyWithoutChildInput
     children?: ZaloAccountRelationUncheckedCreateNestedManyWithoutMasterInput
     groupMaps?: ZaloAccountGroupUncheckedCreateNestedManyWithoutZaloAccountInput
+    backgroundJobStates?: BackgroundJobStateUncheckedCreateNestedManyWithoutZaloAccountInput
     friends?: ZaloAccountFriendUncheckedCreateNestedManyWithoutMasterInput
     friendOf?: ZaloAccountFriendUncheckedCreateNestedManyWithoutFriendInput
   }
@@ -17730,6 +19530,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUpdateManyWithoutChildNestedInput
     children?: ZaloAccountRelationUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUpdateManyWithoutZaloAccountNestedInput
+    backgroundJobStates?: BackgroundJobStateUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUpdateManyWithoutFriendNestedInput
   }
@@ -17750,6 +19551,7 @@ export namespace Prisma {
     masters?: ZaloAccountRelationUncheckedUpdateManyWithoutChildNestedInput
     children?: ZaloAccountRelationUncheckedUpdateManyWithoutMasterNestedInput
     groupMaps?: ZaloAccountGroupUncheckedUpdateManyWithoutZaloAccountNestedInput
+    backgroundJobStates?: BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountNestedInput
     friends?: ZaloAccountFriendUncheckedUpdateManyWithoutMasterNestedInput
     friendOf?: ZaloAccountFriendUncheckedUpdateManyWithoutFriendNestedInput
   }
@@ -17999,6 +19801,15 @@ export namespace Prisma {
     createdAt?: Date | string
   }
 
+  export type BackgroundJobStateCreateManyZaloAccountInput = {
+    jobKey: string
+    jobType: $Enums.BackgroundJobType
+    status: $Enums.BackgroundJobStatus
+    startedAt?: Date | string | null
+    finishedAt?: Date | string | null
+    updatedAt?: Date | string
+  }
+
   export type ZaloAccountFriendCreateManyMasterInput = {
     id?: string
     friendId: string
@@ -18112,6 +19923,33 @@ export namespace Prisma {
     sentAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     status?: EnumMessageStatusFieldUpdateOperationsInput | $Enums.MessageStatus
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BackgroundJobStateUpdateWithoutZaloAccountInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BackgroundJobStateUncheckedUpdateWithoutZaloAccountInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type BackgroundJobStateUncheckedUpdateManyWithoutZaloAccountInput = {
+    jobKey?: StringFieldUpdateOperationsInput | string
+    jobType?: EnumBackgroundJobTypeFieldUpdateOperationsInput | $Enums.BackgroundJobType
+    status?: EnumBackgroundJobStatusFieldUpdateOperationsInput | $Enums.BackgroundJobStatus
+    startedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    finishedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type ZaloAccountFriendUpdateWithoutMasterInput = {

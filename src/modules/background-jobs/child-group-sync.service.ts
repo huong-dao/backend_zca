@@ -25,6 +25,7 @@ import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sess
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
 import { randomUUID } from 'node:crypto';
+import { BackgroundJobStateService } from './background-job-state.service';
 import { CHILD_GROUP_SCAN_QUEUE } from './constants';
 
 export type ChildGroupScanJobPayload = {
@@ -53,6 +54,7 @@ export class ChildGroupSyncService {
     private readonly prisma: PrismaService,
     private readonly loginSessions: ZaloLoginSessionsService,
     private readonly config: ConfigService,
+    private readonly jobState: BackgroundJobStateService,
   ) {
     this.ensureRedis();
   }
@@ -262,6 +264,7 @@ export class ChildGroupSyncService {
       }
       return;
     }
+    await this.jobState.markChildGroupScanRunning(p.zaloAccountId);
     let continuationScheduled = false;
     try {
       continuationScheduled = await this.runScanPayload(p);
@@ -274,6 +277,7 @@ export class ChildGroupSyncService {
         where: { id: p.zaloAccountId, status: 'INACTIVE' },
         data: { status: 'ACTIVE' },
       });
+      await this.jobState.markChildGroupScanIdle(p.zaloAccountId);
       throw e;
     }
     if (!continuationScheduled) {
@@ -281,6 +285,7 @@ export class ChildGroupSyncService {
         where: { id: p.zaloAccountId, status: 'INACTIVE' },
         data: { status: 'ACTIVE' },
       });
+      await this.jobState.markChildGroupScanIdle(p.zaloAccountId);
       this.logger.log(
         `Child group scan finished; status=ACTIVE (zaloAccountId=${p.zaloAccountId})`,
       );
