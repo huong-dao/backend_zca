@@ -19,6 +19,15 @@ export class FindZaloGroupsDto {
   @IsString()
   @MaxLength(255)
   global_id?: string;
+
+  /**
+   * Case-insensitive substring match on `group_name` and `origin_name` (SQL `ILIKE` via Prisma `contains`).
+   * Combined with `global_id` using AND when both are set.
+   */
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  keyword?: string;
 }
 
 /** Built in the controller for `GET /zalo-groups/account/:id` (not validated as a single `@Query()` object). */

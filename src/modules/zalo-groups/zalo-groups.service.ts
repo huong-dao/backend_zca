@@ -123,10 +123,33 @@ export class ZaloGroupsService {
     const skip = (page - 1) * limit;
 
     const globalExact = query.global_id?.trim();
+    const keywordNeedle = query.keyword?.trim();
+
+    const andParts: Prisma.ZaloGroupWhereInput[] = [];
+    if (globalExact && globalExact.length > 0) {
+      andParts.push({ globalId: globalExact });
+    }
+    if (keywordNeedle && keywordNeedle.length > 0) {
+      andParts.push({
+        OR: [
+          {
+            groupName: {
+              contains: keywordNeedle,
+              mode: 'insensitive',
+            },
+          },
+          {
+            originName: {
+              contains: keywordNeedle,
+              mode: 'insensitive',
+            },
+          },
+        ],
+      });
+    }
+
     const whereZaloGroup: Prisma.ZaloGroupWhereInput | undefined =
-      globalExact && globalExact.length > 0
-        ? { globalId: globalExact }
-        : undefined;
+      andParts.length === 0 ? undefined : { AND: andParts };
 
     const [total, data] = await this.prismaService.$transaction([
       this.prismaService.zaloGroup.count({ where: whereZaloGroup }),
