@@ -15,6 +15,8 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import {
   badRequestForZaloSessionRestoreFailure,
   createZcaApiFromCredentials,
+  waitForZaloListenerCipherKey,
+  ZALO_LISTENER_CIPHER_TIMEOUT_MS,
 } from '../../zalo';
 import { snapshotSerializedCookiesFromApi } from '../../zalo/zca-cookie-snapshot';
 import { ZcaApiHelper } from '../../zalo/zca-api.helper';
@@ -633,6 +635,7 @@ export class ZaloAccountsService {
         const p = await zca.findUser(phone);
         return zca.addUserToGroup(p.uid, params.groupZaloId);
       },
+      { useZaloListener: true },
     );
 
     if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
@@ -1502,6 +1505,7 @@ export class ZaloAccountsService {
   private async withZaloUidSession<T>(
     zaloUid: string,
     run: (zca: ZcaApiHelper, api: API) => Promise<T>,
+    options?: { useZaloListener?: boolean },
   ): Promise<T> {
     const full = await this.loginSessions.findLatestByZaloUid(zaloUid);
     const sessionId = full.id;
@@ -1509,7 +1513,10 @@ export class ZaloAccountsService {
 
     let api: API;
     try {
-      api = await createZcaApiFromCredentials(prevCreds);
+      api = await createZcaApiFromCredentials(
+        prevCreds,
+        options?.useZaloListener ? { selfListen: true } : undefined,
+      );
     } catch (err) {
       const detail = err instanceof Error ? err.message : String(err);
       this.logger.error(
@@ -1520,7 +1527,25 @@ export class ZaloAccountsService {
     }
 
     const zca = new ZcaApiHelper(api);
+    let zaloListenerStarted = false;
     try {
+      if (options?.useZaloListener) {
+        api.listener.start({ retryOnClose: true });
+        try {
+          await waitForZaloListenerCipherKey(
+            api,
+            ZALO_LISTENER_CIPHER_TIMEOUT_MS,
+          );
+        } catch (err) {
+          try {
+            api.listener.stop();
+          } catch {
+            /* ignore */
+          }
+          throw err;
+        }
+        zaloListenerStarted = true;
+      }
       const out = await run(zca, api);
       await this.persistRefreshedZaloSession(sessionId, api, prevCreds);
       await this.loginSessions.touchBySessionId(sessionId);
@@ -1538,6 +1563,14 @@ export class ZaloAccountsService {
       throw new InternalServerErrorException(
         err instanceof Error ? err.message : 'Zalo API error.',
       );
+    } finally {
+      if (zaloListenerStarted) {
+        try {
+          api.listener.stop();
+        } catch {
+          /* ignore */
+        }
+      }
     }
   }
 

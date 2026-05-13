@@ -3,7 +3,6 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { once } from 'node:events';
 import { isDeepStrictEqual } from 'node:util';
 import type { API, MessageContent, SendMessageResponse } from 'zca-js';
 import { ThreadType } from 'zca-js';
@@ -11,6 +10,8 @@ import {
   badRequestForZaloSessionRestoreFailure,
   createZcaApiFromCredentials,
   throwHttpForZaloOperationFailure,
+  waitForZaloListenerCipherKey,
+  ZALO_LISTENER_CIPHER_TIMEOUT_MS,
   ZcaApiHelper,
 } from '../../zalo';
 import {
@@ -33,7 +34,6 @@ import type { ZaloSendFriendRequestDto } from './dto/zalo-send-friend-request.dt
 import type { ZaloSendMessageDto } from './dto/zalo-send-message.dto';
 import type { ZaloUndoDto } from './dto/zalo-undo.dto';
 
-const ZALO_LISTENER_CIPHER_TIMEOUT_MS = 30_000;
 /** Wait for one group self message echo (TMessage) to obtain `cliMsgId` after `sendMessage`. */
 const ZALO_SELF_ECHO_TIMEOUT_MS = 12_000;
 
@@ -221,7 +221,10 @@ export class ZaloActionsService {
       if (options?.useZaloListener) {
         api.listener.start({ retryOnClose: true });
         try {
-          await this.waitForZaloListenerCipherKey(api, ZALO_LISTENER_CIPHER_TIMEOUT_MS);
+          await waitForZaloListenerCipherKey(
+            api,
+            ZALO_LISTENER_CIPHER_TIMEOUT_MS,
+          );
         } catch (err) {
           try {
             api.listener.stop();
@@ -462,29 +465,6 @@ export class ZaloActionsService {
       };
       api.listener.on('message', handler);
     });
-  }
-
-  /**
-   * zca-js needs the chat WebSocket so `file_done` can resolve pending file uploads
-   * (see `uploadAttachment.js` + `apis/listen.js` in `zca-js`). Same as
-   * `api.listener.start()` in the library README.
-   */
-  private async waitForZaloListenerCipherKey(
-    api: API,
-    timeoutMs: number,
-  ): Promise<void> {
-    const timeout = new Promise<never>((_, reject) => {
-      setTimeout(() => {
-        reject(
-          new BadRequestException(
-            `Kết nối WebSocket Zalo (nhận khóa mã hóa) vượt quá ${Math.round(
-              timeoutMs / 1000,
-            )} giây; không thể gửi file đính kèm. Hãy kiểm tra mạng, firewall, hoặc thử lại sau.`,
-          ),
-        );
-      }, timeoutMs);
-    });
-    await Promise.race([once(api.listener, 'cipher_key'), timeout]);
   }
 
   private async persistRefreshedCredentials(

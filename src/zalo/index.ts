@@ -1,3 +1,7 @@
+export {
+  waitForZaloListenerCipherKey,
+  ZALO_LISTENER_CIPHER_TIMEOUT_MS,
+} from './wait-zalo-listener-cipher-key';
 export { badRequestForZaloSessionRestoreFailure } from './bad-request-zalo-session-restore';
 export { throwHttpForZaloOperationFailure } from './map-zalo-operation-error';
 export {
