@@ -216,12 +216,19 @@ export class PublicZaloSendService {
   }
 
   private async sendGroup(groupName: string, textPart: string, fileList: Express.Multer.File[]) {
+    const needle = groupName.trim();
     const group = await this.prisma.zaloGroup.findFirst({
-      where: { groupName: groupName.trim() },
+      where: {
+        OR: [
+          { groupName: { equals: needle, mode: 'insensitive' } },
+          { originName: { equals: needle, mode: 'insensitive' } },
+        ],
+      },
       select: { id: true, groupName: true },
+      orderBy: { updatedAt: 'desc' },
     });
     if (!group) {
-      return this.msg(5, `Không có nhóm với tên: "${groupName.trim()}".`);
+      return this.msg(5, `Không có nhóm với tên (groupName/originName): "${needle}".`);
     }
 
     const master = await this.zaloAccounts.findMasterZaloAccountForGroup(
@@ -401,12 +408,18 @@ export class PublicZaloSendService {
         message: rows[0] ?? null,
       });
     } catch (e) {
-      return this.msg(
-        13,
+      let detail =
         e instanceof Error
           ? e.message
-          : 'Zalo sendMessage thất bại (không có thông tin chi tiết).',
-      );
+          : 'Zalo sendMessage thất bại (không có thông tin chi tiết).';
+      if (
+        typeof detail === 'string' &&
+        (/\b161\b/.test(detail) ||
+          detail.includes('Nhóm này không tồn tại'))
+      ) {
+        detail = `${detail} Kiểm tra tài khoản child vẫn trong nhóm trên Zalo; nếu cần, đồng bộ lại nhóm (child group scan) hoặc cập nhật \`group_zalo_id\` trong \`zalo_account_groups\`.`;
+      }
+      return this.msg(13, detail);
     } finally {
       await PublicZaloSendService.unlinkTempPaths(tempPaths);
     }
