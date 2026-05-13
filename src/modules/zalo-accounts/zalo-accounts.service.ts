@@ -965,23 +965,48 @@ export class ZaloAccountsService {
 
   async create(dto: CreateZaloAccountDto) {
     const existingAccount = await this.prismaService.zaloAccount.findFirst({
-      where: { zaloId: dto.zaloId, isDeleted: false },
-      select: { id: true },
+      where: { zaloId: dto.zaloId },
+      select: { id: true, isDeleted: true },
     });
 
-    if (existingAccount) {
+    if (existingAccount && !existingAccount.isDeleted) {
       throw new ConflictException('Zalo account already exists.');
     }
 
-    return this.prismaService.zaloAccount.create({
-      data: {
-        zaloId: dto.zaloId,
-        phone: dto.phone,
-        name: dto.name,
-        isMaster: false,
-      },
-      select: zaloAccountSelect,
-    });
+    if (existingAccount?.isDeleted) {
+      return this.prismaService.zaloAccount.update({
+        where: { id: existingAccount.id },
+        data: {
+          isDeleted: false,
+          deletedAt: null,
+          ...(dto.name !== undefined && { name: dto.name }),
+          ...(dto.phone !== undefined && { phone: dto.phone }),
+        },
+        select: zaloAccountSelect,
+      });
+    }
+
+    try {
+      return await this.prismaService.zaloAccount.create({
+        data: {
+          zaloId: dto.zaloId,
+          phone: dto.phone,
+          name: dto.name,
+          isMaster: false,
+        },
+        select: zaloAccountSelect,
+      });
+    } catch (error) {
+      if (
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === 'P2002'
+      ) {
+        throw new ConflictException('Zalo account already exists.');
+      }
+      throw error;
+    }
   }
 
   async addChild(dto: AddChildAccountDto): Promise<AddChildResult> {
