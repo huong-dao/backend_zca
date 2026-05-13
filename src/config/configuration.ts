@@ -107,5 +107,32 @@ export default () => ({
       Number.parseInt(process.env.CHILD_GROUP_SYNC_CACHE_TTL_SEC ?? '604800', 10) ||
         604800,
     ),
+    /**
+     * Watchdog cron (6-field): clears stale child `INACTIVE` when queue/worker died or enqueue failed silently.
+     */
+    staleWatchdogCron:
+      process.env.CHILD_GROUP_SCAN_STALE_WATCHDOG_CRON?.trim() ||
+      '0 */5 * * * *',
+    /**
+     * Min age of child `updated_at` while INACTIVE + job state IDLE/missing before treating as stuck (ms).
+     */
+    inactiveIdleGraceMs: Math.max(
+      60_000,
+      Number.parseInt(
+        process.env.CHILD_GROUP_SCAN_INACTIVE_IDLE_GRACE_MS ?? '600000',
+        10,
+      ) || 600_000,
+    ),
+    /**
+     * Override max silence on RUNNING scan row before watchdog releases (ms). If unset, derived from delay + API timeouts.
+     */
+    staleRunningThresholdMs: (() => {
+      const raw = process.env.CHILD_GROUP_SCAN_STALE_RUNNING_THRESHOLD_MS?.trim();
+      if (!raw) {
+        return undefined as number | undefined;
+      }
+      const n = Number.parseInt(raw, 10);
+      return Number.isFinite(n) && n > 0 ? n : undefined;
+    })(),
   },
 });

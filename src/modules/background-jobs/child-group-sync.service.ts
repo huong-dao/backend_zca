@@ -24,9 +24,14 @@ import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import type { API } from 'zca-js';
 import { ZaloApiError } from 'zca-js';
+import { BackgroundJobStatus } from '@prisma/client';
 import { randomUUID } from 'node:crypto';
 import { BackgroundJobStateService } from './background-job-state.service';
-import { CHILD_GROUP_SCAN_QUEUE } from './constants';
+import {
+  CHILD_GROUP_SCAN_QUEUE,
+  childGroupScanJobKey,
+  ZALO_CHILD_SCAN_API_TIMEOUT_MS,
+} from './constants';
 
 export type ChildGroupScanJobPayload = {
   zaloAccountId: string;
@@ -40,9 +45,6 @@ export type ChildGroupScanJobPayload = {
 };
 
 type GridInfoEntry = { name?: string; globalId?: string };
-
-/** Avoid hung workers leaving child `INACTIVE` forever if Zalo never responds. */
-const ZALO_CHILD_SCAN_API_TIMEOUT_MS = 120_000;
 
 @Injectable()
 export class ChildGroupSyncService {
@@ -166,21 +168,30 @@ export class ChildGroupSyncService {
       data: { status: 'INACTIVE' },
     });
 
-    await this.queue.add(
-      'sync',
-      {
-        zaloAccountId,
-        appUserId,
-        sessionId,
-        workGridIds: null,
-      } satisfies ChildGroupScanJobPayload,
-      {
-        // Unique id: a job stuck in "active" on Zalo would block re-enqueue with a fixed id in Bull.
-        jobId: `child-scan-${zaloAccountId}-${randomUUID()}`,
-        removeOnComplete: 50,
-        removeOnFail: 20,
-      },
-    );
+    try {
+      await this.queue.add(
+        'sync',
+        {
+          zaloAccountId,
+          appUserId,
+          sessionId,
+          workGridIds: null,
+        } satisfies ChildGroupScanJobPayload,
+        {
+          // Unique id: a job stuck in "active" on Zalo would block re-enqueue with a fixed id in Bull.
+          jobId: `child-scan-${zaloAccountId}-${randomUUID()}`,
+          removeOnComplete: 50,
+          removeOnFail: 20,
+        },
+      );
+    } catch (e) {
+      await this.revertInactiveScanAndIdle(zaloAccountId);
+      this.logger.error(
+        `Child group scan enqueue failed after INACTIVE; reverted ACTIVE (zaloAccountId=${zaloAccountId}): ${e instanceof Error ? e.message : String(e)}`,
+        e instanceof Error ? e.stack : undefined,
+      );
+      throw e;
+    }
     this.logger.log(
       `Child group scan enqueued: zaloAccountId=${zaloAccountId}`,
     );
@@ -198,7 +209,7 @@ export class ChildGroupSyncService {
     this.assertEnabled();
     const child = await this.prisma.zaloAccount.findFirst({
       where: { id: childZaloAccountId, isDeleted: false, isMaster: false },
-      select: { zaloId: true, status: true },
+      select: { zaloId: true, status: true, updatedAt: true },
     });
     if (!child?.zaloId?.trim()) {
       this.logger.warn(
@@ -207,10 +218,48 @@ export class ChildGroupSyncService {
       return;
     }
     if (child.status === 'INACTIVE') {
-      this.logger.log(
-        `Post-invite scan skipped: child already INACTIVE (childZaloAccountId=${childZaloAccountId})`,
-      );
-      return;
+      const jobKey = childGroupScanJobKey(childZaloAccountId);
+      const state = await this.prisma.backgroundJobState.findUnique({
+        where: { jobKey },
+        select: { status: true, updatedAt: true },
+      });
+      const now = Date.now();
+      const runningFreshThresholdMs = this.getRunningScanStaleThresholdMs();
+      const idleGraceMs = this.getInactiveWithoutRunningJobGraceMs();
+
+      const scanRunningFresh =
+        state?.status === BackgroundJobStatus.RUNNING &&
+        now - state.updatedAt.getTime() < runningFreshThresholdMs;
+
+      if (scanRunningFresh) {
+        this.logger.log(
+          `Post-invite scan skipped: child scan in progress (childZaloAccountId=${childZaloAccountId})`,
+        );
+        return;
+      }
+
+      const idleLike =
+        !state || state.status === BackgroundJobStatus.IDLE;
+      const runningStale =
+        state?.status === BackgroundJobStatus.RUNNING &&
+        now - state.updatedAt.getTime() >= runningFreshThresholdMs;
+
+      const accountStaleEnough =
+        now - child.updatedAt.getTime() >= idleGraceMs;
+
+      if (idleLike && !accountStaleEnough && !runningStale) {
+        this.logger.log(
+          `Post-invite scan skipped: child INACTIVE but scan recently started (childZaloAccountId=${childZaloAccountId})`,
+        );
+        return;
+      }
+
+      const cleared = await this.revertInactiveScanAndIdle(childZaloAccountId);
+      if (cleared) {
+        this.logger.warn(
+          `Post-invite: cleared stale INACTIVE lock before enqueue (childZaloAccountId=${childZaloAccountId})`,
+        );
+      }
     }
     const zaloUid = child.zaloId.trim();
     let sessionId: string;
@@ -230,20 +279,29 @@ export class ChildGroupSyncService {
       where: { id: childZaloAccountId },
       data: { status: 'INACTIVE' },
     });
-    await this.queue.add(
-      'sync',
-      {
-        zaloAccountId: childZaloAccountId,
-        appUserId,
-        sessionId,
-        workGridIds: null,
-      } satisfies ChildGroupScanJobPayload,
-      {
-        jobId: `child-scan-${childZaloAccountId}-${randomUUID()}`,
-        removeOnComplete: 50,
-        removeOnFail: 20,
-      },
-    );
+    try {
+      await this.queue.add(
+        'sync',
+        {
+          zaloAccountId: childZaloAccountId,
+          appUserId,
+          sessionId,
+          workGridIds: null,
+        } satisfies ChildGroupScanJobPayload,
+        {
+          jobId: `child-scan-${childZaloAccountId}-${randomUUID()}`,
+          removeOnComplete: 50,
+          removeOnFail: 20,
+        },
+      );
+    } catch (e) {
+      await this.revertInactiveScanAndIdle(childZaloAccountId);
+      this.logger.error(
+        `Post-invite child scan enqueue failed after INACTIVE; reverted ACTIVE (childZaloAccountId=${childZaloAccountId}): ${e instanceof Error ? e.message : String(e)}`,
+        e instanceof Error ? e.stack : undefined,
+      );
+      throw e;
+    }
     this.logger.log(
       `Post-invite child scan enqueued: childZaloAccountId=${childZaloAccountId}`,
     );
@@ -257,6 +315,105 @@ export class ChildGroupSyncService {
     }
   }
 
+  /**
+   * Idempotent: sets child ACTIVE + marks idle when row was INACTIVE (scan finished or recovered).
+   * @returns whether a row was updated
+   */
+  private async revertInactiveScanAndIdle(zaloAccountId: string): Promise<boolean> {
+    const r = await this.prisma.zaloAccount.updateMany({
+      where: { id: zaloAccountId, status: 'INACTIVE' },
+      data: { status: 'ACTIVE' },
+    });
+    if (r.count === 0) {
+      return false;
+    }
+    await this.jobState.markChildGroupScanIdle(zaloAccountId);
+    return true;
+  }
+
+  private getRunningScanStaleThresholdMs(): number {
+    const configured = this.config.get<number>(
+      'childGroupSync.staleRunningThresholdMs',
+    );
+    if (
+      configured != null &&
+      Number.isFinite(configured) &&
+      configured > 0
+    ) {
+      return configured;
+    }
+    const delay =
+      this.config.get<number>('childGroupSync.continueDelayMs') ?? 180_000;
+    const maxCalls =
+      this.config.get<number>('childGroupSync.maxGetGroupInfoCallsPerRun') ?? 10;
+    const buffer = 300_000;
+    return delay + ZALO_CHILD_SCAN_API_TIMEOUT_MS * maxCalls + buffer;
+  }
+
+  private getInactiveWithoutRunningJobGraceMs(): number {
+    return (
+      this.config.get<number>('childGroupSync.inactiveIdleGraceMs') ?? 600_000
+    );
+  }
+
+  /**
+   * Periodic watchdog: clears INACTIVE children whose Bull/job-state indicates no healthy scan.
+   */
+  async reconcileStaleInactiveChildScans(): Promise<{ released: number }> {
+    if (!this.isEnabled()) {
+      return { released: 0 };
+    }
+    const idleGraceMs = this.getInactiveWithoutRunningJobGraceMs();
+    const runningStaleMs = this.getRunningScanStaleThresholdMs();
+    const now = Date.now();
+
+    const inactiveChildren = await this.prisma.zaloAccount.findMany({
+      where: {
+        isDeleted: false,
+        isMaster: false,
+        status: 'INACTIVE',
+      },
+      select: { id: true, updatedAt: true },
+    });
+
+    let released = 0;
+    for (const row of inactiveChildren) {
+      const jobKey = childGroupScanJobKey(row.id);
+      const state = await this.prisma.backgroundJobState.findUnique({
+        where: { jobKey },
+        select: { status: true, updatedAt: true },
+      });
+
+      let shouldRelease = false;
+      const idleLike =
+        !state || state.status === BackgroundJobStatus.IDLE;
+
+      if (idleLike) {
+        if (now - row.updatedAt.getTime() >= idleGraceMs) {
+          shouldRelease = true;
+        }
+      } else if (state.status === BackgroundJobStatus.RUNNING) {
+        if (now - state.updatedAt.getTime() >= runningStaleMs) {
+          shouldRelease = true;
+        }
+      }
+
+      if (!shouldRelease) {
+        continue;
+      }
+
+      const ok = await this.revertInactiveScanAndIdle(row.id);
+      if (ok) {
+        released += 1;
+        this.logger.warn(
+          `Stale child scan lock released by watchdog (idleLike=${idleLike}); zaloAccountId=${row.id}`,
+        );
+      }
+    }
+
+    return { released };
+  }
+
   async runScanFromJob(job: Job<ChildGroupScanJobPayload>): Promise<void> {
     const p = job.data;
     if (!p?.zaloAccountId || !p.sessionId) {
@@ -264,13 +421,12 @@ export class ChildGroupSyncService {
         `child-group-scan: invalid job payload (jobId=${String(job.id)})`,
       );
       if (p?.zaloAccountId) {
-        await this.prisma.zaloAccount.updateMany({
-          where: { id: p.zaloAccountId, status: 'INACTIVE' },
-          data: { status: 'ACTIVE' },
-        });
-        this.logger.warn(
-          `child-group-scan: reverted INACTIVE for zaloAccountId=${p.zaloAccountId} (invalid payload)`,
-        );
+        const ok = await this.revertInactiveScanAndIdle(p.zaloAccountId);
+        if (ok) {
+          this.logger.warn(
+            `child-group-scan: reverted INACTIVE for zaloAccountId=${p.zaloAccountId} (invalid payload)`,
+          );
+        }
       }
       return;
     }
@@ -283,22 +439,16 @@ export class ChildGroupSyncService {
         `child-group-scan failed: ${e instanceof Error ? e.message : String(e)}`,
         e instanceof Error ? e.stack : undefined,
       );
-      await this.prisma.zaloAccount.updateMany({
-        where: { id: p.zaloAccountId, status: 'INACTIVE' },
-        data: { status: 'ACTIVE' },
-      });
-      await this.jobState.markChildGroupScanIdle(p.zaloAccountId);
+      await this.revertInactiveScanAndIdle(p.zaloAccountId);
       throw e;
     }
     if (!continuationScheduled) {
-      await this.prisma.zaloAccount.updateMany({
-        where: { id: p.zaloAccountId, status: 'INACTIVE' },
-        data: { status: 'ACTIVE' },
-      });
-      await this.jobState.markChildGroupScanIdle(p.zaloAccountId);
-      this.logger.log(
-        `Child group scan finished; status=ACTIVE (zaloAccountId=${p.zaloAccountId})`,
-      );
+      const ok = await this.revertInactiveScanAndIdle(p.zaloAccountId);
+      if (ok) {
+        this.logger.log(
+          `Child group scan finished; status=ACTIVE (zaloAccountId=${p.zaloAccountId})`,
+        );
+      }
     }
   }
 

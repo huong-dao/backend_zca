@@ -6,6 +6,7 @@ import { ZaloLoginSessionsModule } from '../zalo-login-sessions/zalo-login-sessi
 import { BackgroundJobStateService } from './background-job-state.service';
 import { BackgroundJobsStatusController } from './background-jobs-status.controller';
 import { CHILD_GROUP_SCAN_QUEUE, GROUP_METADATA_SYNC_QUEUE } from './constants';
+import { ChildGroupScanStaleScheduler } from './child-group-scan-stale.scheduler';
 import { ChildGroupSyncProcessor } from './child-group-sync.processor';
 import { ChildGroupSyncDisabledService } from './child-group-sync-disabled.service';
 import { ChildGroupSyncService } from './child-group-sync.service';
@@ -92,6 +93,7 @@ export class BackgroundJobsModule {
         GroupMetadataSyncService,
         GroupMetadataSyncProcessor,
         GroupMetadataSyncScheduler,
+        ChildGroupScanStaleScheduler,
         ChildGroupSyncService,
         ChildGroupSyncProcessor,
       ],

@@ -11,3 +11,6 @@ export const GROUP_METADATA_SYNC_JOB_KEY = 'group-metadata-sync';
 export function childGroupScanJobKey(zaloAccountId: string): string {
   return `child-group-scan:${zaloAccountId}`;
 }
+
+/** Exported for stale-scan watchdog threshold (must match worker timeout guard). */
+export const ZALO_CHILD_SCAN_API_TIMEOUT_MS = 120_000;
