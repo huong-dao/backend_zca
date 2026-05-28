@@ -73,7 +73,6 @@ export class MessagesService {
     const skip = (page - 1) * limit;
     const where = {
       ...(status && { status }),
-      parentId: null,
     };
 
     const [total, data] = await this.prismaService.$transaction([
