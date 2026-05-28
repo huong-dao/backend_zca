@@ -1,7 +1,3 @@
-import { randomUUID } from 'node:crypto';
-import { writeFile, unlink } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import {
   BadRequestException,
   Injectable,
@@ -17,8 +13,13 @@ import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sess
 import {
   extractIdsFromZaloSendResult,
   listZaloSendBubbleIds,
-  type ZaloSendBubbleIds,
 } from '../../zalo/parse-zalo-send-message-result';
+import {
+  buildAttachmentBubbleContents,
+  buildAttachmentContentForDb,
+  cleanupAttachmentTempPaths,
+  writeMulterAttachmentsToTemp,
+} from '../../common/utils/attachment-files.util';
 import { FindMessagesDto } from './dto/find-messages.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 
@@ -203,21 +204,12 @@ export class MessagesService {
       );
     }
 
-    const contentForDb = (() => {
-      if (textPart && fileList.length) {
-        const names = fileList
-          .map((f) => f.originalname || 'file')
-          .join(', ');
-        return `${textPart}\n\n(Đính kèm: ${names})`;
-      }
-      if (textPart) return textPart;
-      return `Đính kèm: ${fileList.map((f) => f.originalname || 'file').join(', ')}`;
-    })();
+    const contentForDb = buildAttachmentContentForDb(textPart, fileList);
 
     let tempPaths: string[] = [];
     try {
       if (fileList.length) {
-        tempPaths = await MessagesService.writeMulterFilesToTemp(fileList);
+        tempPaths = await writeMulterAttachmentsToTemp(fileList);
       }
       const { result } = await this.zaloActionsService.sendMessage({
         sessionId: session.id,
@@ -264,7 +256,7 @@ export class MessagesService {
         return { result, message: messageRow, messages: [messageRow] };
       }
 
-      const contents = MessagesService.buildBubbleContents(
+      const contents = buildAttachmentBubbleContents(
         textPart,
         fileList,
         bubbles,
@@ -303,53 +295,8 @@ export class MessagesService {
 
       return { result, message: rows[0], messages: rows };
     } finally {
-      await MessagesService.unlinkTempPaths(tempPaths);
+      await cleanupAttachmentTempPaths(tempPaths);
     }
-  }
-
-  /**
-   * One line of `content` per Zalo bubble (text first, then each attachment file name).
-   * Matches `listZaloSendBubbleIds` / zca `responses.message` + `responses.attachment[]`.
-   */
-  private static buildBubbleContents(
-    textPart: string,
-    files: Express.Multer.File[],
-    bubbles: ZaloSendBubbleIds[],
-    fallbackSingle: string,
-  ): string[] {
-    if (bubbles.length === 0) {
-      return [fallbackSingle];
-    }
-    return bubbles.map((b) => {
-      if (b.source === 'message') {
-        return textPart.length > 0 ? textPart : '(tin nhắn)';
-      }
-      const i = b.attachmentIndex ?? 0;
-      const name = files[i]?.originalname?.trim() || `file_${i + 1}`;
-      return `Đính kèm: ${name}`;
-    });
-  }
-
-  private static async writeMulterFilesToTemp(
-    files: Express.Multer.File[],
-  ): Promise<string[]> {
-    const paths: string[] = [];
-    for (const f of files) {
-      const base = (f.originalname || 'file')
-        .replace(/[^a-zA-Z0-9._\-\s\u00C0-\u024F]/g, '_')
-        .slice(0, 120);
-      const p = join(tmpdir(), `zca-msg-${randomUUID()}-${base}`);
-      await writeFile(p, f.buffer);
-      paths.push(p);
-    }
-    return paths;
-  }
-
-  private static async unlinkTempPaths(paths: string[]): Promise<void> {
-    if (!paths.length) return;
-    await Promise.all(
-      paths.map((p) => unlink(p).catch(() => undefined)),
-    );
   }
 
   /**

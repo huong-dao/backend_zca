@@ -1,7 +1,3 @@
-import { randomUUID } from 'node:crypto';
-import { writeFile, unlink } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
 import { Injectable, Logger } from '@nestjs/common';
 import type { Express } from 'express';
 import { ThreadType } from 'zca-js';
@@ -10,8 +6,13 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import {
   extractIdsFromZaloSendResult,
   listZaloSendBubbleIds,
-  type ZaloSendBubbleIds,
 } from '../../zalo/parse-zalo-send-message-result';
+import {
+  buildAttachmentBubbleContents,
+  buildAttachmentContentForDb,
+  cleanupAttachmentTempPaths,
+  writeMulterAttachmentsToTemp,
+} from '../../common/utils/attachment-files.util';
 import {
   isValidVietnamPhoneForPublicTarget,
   normalizeVietnamPhone,
@@ -379,7 +380,7 @@ export class PublicZaloSendService {
     let tempPaths: string[] = [];
     try {
       if (ctx.fileList.length) {
-        tempPaths = await PublicZaloSendService.writeFilesToTemp(ctx.fileList);
+        tempPaths = await writeMulterAttachmentsToTemp(ctx.fileList);
       }
 
       const { result } = await this.zaloActions.sendMessage({
@@ -390,7 +391,7 @@ export class PublicZaloSendService {
         ...(tempPaths.length ? { attachmentLocalPaths: tempPaths } : {}),
       });
 
-      const contentForDb = PublicZaloSendService.buildContentForDb(
+      const contentForDb = buildAttachmentContentForDb(
         ctx.textPart,
         ctx.fileList,
       );
@@ -421,7 +422,7 @@ export class PublicZaloSendService {
       }
       return this.msg(13, detail);
     } finally {
-      await PublicZaloSendService.unlinkTempPaths(tempPaths);
+      await cleanupAttachmentTempPaths(tempPaths);
     }
   }
 
@@ -458,7 +459,7 @@ export class PublicZaloSendService {
         }),
       ];
     }
-    const contents = PublicZaloSendService.buildBubbleContents(
+    const contents = buildAttachmentBubbleContents(
       textPart,
       fileList,
       bubbles,
@@ -607,64 +608,5 @@ export class PublicZaloSendService {
       code: PublicZaloSendCode.MESSAGE_INTERVAL_NOT_ELAPSED,
       detail: `${childName} vừa gửi tin nhắn tới số ${args.peerPhone} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo tới số này`,
     };
-  }
-
-  private static buildContentForDb(
-    textPart: string,
-    files: Express.Multer.File[],
-  ): string {
-    if (textPart && files.length) {
-      const names = files
-        .map((f) => f.originalname || 'file')
-        .join(', ');
-      return `${textPart}\n\n(Đính kèm: ${names})`;
-    }
-    if (textPart) {
-      return textPart;
-    }
-    return `Đính kèm: ${files.map((f) => f.originalname || 'file').join(', ')}`;
-  }
-
-  private static buildBubbleContents(
-    textPart: string,
-    files: Express.Multer.File[],
-    bubbles: ZaloSendBubbleIds[],
-    fallback: string,
-  ): string[] {
-    if (bubbles.length === 0) {
-      return [fallback];
-    }
-    return bubbles.map((b) => {
-      if (b.source === 'message') {
-        return textPart.length > 0 ? textPart : '(tin nhắn)';
-      }
-      const i = b.attachmentIndex ?? 0;
-      const name = files[i]?.originalname?.trim() || `file_${i + 1}`;
-      return `Đính kèm: ${name}`;
-    });
-  }
-
-  private static async writeFilesToTemp(
-    files: Express.Multer.File[],
-  ): Promise<string[]> {
-    const paths: string[] = [];
-    for (const f of files) {
-      const base = (f.originalname || 'file')
-        .replace(/[^a-zA-Z0-9._\-\s\u00C0-\u024F]/g, '_')
-        .slice(0, 120);
-      const p = join(tmpdir(), `zca-pub-${randomUUID()}-${base}`);
-      await writeFile(p, f.buffer);
-      paths.push(p);
-    }
-    return paths;
-  }
-
-  private static async unlinkTempPaths(paths: string[]): Promise<void> {
-    if (!paths.length) {
-      return;
-    }
-    await Promise.all(
-      paths.map((p) => unlink(p).catch(() => undefined)),
-    );
   }
 }
