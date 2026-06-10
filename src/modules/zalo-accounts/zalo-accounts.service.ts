@@ -1181,10 +1181,12 @@ export class ZaloAccountsService {
    * `senderId`; `GET /messages` exposes `sender.isDeleted` for the UI.
    *
    * When the account was master (`isMaster`), it is demoted (`isMaster = false`) and all
-   * `ZaloAccountRelation` rows with `masterId` = this account are hard-deleted. Every `ZaloGroup`
-   * linked to this account via `ZaloAccountGroup` is hard-deleted together with **all** `ZaloAccountGroup`
-   * rows for those groups (including child accounts). `Message` rows are kept; their `groupId` is cleared
-   * first so FK `ON DELETE RESTRICT` does not block group removal.
+   * `ZaloAccountRelation` rows with `masterId` = this account are hard-deleted. For each `ZaloGroup`
+   * this account is in, removes **only** this account’s `ZaloAccountGroup` row(s) and those of its
+   * children; other masters in the same group are left intact. A `ZaloGroup` is hard-deleted only when
+   * **no active master** (`isMaster = true`, not soft-deleted) still maps to it; orphan child-only
+   * mappings on those groups are removed too. `Message` rows are kept; `groupId` is cleared only for
+   * groups that are fully removed.
    */
   async softDelete(id: string) {
     const account = await this.prismaService.zaloAccount.findUnique({
@@ -1288,8 +1290,9 @@ export class ZaloAccountsService {
   }
 
   /**
-   * Hard-delete every `ZaloGroup` mapped to `accountId`, all `ZaloAccountGroup` rows for those groups
-   * (master + child), and detach linked messages (`groupId` → null).
+   * Unlink `accountId` (and its children when it is a master) from every group they belong to.
+   * Hard-delete a `ZaloGroup` only when no active master still maps to it. Detach messages
+   * (`groupId` → null) only for fully removed groups.
    */
   private async purgeGroupsForAccount(
     tx: Prisma.TransactionClient,
@@ -1312,34 +1315,71 @@ export class ZaloAccountsService {
       };
     }
 
-    const allMaps = await tx.zaloAccountGroup.findMany({
-      where: { groupId: { in: groupIds } },
-      select: { zaloAccountId: true },
+    const childRelations = await tx.zaloAccountRelation.findMany({
+      where: { masterId: accountId },
+      select: { childId: true },
     });
-    const affectedAccountIds = [
-      ...new Set(allMaps.map((m) => m.zaloAccountId)),
+    const accountIdsToUnlink = [
+      accountId,
+      ...childRelations.map((r) => r.childId),
     ];
 
-    const messagesDetached = (
-      await tx.message.updateMany({
-        where: { groupId: { in: groupIds } },
-        data: { groupId: null },
-      })
-    ).count;
-
-    const accountGroupMapsRemoved = (
+    let accountGroupMapsRemoved = (
       await tx.zaloAccountGroup.deleteMany({
-        where: { groupId: { in: groupIds } },
+        where: {
+          groupId: { in: groupIds },
+          zaloAccountId: { in: accountIdsToUnlink },
+        },
       })
     ).count;
 
-    const groupsRemoved = (
-      await tx.zaloGroup.deleteMany({
-        where: { id: { in: groupIds } },
-      })
-    ).count;
+    const masterMapsStillPresent = await tx.zaloAccountGroup.findMany({
+      where: {
+        groupId: { in: groupIds },
+        zaloAccount: { isMaster: true, isDeleted: false },
+      },
+      select: { groupId: true },
+    });
+    const groupIdsWithMaster = new Set(
+      masterMapsStillPresent.map((m) => m.groupId),
+    );
+    const groupIdsToDelete = groupIds.filter(
+      (groupId) => !groupIdsWithMaster.has(groupId),
+    );
 
-    for (const affectedId of affectedAccountIds) {
+    const accountIdsForGroupCountRefresh = new Set(accountIdsToUnlink);
+    let messagesDetached = 0;
+    let groupsRemoved = 0;
+    if (groupIdsToDelete.length > 0) {
+      const orphanMaps = await tx.zaloAccountGroup.findMany({
+        where: { groupId: { in: groupIdsToDelete } },
+        select: { zaloAccountId: true },
+      });
+      for (const row of orphanMaps) {
+        accountIdsForGroupCountRefresh.add(row.zaloAccountId);
+      }
+
+      accountGroupMapsRemoved += (
+        await tx.zaloAccountGroup.deleteMany({
+          where: { groupId: { in: groupIdsToDelete } },
+        })
+      ).count;
+
+      messagesDetached = (
+        await tx.message.updateMany({
+          where: { groupId: { in: groupIdsToDelete } },
+          data: { groupId: null },
+        })
+      ).count;
+
+      groupsRemoved = (
+        await tx.zaloGroup.deleteMany({
+          where: { id: { in: groupIdsToDelete } },
+        })
+      ).count;
+    }
+
+    for (const affectedId of accountIdsForGroupCountRefresh) {
       const groupCount = await tx.zaloAccountGroup.count({
         where: { zaloAccountId: affectedId },
       });
