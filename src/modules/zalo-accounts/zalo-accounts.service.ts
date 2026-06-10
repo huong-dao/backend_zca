@@ -1179,33 +1179,62 @@ export class ZaloAccountsService {
    * Also **hard-deletes** all `ZaloLoginSession` rows whose `zalo_uid` matches this account’s `zaloId`
    * (the persisted QR / cookie session for that Zalo identity). Historical messages still reference
    * `senderId`; `GET /messages` exposes `sender.isDeleted` for the UI.
+   *
+   * When the account was master (`isMaster`), it is demoted (`isMaster = false`). Every `ZaloGroup`
+   * linked to this account via `ZaloAccountGroup` is hard-deleted together with **all** `ZaloAccountGroup`
+   * rows for those groups (including child accounts). `Message` rows are kept; their `groupId` is cleared
+   * first so FK `ON DELETE RESTRICT` does not block group removal.
    */
   async softDelete(id: string) {
     const account = await this.prismaService.zaloAccount.findUnique({
       where: { id },
-      select: { id: true, isDeleted: true, zaloId: true },
+      select: { id: true, isDeleted: true, zaloId: true, isMaster: true },
     });
     if (!account) {
       throw new NotFoundException('Zalo account not found.');
     }
     const zaloUid = account.zaloId?.trim() ?? '';
     if (account.isDeleted) {
-      const loginSessionsRemoved = zaloUid
-        ? (
-            await this.prismaService.zaloLoginSession.deleteMany({
-              where: { zaloUid },
-            })
-          ).count
-        : 0;
+      let loginSessionsRemoved = 0;
+      let groupsRemoved = 0;
+      let accountGroupMapsRemoved = 0;
+      let messagesDetached = 0;
+      let demotedFromMaster = false;
+      await this.prismaService.$transaction(async (tx) => {
+        if (zaloUid) {
+          loginSessionsRemoved = (
+            await tx.zaloLoginSession.deleteMany({ where: { zaloUid } })
+          ).count;
+        }
+        const purge = await this.purgeGroupsForAccount(tx, account.id);
+        groupsRemoved = purge.groupsRemoved;
+        accountGroupMapsRemoved = purge.accountGroupMapsRemoved;
+        messagesDetached = purge.messagesDetached;
+        if (account.isMaster) {
+          await tx.zaloAccount.update({
+            where: { id: account.id },
+            data: { isMaster: false },
+          });
+          demotedFromMaster = true;
+        }
+      });
       return {
         message: 'Zalo account was already removed.',
         id: account.id,
         isDeleted: true as const,
         loginSessionsRemoved,
+        groupsRemoved,
+        accountGroupMapsRemoved,
+        messagesDetached,
+        demotedFromMaster,
       };
     }
     const now = new Date();
     let loginSessionsRemoved = 0;
+    let groupsRemoved = 0;
+    let accountGroupMapsRemoved = 0;
+    let messagesDetached = 0;
+    const demotedFromMaster = account.isMaster;
     await this.prismaService.$transaction(async (tx) => {
       if (zaloUid) {
         const r = await tx.zaloLoginSession.deleteMany({
@@ -1213,9 +1242,17 @@ export class ZaloAccountsService {
         });
         loginSessionsRemoved = r.count;
       }
+      const purge = await this.purgeGroupsForAccount(tx, id);
+      groupsRemoved = purge.groupsRemoved;
+      accountGroupMapsRemoved = purge.accountGroupMapsRemoved;
+      messagesDetached = purge.messagesDetached;
       await tx.zaloAccount.update({
         where: { id },
-        data: { isDeleted: true, deletedAt: now },
+        data: {
+          isDeleted: true,
+          deletedAt: now,
+          ...(account.isMaster ? { isMaster: false } : {}),
+        },
       });
     });
     return {
@@ -1224,7 +1261,76 @@ export class ZaloAccountsService {
       isDeleted: true as const,
       deletedAt: now,
       loginSessionsRemoved,
+      groupsRemoved,
+      accountGroupMapsRemoved,
+      messagesDetached,
+      demotedFromMaster,
     };
+  }
+
+  /**
+   * Hard-delete every `ZaloGroup` mapped to `accountId`, all `ZaloAccountGroup` rows for those groups
+   * (master + child), and detach linked messages (`groupId` → null).
+   */
+  private async purgeGroupsForAccount(
+    tx: Prisma.TransactionClient,
+    accountId: string,
+  ): Promise<{
+    groupsRemoved: number;
+    accountGroupMapsRemoved: number;
+    messagesDetached: number;
+  }> {
+    const accountGroupMaps = await tx.zaloAccountGroup.findMany({
+      where: { zaloAccountId: accountId },
+      select: { groupId: true },
+    });
+    const groupIds = [...new Set(accountGroupMaps.map((m) => m.groupId))];
+    if (groupIds.length === 0) {
+      return {
+        groupsRemoved: 0,
+        accountGroupMapsRemoved: 0,
+        messagesDetached: 0,
+      };
+    }
+
+    const allMaps = await tx.zaloAccountGroup.findMany({
+      where: { groupId: { in: groupIds } },
+      select: { zaloAccountId: true },
+    });
+    const affectedAccountIds = [
+      ...new Set(allMaps.map((m) => m.zaloAccountId)),
+    ];
+
+    const messagesDetached = (
+      await tx.message.updateMany({
+        where: { groupId: { in: groupIds } },
+        data: { groupId: null },
+      })
+    ).count;
+
+    const accountGroupMapsRemoved = (
+      await tx.zaloAccountGroup.deleteMany({
+        where: { groupId: { in: groupIds } },
+      })
+    ).count;
+
+    const groupsRemoved = (
+      await tx.zaloGroup.deleteMany({
+        where: { id: { in: groupIds } },
+      })
+    ).count;
+
+    for (const affectedId of affectedAccountIds) {
+      const groupCount = await tx.zaloAccountGroup.count({
+        where: { zaloAccountId: affectedId },
+      });
+      await tx.zaloAccount.update({
+        where: { id: affectedId },
+        data: { groupCount },
+      });
+    }
+
+    return { groupsRemoved, accountGroupMapsRemoved, messagesDetached };
   }
 
   private async findAccounts(
