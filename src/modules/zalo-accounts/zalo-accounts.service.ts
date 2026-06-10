@@ -1180,7 +1180,8 @@ export class ZaloAccountsService {
    * (the persisted QR / cookie session for that Zalo identity). Historical messages still reference
    * `senderId`; `GET /messages` exposes `sender.isDeleted` for the UI.
    *
-   * When the account was master (`isMaster`), it is demoted (`isMaster = false`). Every `ZaloGroup`
+   * When the account was master (`isMaster`), it is demoted (`isMaster = false`) and all
+   * `ZaloAccountRelation` rows with `masterId` = this account are hard-deleted. Every `ZaloGroup`
    * linked to this account via `ZaloAccountGroup` is hard-deleted together with **all** `ZaloAccountGroup`
    * rows for those groups (including child accounts). `Message` rows are kept; their `groupId` is cleared
    * first so FK `ON DELETE RESTRICT` does not block group removal.
@@ -1199,6 +1200,7 @@ export class ZaloAccountsService {
       let groupsRemoved = 0;
       let accountGroupMapsRemoved = 0;
       let messagesDetached = 0;
+      let childRelationsRemoved = 0;
       let demotedFromMaster = false;
       await this.prismaService.$transaction(async (tx) => {
         if (zaloUid) {
@@ -1210,6 +1212,7 @@ export class ZaloAccountsService {
         groupsRemoved = purge.groupsRemoved;
         accountGroupMapsRemoved = purge.accountGroupMapsRemoved;
         messagesDetached = purge.messagesDetached;
+        childRelationsRemoved = await this.purgeMasterChildRelations(tx, account.id);
         if (account.isMaster) {
           await tx.zaloAccount.update({
             where: { id: account.id },
@@ -1226,6 +1229,7 @@ export class ZaloAccountsService {
         groupsRemoved,
         accountGroupMapsRemoved,
         messagesDetached,
+        childRelationsRemoved,
         demotedFromMaster,
       };
     }
@@ -1234,6 +1238,7 @@ export class ZaloAccountsService {
     let groupsRemoved = 0;
     let accountGroupMapsRemoved = 0;
     let messagesDetached = 0;
+    let childRelationsRemoved = 0;
     const demotedFromMaster = account.isMaster;
     await this.prismaService.$transaction(async (tx) => {
       if (zaloUid) {
@@ -1246,6 +1251,7 @@ export class ZaloAccountsService {
       groupsRemoved = purge.groupsRemoved;
       accountGroupMapsRemoved = purge.accountGroupMapsRemoved;
       messagesDetached = purge.messagesDetached;
+      childRelationsRemoved = await this.purgeMasterChildRelations(tx, id);
       await tx.zaloAccount.update({
         where: { id },
         data: {
@@ -1264,8 +1270,21 @@ export class ZaloAccountsService {
       groupsRemoved,
       accountGroupMapsRemoved,
       messagesDetached,
+      childRelationsRemoved,
       demotedFromMaster,
     };
+  }
+
+  /** Hard-delete master→child rows in `zalo_account_relations` for this account as master. */
+  private async purgeMasterChildRelations(
+    tx: Prisma.TransactionClient,
+    accountId: string,
+  ): Promise<number> {
+    return (
+      await tx.zaloAccountRelation.deleteMany({
+        where: { masterId: accountId },
+      })
+    ).count;
   }
 
   /**

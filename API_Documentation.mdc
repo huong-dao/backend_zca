@@ -1684,7 +1684,7 @@ All side effects run in **one database transaction**:
 | `zalo_groups` | **Hard delete** every group this account is linked to via `zalo_account_groups` |
 | `zalo_account_groups` | **Hard delete** **all** mapping rows for those groups (master **and** child accounts); affected accounts get refreshed `groupCount` |
 | `messages` | **Kept**; `group_id` set to `null` first so group hard-delete is allowed (historical log remains; `sender_id` unchanged) |
-| `zalo_account_relations` | **Not** removed — master/child links stay unless changed elsewhere |
+| `zalo_account_relations` | **Hard delete** rows where `master_id` = this account (unlink all children from this master); rows where this account is `child_id` are **not** removed |
 | `zalo_account_friends` | **Not** removed |
 
 **Group purge scope:** only groups where **this** account has a `zalo_account_groups` row. For each such group, child mappings to the same `group_id` are removed too, then the `zalo_groups` row is deleted.
@@ -1711,6 +1711,7 @@ Success (first removal):
   "groupsRemoved": 3,
   "accountGroupMapsRemoved": 5,
   "messagesDetached": 12,
+  "childRelationsRemoved": 2,
   "demotedFromMaster": true
 }
 ```
@@ -1726,6 +1727,7 @@ Already removed (idempotent):
   "groupsRemoved": 0,
   "accountGroupMapsRemoved": 0,
   "messagesDetached": 0,
+  "childRelationsRemoved": 0,
   "demotedFromMaster": false
 }
 ```
@@ -1742,6 +1744,7 @@ Response fields:
 | `groupsRemoved` | `number` | Count of `zalo_groups` rows hard-deleted |
 | `accountGroupMapsRemoved` | `number` | Count of `zalo_account_groups` rows hard-deleted (includes child links) |
 | `messagesDetached` | `number` | Count of `messages` whose `group_id` was cleared to `null` |
+| `childRelationsRemoved` | `number` | Count of `zalo_account_relations` rows hard-deleted where this account was `master_id` |
 | `demotedFromMaster` | `boolean` | `true` if account had `isMaster = true` and was demoted in this call |
 
 #### Frontend notes
@@ -1749,6 +1752,7 @@ Response fields:
 - **Recommended UI updates** after a successful delete:
   - Remove the account from local list/cache (`GET /zalo-accounts` will no longer return it).
   - If `groupsRemoved > 0`, refresh **group** views (`GET /zalo-groups`, `GET /zalo-groups/account/:childId`) — deleted groups disappear; child `groupCount` on account cards may drop.
+  - If `childRelationsRemoved > 0`, refresh child account detail — `masters` array no longer includes the removed master (DB link is gone, not just filtered).
   - Refresh **message** list if shown: old group messages remain but `groupId` / nested `group` may be **`null`** (handle null-safe display, e.g. “Nhóm đã xóa” instead of `group.groupName`).
 - **Optional:** show a confirmation dialog when deleting a **master** — warn that linked groups will be permanently removed from the system and child group memberships for those groups will be cleared.
 - **Optional:** display new counters (`groupsRemoved`, `messagesDetached`, `demotedFromMaster`) in a toast/summary if useful for admin audit.
