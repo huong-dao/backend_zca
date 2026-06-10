@@ -44,38 +44,66 @@ export class ZaloLoginSessionsService {
   ) {}
 
   /**
-   * Sessions are a shared pool: any authenticated app user may upsert by id.
-   * `appUserId` is still stored on create for audit / FK; access is not scoped by it.
+   * Sessions are a shared pool: any authenticated app user may upsert.
+   * **One row per `zalo_uid`:** re-login updates the canonical row (latest `updatedAt`)
+   * and removes stale duplicates. If no row exists for the uid yet, reuses `dto.id`
+   * when that session row exists (cookie slot), otherwise creates with `dto.id` or a new UUID.
+   * `appUserId` is stored on create for audit / FK; access is not scoped by it.
    */
   async upsert(
     appUserId: string,
     dto: UpsertZaloLoginSessionDto,
   ): Promise<ZaloLoginSessionPublic> {
-    const sessionId = dto.id ?? randomUUID();
-
+    const zaloUid = dto.user.uid.trim();
     const userProfile = this.normalizeUserProfile(dto);
     const encrypted = Uint8Array.from(this.crypto.encryptJson(dto.credentials));
 
-    const createData: Prisma.ZaloLoginSessionCreateInput = {
-      id: sessionId,
-      user: { connect: { id: appUserId } },
-      zaloUid: dto.user.uid,
-      userProfile: userProfile as unknown as Prisma.InputJsonValue,
-      credentialsEncrypted: encrypted,
-      ...(dto.createdAt ? { createdAt: new Date(dto.createdAt) } : {}),
-    };
-
-    const updateData: Prisma.ZaloLoginSessionUpdateInput = {
-      zaloUid: dto.user.uid,
+    const updatePayload: Prisma.ZaloLoginSessionUpdateInput = {
+      zaloUid,
       userProfile: userProfile as unknown as Prisma.InputJsonValue,
       credentialsEncrypted: encrypted,
       ...(dto.updatedAt ? { updatedAt: new Date(dto.updatedAt) } : {}),
     };
 
-    const row = await this.prisma.zaloLoginSession.upsert({
-      where: { id: sessionId },
-      create: createData,
-      update: updateData,
+    const row = await this.prisma.$transaction(async (tx) => {
+      const canonical = await tx.zaloLoginSession.findFirst({
+        where: { zaloUid },
+        orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
+      });
+
+      if (canonical) {
+        await tx.zaloLoginSession.deleteMany({
+          where: { zaloUid, id: { not: canonical.id } },
+        });
+        return tx.zaloLoginSession.update({
+          where: { id: canonical.id },
+          data: updatePayload,
+        });
+      }
+
+      if (dto.id) {
+        const byClientId = await tx.zaloLoginSession.findUnique({
+          where: { id: dto.id },
+        });
+        if (byClientId) {
+          return tx.zaloLoginSession.update({
+            where: { id: dto.id },
+            data: updatePayload,
+          });
+        }
+      }
+
+      const sessionId = dto.id ?? randomUUID();
+      return tx.zaloLoginSession.create({
+        data: {
+          id: sessionId,
+          zaloUid,
+          user: { connect: { id: appUserId } },
+          userProfile: userProfile as unknown as Prisma.InputJsonValue,
+          credentialsEncrypted: encrypted,
+          ...(dto.createdAt ? { createdAt: new Date(dto.createdAt) } : {}),
+        },
+      });
     });
 
     return this.toPublic(row);

@@ -58,7 +58,7 @@ model User {
 model ZaloLoginSession {
   id                    String   @id @db.Uuid
   userId                String   @map("user_id") @db.Uuid
-  zaloUid               String   @map("zalo_uid") @db.VarChar(255)
+  zaloUid               String   @unique @map("zalo_uid") @db.VarChar(255)
   userProfile           Json     @map("user_profile")
   credentialsEncrypted  Bytes    @map("credentials_encrypted")
   createdAt             DateTime @default(now()) @map("created_at")
@@ -67,7 +67,6 @@ model ZaloLoginSession {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
-  @@index([zaloUid])
   @@index([userId, zaloUid])
   @@map("zalo_login_sessions")
 }
