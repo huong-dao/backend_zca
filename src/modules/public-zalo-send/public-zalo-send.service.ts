@@ -26,6 +26,10 @@ import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sess
 import { PublicZaloSendCode, type PublicZaloSendCodeValue } from './public-zalo-send-codes';
 import type { PublicZaloSendBodyDto } from './dto/public-zalo-send-body.dto';
 import { formatPublicZaloUserMessage } from './public-zalo-user-messages.vi';
+import {
+  logFailedMessage,
+  type LogFailedMessageInput,
+} from '../messages/log-failed-message.util';
 
 const createSelect = {
   id: true,
@@ -39,6 +43,7 @@ const createSelect = {
   parentId: true,
   sentAt: true,
   status: true,
+  failureReason: true,
   createdAt: true,
 } as const;
 
@@ -70,6 +75,23 @@ export class PublicZaloSendService {
       message: formatPublicZaloUserMessage(code, detail),
       ...(data !== undefined ? { data } : {}),
     };
+  }
+
+  private async failWithLog(
+    base: Omit<LogFailedMessageInput, 'failureReason'>,
+    code: PublicZaloSendCodeValue,
+    detail?: string,
+  ): Promise<{
+    code: PublicZaloSendCodeValue;
+    message: string;
+    data?: Record<string, unknown>;
+  }> {
+    const response = this.msg(code, detail);
+    await logFailedMessage(this.prisma, {
+      ...base,
+      failureReason: response.message,
+    });
+    return response;
   }
 
   async send(
@@ -139,13 +161,25 @@ export class PublicZaloSendService {
     textPart: string,
     fileList: Express.Multer.File[],
   ) {
+    const contentForDb = buildAttachmentContentForDb(textPart, fileList);
     const pair = await this.zaloAccounts.findChildAndMasterForPublicDm();
     if (!pair) {
       return this.msg(7, 'Chưa có cặp tài khoản master/child sẵn sàng cho kênh DM công khai.');
     }
     const { child, master } = pair;
+    const failureBase: Omit<LogFailedMessageInput, 'failureReason'> = {
+      senderId: child.id,
+      groupId: null,
+      peerPhone: normalizedPhone,
+      content: contentForDb,
+      uidFrom: child.zaloId?.trim() || null,
+    };
     if (child.status !== 'ACTIVE' || !child.zaloId) {
-      return this.msg(8, 'Tài khoản child tự chọn chưa active hoặc thiếu zalo_id.');
+      return this.failWithLog(
+        failureBase,
+        8,
+        'Tài khoản child tự chọn chưa active hoặc thiếu zalo_id.',
+      );
     }
 
     // Giới hạn tần suất: theo cùng child + cùng peerPhone lưu trong bản ghi Message (có thể gọi sớm, không cần session)
@@ -155,7 +189,7 @@ export class PublicZaloSendService {
       peerPhone: normalizedPhone,
     });
     if (intervalDm) {
-      return this.msg(intervalDm.code, intervalDm.detail);
+      return this.failWithLog(failureBase, intervalDm.code, intervalDm.detail);
     }
 
     let sessionId: string;
@@ -165,7 +199,11 @@ export class PublicZaloSendService {
       );
       sessionId = full.id;
     } catch {
-      return this.msg(9, 'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.');
+      return this.failWithLog(
+        failureBase,
+        9,
+        'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
+      );
     }
 
     try {
@@ -174,7 +212,8 @@ export class PublicZaloSendService {
         child.id,
       );
     } catch (e) {
-      return this.msg(
+      return this.failWithLog(
+        failureBase,
         10,
         e instanceof Error
           ? e.message
@@ -192,10 +231,15 @@ export class PublicZaloSendService {
       const raw = u?.uid;
       peerUid = raw != null ? String(raw).trim() : '';
       if (!peerUid) {
-        return this.msg(12, 'Không thấy tài khoản Zalo tương ứng với số điện thoại.');
+        return this.failWithLog(
+          failureBase,
+          12,
+          'Không thấy tài khoản Zalo tương ứng với số điện thoại.',
+        );
       }
     } catch (e) {
-      return this.msg(
+      return this.failWithLog(
+        failureBase,
         12,
         e instanceof Error
           ? e.message
@@ -213,10 +257,12 @@ export class PublicZaloSendService {
       groupId: null,
       peerPhone: normalizedPhone,
       zaloUid: child.zaloId.trim(),
+      contentForDb,
     });
   }
 
   private async sendGroup(groupName: string, textPart: string, fileList: Express.Multer.File[]) {
+    const contentForDb = buildAttachmentContentForDb(textPart, fileList);
     const needle = groupName.trim();
     const group = await this.prisma.zaloGroup.findFirst({
       where: {
@@ -247,12 +293,27 @@ export class PublicZaloSendService {
     if (!child) {
       return this.msg(7, 'Master này chưa có tài khoản child dùng để gửi.');
     }
+    const failureBase: Omit<LogFailedMessageInput, 'failureReason'> = {
+      senderId: child.id,
+      groupId: group.id,
+      peerPhone: null,
+      content: contentForDb,
+      uidFrom: child.zaloId?.trim() || null,
+    };
     if (child.status !== 'ACTIVE' || !child.zaloId) {
-      return this.msg(8, 'Tài khoản child chưa active hoặc thiếu zalo_id.');
+      return this.failWithLog(
+        failureBase,
+        8,
+        'Tài khoản child chưa active hoặc thiếu zalo_id.',
+      );
     }
     const childPhone = child.phone?.trim();
     if (!childPhone && childPreferInGroup == null) {
-      return this.msg(8, 'Tài khoản child cần có số điện thoại (mời nhóm / tìm user).');
+      return this.failWithLog(
+        failureBase,
+        8,
+        'Tài khoản child cần có số điện thoại (mời nhóm / tìm user).',
+      );
     }
 
     const intervalGroup = await this.checkMessageIntervalForGroup({
@@ -262,7 +323,7 @@ export class PublicZaloSendService {
       groupName: group.groupName,
     });
     if (intervalGroup) {
-      return this.msg(intervalGroup.code, intervalGroup.detail);
+      return this.failWithLog(failureBase, intervalGroup.code, intervalGroup.detail);
     }
 
     let sessionId: string;
@@ -272,7 +333,11 @@ export class PublicZaloSendService {
       );
       sessionId = full.id;
     } catch {
-      return this.msg(9, 'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.');
+      return this.failWithLog(
+        failureBase,
+        9,
+        'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
+      );
     }
 
     const [childMapRow, masterMapRow] = await Promise.all([
@@ -292,7 +357,8 @@ export class PublicZaloSendService {
         child.id,
       );
     } catch (e) {
-      return this.msg(
+      return this.failWithLog(
+        failureBase,
         10,
         e instanceof Error
           ? e.message
@@ -307,7 +373,8 @@ export class PublicZaloSendService {
     } else {
       const masterGroupZaloId = masterMapRow?.groupZaloId?.trim() ?? '';
       if (!masterGroupZaloId) {
-        return this.msg(
+        return this.failWithLog(
+          failureBase,
           6,
           'Thiếu group_zalo_id ở master trong zalo_account_groups — cần để mời child vào nhóm trên Zalo.',
         );
@@ -322,7 +389,8 @@ export class PublicZaloSendService {
           groupInternalId: group.id,
         });
       } catch (e) {
-        return this.msg(
+        return this.failWithLog(
+          failureBase,
           11,
           e instanceof Error
             ? e.message
@@ -340,7 +408,8 @@ export class PublicZaloSendService {
             },
           );
       } catch (e) {
-        return this.msg(
+        return this.failWithLog(
+          failureBase,
           11,
           e instanceof Error
             ? e.message
@@ -359,6 +428,7 @@ export class PublicZaloSendService {
       groupId: group.id,
       peerPhone: null,
       zaloUid: child.zaloId.trim(),
+      contentForDb,
     });
   }
 
@@ -372,6 +442,7 @@ export class PublicZaloSendService {
     groupId: string | null;
     peerPhone: string | null;
     zaloUid: string;
+    contentForDb: string;
   }): Promise<{
     code: PublicZaloSendCodeValue;
     message: string;
@@ -391,10 +462,7 @@ export class PublicZaloSendService {
         ...(tempPaths.length ? { attachmentLocalPaths: tempPaths } : {}),
       });
 
-      const contentForDb = buildAttachmentContentForDb(
-        ctx.textPart,
-        ctx.fileList,
-      );
+      const contentForDb = ctx.contentForDb;
       const rows = await this.persistMessages(
         result,
         ctx,
@@ -420,7 +488,17 @@ export class PublicZaloSendService {
       ) {
         detail = `${detail} Kiểm tra tài khoản child vẫn trong nhóm trên Zalo; nếu cần, đồng bộ lại nhóm (child group scan) hoặc cập nhật \`group_zalo_id\` trong \`zalo_account_groups\`.`;
       }
-      return this.msg(13, detail);
+      return this.failWithLog(
+        {
+          senderId: ctx.senderId,
+          groupId: ctx.groupId,
+          peerPhone: ctx.peerPhone,
+          content: ctx.contentForDb,
+          uidFrom: ctx.zaloUid,
+        },
+        13,
+        detail,
+      );
     } finally {
       await cleanupAttachmentTempPaths(tempPaths);
     }
@@ -529,6 +607,7 @@ export class PublicZaloSendService {
       where: {
         senderId: args.childId,
         groupId: args.groupId,
+        status: 'SENT',
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       select: { sentAt: true, createdAt: true },
@@ -585,6 +664,7 @@ export class PublicZaloSendService {
         senderId: args.childId,
         groupId: null,
         peerPhone: args.peerPhone,
+        status: 'SENT',
       },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
       select: { sentAt: true, createdAt: true },

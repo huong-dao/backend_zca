@@ -199,6 +199,8 @@ model Message {
   parentId      String?       @map("parent_id") @db.Uuid
   sentAt        DateTime?     @map("sent_at")
   status        MessageStatus
+  /// Human-readable send failure reason when `status` is `FAILED` (not an error code).
+  failureReason String?       @map("failure_reason") @db.Text
   createdAt     DateTime      @default(now()) @map("created_at")
   sender        ZaloAccount   @relation(fields: [senderId], references: [id])
   group         ZaloGroup?    @relation(fields: [groupId], references: [id], onDelete: SetNull)

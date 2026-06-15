@@ -22,6 +22,11 @@ import {
 } from '../../common/utils/attachment-files.util';
 import { FindMessagesDto } from './dto/find-messages.dto';
 import { SendMessageDto } from './dto/send-message.dto';
+import { buildMessagesWhereInput } from './build-messages-where.util';
+import {
+  logFailedMessage,
+  type LogFailedMessageInput,
+} from './log-failed-message.util';
 
 const messageSelect = {
   id: true,
@@ -35,6 +40,7 @@ const messageSelect = {
   parentId: true,
   sentAt: true,
   status: true,
+  failureReason: true,
   createdAt: true,
 } as const;
 
@@ -69,12 +75,19 @@ export class MessagesService {
     private readonly zaloLoginSessions: ZaloLoginSessionsService,
   ) {}
 
+  private async recordFailureAndThrow(
+    base: Omit<LogFailedMessageInput, 'failureReason'>,
+    failureReason: string,
+    error: Error,
+  ): Promise<never> {
+    await logFailedMessage(this.prismaService, { ...base, failureReason });
+    throw error;
+  }
+
   async findAll(query: FindMessagesDto) {
-    const { status, page = 1, limit = 20 } = query;
+    const { page = 1, limit = 20 } = query;
     const skip = (page - 1) * limit;
-    const where = {
-      ...(status && { status }),
-    };
+    const where = buildMessagesWhereInput(query);
 
     const [total, data] = await this.prismaService.$transaction([
       this.prismaService.message.count({ where }),
@@ -105,6 +118,10 @@ export class MessagesService {
     dto: SendMessageDto,
     files?: Express.Multer.File[],
   ) {
+    const textPart = dto.text?.trim() ?? '';
+    const fileList = files?.length ? files : [];
+    const contentForDb = buildAttachmentContentForDb(textPart, fileList);
+
     const account = await this.prismaService.zaloAccount.findFirst({
       where: { id: dto.zaloAccountId, isDeleted: false },
       select: { id: true, zaloId: true, name: true, isMaster: true, status: true },
@@ -114,30 +131,61 @@ export class MessagesService {
       throw new NotFoundException('Zalo account not found or removed.');
     }
 
+    const failureBase: Omit<LogFailedMessageInput, 'failureReason'> = {
+      senderId: dto.zaloAccountId,
+      groupId: dto.groupId,
+      content: contentForDb,
+      uidFrom: account.zaloId?.trim() || null,
+    };
+
     if (account.status !== 'ACTIVE') {
-      throw new BadRequestException(
+      return await this.recordFailureAndThrow(
+        failureBase,
         'Cannot send messages: this Zalo account is not active (status must be ACTIVE).',
+        new BadRequestException(
+          'Cannot send messages: this Zalo account is not active (status must be ACTIVE).',
+        ),
       );
     }
 
     if (account.isMaster) {
-      throw new BadRequestException(
+      return await this.recordFailureAndThrow(
+        failureBase,
         'This endpoint sends as a child account only; use a child zaloAccountId.',
+        new BadRequestException(
+          'This endpoint sends as a child account only; use a child zaloAccountId.',
+        ),
       );
     }
 
     const zaloUid = account.zaloId?.trim();
     if (!zaloUid) {
-      throw new BadRequestException(
+      return await this.recordFailureAndThrow(
+        failureBase,
         'Child Zalo account has no zalo_id; set or sync it before sending.',
+        new BadRequestException(
+          'Child Zalo account has no zalo_id; set or sync it before sending.',
+        ),
       );
     }
 
-    const session =
-      await this.zaloLoginSessions.findLatestFullForAppUserAndZaloUid(
-        appUserId,
-        zaloUid,
-      );
+    let session;
+    try {
+      session =
+        await this.zaloLoginSessions.findLatestFullForAppUserAndZaloUid(
+          appUserId,
+          zaloUid,
+        );
+    } catch (e) {
+      if (e instanceof NotFoundException) {
+        return await this.recordFailureAndThrow(
+          failureBase,
+          e.message,
+          e,
+        );
+      }
+      throw e;
+    }
 
     const mapping = await this.prismaService.zaloAccountGroup.findFirst({
       where: {
@@ -148,15 +196,23 @@ export class MessagesService {
     });
 
     if (!mapping) {
-      throw new NotFoundException(
+      return await this.recordFailureAndThrow(
+        failureBase,
         'This Zalo account is not linked to the given group.',
+        new NotFoundException(
+          'This Zalo account is not linked to the given group.',
+        ),
       );
     }
 
     const groupZaloId = mapping.groupZaloId?.trim() ?? '';
     if (!groupZaloId) {
-      throw new BadRequestException(
+      return await this.recordFailureAndThrow(
+        failureBase,
         'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
+        new BadRequestException(
+          'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
+        ),
       );
     }
 
@@ -171,6 +227,7 @@ export class MessagesService {
           where: {
             senderId: dto.zaloAccountId,
             groupId: dto.groupId,
+            status: 'SENT',
           },
           orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
           select: { sentAt: true, createdAt: true },
@@ -189,22 +246,26 @@ export class MessagesService {
           const agoMinutes = Math.floor(elapsed / 60_000);
           const agoLabel =
             agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
-          throw new BadRequestException(
-            `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`,
+          const intervalMessage =
+            `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`;
+          return await this.recordFailureAndThrow(
+            failureBase,
+            intervalMessage,
+            new BadRequestException(intervalMessage),
           );
         }
       }
     }
 
-    const textPart = dto.text?.trim() ?? '';
-    const fileList = files?.length ? files : [];
     if (!textPart && !fileList.length) {
-      throw new BadRequestException(
+      return await this.recordFailureAndThrow(
+        failureBase,
         'Cần nội dung tin nhắn (text) hoặc ít nhất một file đính kèm.',
+        new BadRequestException(
+          'Cần nội dung tin nhắn (text) hoặc ít nhất một file đính kèm.',
+        ),
       );
     }
-
-    const contentForDb = buildAttachmentContentForDb(textPart, fileList);
 
     let tempPaths: string[] = [];
     try {
@@ -234,6 +295,7 @@ export class MessagesService {
         parentId: true,
         sentAt: true,
         status: true,
+        failureReason: true,
         createdAt: true,
       } as const;
 
@@ -294,6 +356,16 @@ export class MessagesService {
       });
 
       return { result, message: rows[0], messages: rows };
+    } catch (e) {
+      const failureReason =
+        e instanceof Error
+          ? e.message
+          : 'Gửi tin qua giao thức Zalo thất bại.';
+      await logFailedMessage(this.prismaService, {
+        ...failureBase,
+        failureReason,
+      });
+      throw e;
     } finally {
       await cleanupAttachmentTempPaths(tempPaths);
     }
