@@ -12,6 +12,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { CurrentUser } from '../../common/decorators/current-user.decorator';
 import type { AuthenticatedUser } from '../../common/utils/authenticated-user';
 import { UpsertZaloLoginSessionDto } from './dto/upsert-zalo-login-session.dto';
+import { VerifyZaloLoginSessionDto } from './dto/verify-zalo-login-session.dto';
 import { ZaloLoginSessionsService } from './zalo-login-sessions.service';
 
 /**
@@ -47,6 +48,15 @@ export class ZaloLoginSessionsController {
   @Get('by-zalo-uid/:zaloUid')
   findByZaloUid(@Param('zaloUid') zaloUid: string) {
     return this.zaloLoginSessionsService.findLatestByZaloUid(zaloUid);
+  }
+
+  /**
+   * Check whether a stored session still works on Zalo (`getUserInfo`).
+   * If not, the session row is hard-deleted so the frontend can show offline / re-login.
+   */
+  @Post('verify')
+  verify(@Body() dto: VerifyZaloLoginSessionDto) {
+    return this.zaloLoginSessionsService.verifyAndCleanup(dto.sessionId);
   }
 
   @Patch(':sessionId/touch')
