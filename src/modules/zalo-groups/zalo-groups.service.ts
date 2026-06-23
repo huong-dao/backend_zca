@@ -108,6 +108,18 @@ type PaginatedZaloGroupByAccountResult = {
   };
 };
 
+type LinkedZaloAccountByGroupItem = {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  accountType: 'Master' | 'Child';
+  joinedAt: Date;
+};
+
+type LinkedZaloAccountsByGroupResult = {
+  data: LinkedZaloAccountByGroupItem[];
+};
+
 @Injectable()
 export class ZaloGroupsService {
   private readonly logger = new Logger(ZaloGroupsService.name);
@@ -278,6 +290,41 @@ export class ZaloGroupsService {
         total,
         totalPages: total === 0 ? 0 : Math.ceil(total / limit),
       },
+    };
+  }
+
+  async findLinkedAccountsByGroupId(
+    groupId: string,
+  ): Promise<LinkedZaloAccountsByGroupResult> {
+    await this.ensureGroupExists(groupId);
+
+    const accountMaps = await this.prismaService.zaloAccountGroup.findMany({
+      where: {
+        groupId,
+        zaloAccount: { isDeleted: false },
+      },
+      select: {
+        joinedAt: true,
+        zaloAccount: {
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            isMaster: true,
+          },
+        },
+      },
+      orderBy: [{ zaloAccount: { isMaster: 'desc' } }, { joinedAt: 'asc' }],
+    });
+
+    return {
+      data: accountMaps.map(({ joinedAt, zaloAccount }) => ({
+        id: zaloAccount.id,
+        name: zaloAccount.name,
+        phone: zaloAccount.phone,
+        accountType: zaloAccount.isMaster ? 'Master' : 'Child',
+        joinedAt,
+      })),
     };
   }
 

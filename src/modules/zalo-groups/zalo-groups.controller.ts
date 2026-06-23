@@ -58,6 +58,11 @@ export class ZaloGroupsController {
     return this.zaloGroupsService.findAllByZaloAccountId(id, query);
   }
 
+  @Get(':id/accounts')
+  findLinkedAccountsByGroupId(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.zaloGroupsService.findLinkedAccountsByGroupId(id);
+  }
+
   @Post()
   create(@Body() dto: UpsertZaloGroupDto) {
     return this.zaloGroupsService.create(dto);
