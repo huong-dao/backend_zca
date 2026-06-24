@@ -156,6 +156,9 @@ export class PublicZaloSendService {
     fileList: Express.Multer.File[],
   ) {
     const contentForDb = buildAttachmentContentForDb(textPart, fileList);
+    const savedMedia = fileList.length
+      ? await saveMulterFilesToStorage(fileList)
+      : [];
     const pair = await this.zaloAccounts.findChildAndMasterForPublicDm();
     if (!pair) {
       return this.msg(7, 'Chưa có cặp tài khoản master/child sẵn sàng cho kênh DM công khai.');
@@ -173,6 +176,7 @@ export class PublicZaloSendService {
         failureBase,
         8,
         'Tài khoản child tự chọn chưa active hoặc thiếu zalo_id.',
+        savedMedia,
       );
     }
 
@@ -183,7 +187,12 @@ export class PublicZaloSendService {
       peerPhone: normalizedPhone,
     });
     if (intervalDm) {
-      return this.failWithLog(failureBase, intervalDm.code, intervalDm.detail);
+      return this.failWithLog(
+        failureBase,
+        intervalDm.code,
+        intervalDm.detail,
+        savedMedia,
+      );
     }
 
     let sessionId: string;
@@ -197,6 +206,7 @@ export class PublicZaloSendService {
         failureBase,
         9,
         'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
+        savedMedia,
       );
     }
 
@@ -212,6 +222,7 @@ export class PublicZaloSendService {
         e instanceof Error
           ? e.message
           : 'Không đảm bảo được tình bạn master–child trên Zalo.',
+        savedMedia,
       );
     }
 
@@ -229,6 +240,7 @@ export class PublicZaloSendService {
           failureBase,
           12,
           'Không thấy tài khoản Zalo tương ứng với số điện thoại.',
+          savedMedia,
         );
       }
     } catch (e) {
@@ -238,6 +250,7 @@ export class PublicZaloSendService {
         e instanceof Error
           ? e.message
           : 'Gọi findUser theo số thất bại (kiểm tra số, session).',
+        savedMedia,
       );
     }
 
@@ -252,11 +265,15 @@ export class PublicZaloSendService {
       peerPhone: normalizedPhone,
       zaloUid: child.zaloId.trim(),
       contentForDb,
+      savedMedia,
     });
   }
 
   private async sendGroup(groupName: string, textPart: string, fileList: Express.Multer.File[]) {
     const contentForDb = buildAttachmentContentForDb(textPart, fileList);
+    const savedMedia = fileList.length
+      ? await saveMulterFilesToStorage(fileList)
+      : [];
     const needle = groupName.trim();
     const group = await this.prisma.zaloGroup.findFirst({
       where: {
@@ -299,6 +316,7 @@ export class PublicZaloSendService {
         failureBase,
         8,
         'Tài khoản child chưa active hoặc thiếu zalo_id.',
+        savedMedia,
       );
     }
     const childPhone = child.phone?.trim();
@@ -307,6 +325,7 @@ export class PublicZaloSendService {
         failureBase,
         8,
         'Tài khoản child cần có số điện thoại (mời nhóm / tìm user).',
+        savedMedia,
       );
     }
 
@@ -317,7 +336,12 @@ export class PublicZaloSendService {
       groupName: group.groupName,
     });
     if (intervalGroup) {
-      return this.failWithLog(failureBase, intervalGroup.code, intervalGroup.detail);
+      return this.failWithLog(
+        failureBase,
+        intervalGroup.code,
+        intervalGroup.detail,
+        savedMedia,
+      );
     }
 
     let sessionId: string;
@@ -331,6 +355,7 @@ export class PublicZaloSendService {
         failureBase,
         9,
         'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
+        savedMedia,
       );
     }
 
@@ -357,6 +382,7 @@ export class PublicZaloSendService {
         e instanceof Error
           ? e.message
           : 'Không đảm bảo được tình bạn master–child trên Zalo.',
+        savedMedia,
       );
     }
 
@@ -371,6 +397,7 @@ export class PublicZaloSendService {
           failureBase,
           6,
           'Thiếu group_zalo_id ở master trong zalo_account_groups — cần để mời child vào nhóm trên Zalo.',
+          savedMedia,
         );
       }
 
@@ -389,6 +416,7 @@ export class PublicZaloSendService {
           e instanceof Error
             ? e.message
             : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
+          savedMedia,
         );
       }
 
@@ -408,6 +436,7 @@ export class PublicZaloSendService {
           e instanceof Error
             ? e.message
             : 'Không map được group_zalo_id phía child sau khi mời vào nhóm.',
+          savedMedia,
         );
       }
     }
@@ -423,6 +452,7 @@ export class PublicZaloSendService {
       peerPhone: null,
       zaloUid: child.zaloId.trim(),
       contentForDb,
+      savedMedia,
     });
   }
 
@@ -437,19 +467,15 @@ export class PublicZaloSendService {
     peerPhone: string | null;
     zaloUid: string;
     contentForDb: string;
+    savedMedia: SavedMediaFile[];
   }): Promise<{
     code: PublicZaloSendCodeValue;
     message: string;
     data?: Record<string, unknown>;
   }> {
-    let savedMedia: SavedMediaFile[] = [];
-    let tempPaths: string[] = [];
+    let savedMedia = ctx.savedMedia;
+    const tempPaths = savedMediaToAttachmentPaths(savedMedia);
     try {
-      if (ctx.fileList.length) {
-        savedMedia = await saveMulterFilesToStorage(ctx.fileList);
-        tempPaths = savedMediaToAttachmentPaths(savedMedia);
-      }
-
       const { result } = await this.zaloActions.sendMessage({
         sessionId: ctx.sessionId,
         text: ctx.textPart,
