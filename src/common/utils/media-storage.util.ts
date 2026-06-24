@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, readFile, rm, unlink, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 import type { Express } from 'express';
 import { resolveAttachmentFileName } from './attachment-files.util';
 
@@ -102,4 +102,17 @@ export async function readStorageFileAsMulter(
 
 export function savedMediaToAttachmentPaths(saved: SavedMediaFile[]): string[] {
   return saved.map((s) => s.storagePath);
+}
+
+/** Best-effort remove of a persisted media file and its empty upload directory. */
+export async function deletePersistentMediaFile(
+  storagePath: string,
+): Promise<void> {
+  const path = storagePath.trim();
+  if (!path) {
+    return;
+  }
+  const dir = dirname(path);
+  await unlink(path).catch(() => undefined);
+  await rm(dir, { recursive: true, force: true }).catch(() => undefined);
 }

@@ -6,6 +6,7 @@ import {
 import { createReadStream } from 'node:fs';
 import { stat } from 'node:fs/promises';
 import { basename } from 'node:path';
+import { deletePersistentMediaFile } from '../../common/utils/media-storage.util';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { buildMediaWhereInput } from './build-media-where.util';
 import { FindMediaDto } from './dto/find-media.dto';
@@ -28,6 +29,12 @@ const mediaSelect = {
       status: true,
     },
   },
+} as const;
+
+const mediaStorageSelect = {
+  id: true,
+  fileName: true,
+  storagePath: true,
 } as const;
 
 @Injectable()
@@ -87,5 +94,54 @@ export class MediaService {
       type: mimeType,
       disposition: `inline; filename="${basename(row.fileName)}"`,
     });
+  }
+
+  async remove(id: string) {
+    const row = await this.prismaService.media.findUnique({
+      where: { id },
+      select: mediaStorageSelect,
+    });
+    if (!row) {
+      throw new NotFoundException('Media not found.');
+    }
+
+    await deletePersistentMediaFile(row.storagePath);
+    await this.prismaService.media.delete({ where: { id: row.id } });
+
+    return {
+      message: 'Media deleted.',
+      id: row.id,
+      fileName: row.fileName,
+    };
+  }
+
+  async removeMany(ids: string[]) {
+    const uniqueIds = [...new Set(ids)];
+    const rows = await this.prismaService.media.findMany({
+      where: { id: { in: uniqueIds } },
+      select: mediaStorageSelect,
+    });
+
+    if (rows.length !== uniqueIds.length) {
+      const found = new Set(rows.map((r) => r.id));
+      const missing = uniqueIds.filter((id) => !found.has(id));
+      throw new NotFoundException(
+        `Media not found: ${missing.join(', ')}`,
+      );
+    }
+
+    for (const row of rows) {
+      await deletePersistentMediaFile(row.storagePath);
+    }
+
+    await this.prismaService.media.deleteMany({
+      where: { id: { in: uniqueIds } },
+    });
+
+    return {
+      message: 'Media deleted.',
+      deletedCount: rows.length,
+      ids: uniqueIds,
+    };
   }
 }
