@@ -161,6 +161,10 @@ export class MessagesService {
       uidFrom: account.zaloId?.trim() || null,
     };
 
+    const savedMedia = fileList.length
+      ? await saveMulterFilesToStorage(fileList)
+      : [];
+
     if (account.status !== 'ACTIVE') {
       return await this.recordFailureAndThrow(
         failureBase,
@@ -168,6 +172,7 @@ export class MessagesService {
         new BadRequestException(
           'Cannot send messages: this Zalo account is not active (status must be ACTIVE).',
         ),
+        savedMedia,
       );
     }
 
@@ -178,6 +183,7 @@ export class MessagesService {
         new BadRequestException(
           'This endpoint sends as a child account only; use a child zaloAccountId.',
         ),
+        savedMedia,
       );
     }
 
@@ -189,6 +195,7 @@ export class MessagesService {
         new BadRequestException(
           'Child Zalo account has no zalo_id; set or sync it before sending.',
         ),
+        savedMedia,
       );
     }
 
@@ -205,6 +212,7 @@ export class MessagesService {
           failureBase,
           e.message,
           e,
+          savedMedia,
         );
       }
       throw e;
@@ -216,12 +224,14 @@ export class MessagesService {
         dto.zaloAccountId,
         groupId,
         failureBase,
+        savedMedia,
       );
       await this.enforceMessageIntervalForGroup({
         zaloAccountId: dto.zaloAccountId,
         groupId,
         accountName: account.name,
         failureBase,
+        savedMedia,
       });
     } else {
       const normalizedPhone = normalizeVietnamPhone(peerRaw!);
@@ -232,18 +242,21 @@ export class MessagesService {
           new BadRequestException(
             'peerPhone không hợp lệ (số di động VN 10 chữ số).',
           ),
+          savedMedia,
         );
       }
       target = await this.resolveDmTarget(
         session.id,
         normalizedPhone,
         { ...failureBase, peerPhone: normalizedPhone },
+        savedMedia,
       );
       await this.enforceMessageIntervalForDm({
         zaloAccountId: dto.zaloAccountId,
         peerPhone: normalizedPhone,
         accountName: account.name,
         failureBase: { ...failureBase, peerPhone: normalizedPhone },
+        savedMedia,
       });
     }
 
@@ -254,6 +267,7 @@ export class MessagesService {
         new BadRequestException(
           'Cần nội dung tin nhắn (text) hoặc ít nhất một file đính kèm.',
         ),
+        savedMedia,
       );
     }
 
@@ -266,6 +280,7 @@ export class MessagesService {
       failureBase,
       senderId: dto.zaloAccountId,
       zaloUid,
+      savedMedia,
     });
   }
 
@@ -433,6 +448,7 @@ export class MessagesService {
     zaloAccountId: string,
     groupId: string,
     failureBase: Omit<LogFailedMessageInput, 'failureReason'>,
+    savedMedia: SavedMediaFile[] = [],
   ): Promise<SendTarget> {
     const mapping = await this.prismaService.zaloAccountGroup.findFirst({
       where: {
@@ -449,6 +465,7 @@ export class MessagesService {
         new NotFoundException(
           'This Zalo account is not linked to the given group.',
         ),
+        savedMedia,
       );
     }
 
@@ -460,6 +477,7 @@ export class MessagesService {
         new BadRequestException(
           'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
         ),
+        savedMedia,
       );
     }
 
@@ -470,6 +488,7 @@ export class MessagesService {
     sessionId: string,
     normalizedPhone: string,
     failureBase: Omit<LogFailedMessageInput, 'failureReason'>,
+    savedMedia: SavedMediaFile[] = [],
   ): Promise<SendTarget> {
     try {
       const { user } = await this.zaloActionsService.findUser({
@@ -486,6 +505,7 @@ export class MessagesService {
           new BadRequestException(
             'Không thấy tài khoản Zalo tương ứng với số điện thoại.',
           ),
+          savedMedia,
         );
       }
       return { kind: 'dm', peerPhone: normalizedPhone, threadId };
@@ -503,6 +523,7 @@ export class MessagesService {
             ? e.message
             : 'Gọi findUser theo số thất bại (kiểm tra số, session).',
         ),
+        savedMedia,
       );
     }
   }
@@ -512,6 +533,7 @@ export class MessagesService {
     groupId: string;
     accountName: string | null;
     failureBase: Omit<LogFailedMessageInput, 'failureReason'>;
+    savedMedia: SavedMediaFile[];
   }): Promise<void> {
     const intervalMinutes = await this.configsService.getMessageIntervalMinutes();
     if (intervalMinutes <= 0) {
@@ -558,6 +580,7 @@ export class MessagesService {
       args.failureBase,
       intervalMessage,
       new BadRequestException(intervalMessage),
+      args.savedMedia,
     );
   }
 
@@ -566,6 +589,7 @@ export class MessagesService {
     peerPhone: string;
     accountName: string | null;
     failureBase: Omit<LogFailedMessageInput, 'failureReason'>;
+    savedMedia: SavedMediaFile[];
   }): Promise<void> {
     const intervalMinutes = await this.configsService.getMessageIntervalMinutes();
     if (intervalMinutes <= 0) {
@@ -606,6 +630,7 @@ export class MessagesService {
       args.failureBase,
       intervalMessage,
       new BadRequestException(intervalMessage),
+      args.savedMedia,
     );
   }
 
@@ -618,15 +643,12 @@ export class MessagesService {
     failureBase: Omit<LogFailedMessageInput, 'failureReason'>;
     senderId: string;
     zaloUid: string;
+    savedMedia: SavedMediaFile[];
   }) {
-    let savedMedia: SavedMediaFile[] = [];
-    let tempPaths: string[] = [];
+    const savedMedia = args.savedMedia;
+    const tempPaths = savedMediaToAttachmentPaths(savedMedia);
 
     try {
-      if (args.fileList.length) {
-        savedMedia = await saveMulterFilesToStorage(args.fileList);
-        tempPaths = savedMediaToAttachmentPaths(savedMedia);
-      }
 
       const { result } = await this.zaloActionsService.sendMessage({
         sessionId: args.sessionId,
