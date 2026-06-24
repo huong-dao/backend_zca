@@ -206,10 +206,32 @@ model Message {
   group         ZaloGroup?    @relation(fields: [groupId], references: [id], onDelete: SetNull)
   parent        Message?      @relation("MessageParent", fields: [parentId], references: [id], onDelete: SetNull)
   childMessages Message[]     @relation("MessageParent")
+  media         Media[]
 
   @@index([parentId])
   @@index([senderId, groupId])
   @@map("messages")
+}
+
+/// Persisted attachment binary for a message bubble (typically a file child row).
+model Media {
+  id              String   @id @default(uuid()) @db.Uuid
+  messageId       String   @map("message_id") @db.Uuid
+  fileName        String   @map("file_name") @db.VarChar(255)
+  mimeType        String?  @map("mime_type") @db.VarChar(127)
+  sizeBytes       Int      @map("size_bytes")
+  storagePath     String   @map("storage_path") @db.VarChar(512)
+  /// Same instant as the linked message `sentAt` (or `createdAt` when send failed before `sentAt`).
+  sentAt          DateTime @map("sent_at")
+  attachmentIndex Int      @default(0) @map("attachment_index")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([sentAt])
+  @@index([fileName])
+  @@map("media")
 }
 
 model ApiKey {

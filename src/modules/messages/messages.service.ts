@@ -5,47 +5,40 @@ import {
 } from '@nestjs/common';
 import type { Express } from 'express';
 import { ThreadType } from 'zca-js';
-import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import { ConfigsService } from '../configs/configs.service';
 import { ZaloActionsService } from '../zalo-actions/zalo-actions.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
 import {
-  extractIdsFromZaloSendResult,
-  listZaloSendBubbleIds,
-} from '../../zalo/parse-zalo-send-message-result';
-import {
-  buildAttachmentBubbleContents,
   buildAttachmentContentForDb,
-  cleanupAttachmentTempPaths,
-  writeMulterAttachmentsToTemp,
 } from '../../common/utils/attachment-files.util';
+import {
+  copyStorageFileForResend,
+  readStorageFileAsMulter,
+  saveMulterFilesToStorage,
+  savedMediaToAttachmentPaths,
+  type SavedMediaFile,
+} from '../../common/utils/media-storage.util';
+import {
+  isValidVietnamPhoneForPublicTarget,
+  normalizeVietnamPhone,
+} from '../../zalo/vietnam-phone';
 import { FindMessagesDto } from './dto/find-messages.dto';
 import { SendMessageDto } from './dto/send-message.dto';
 import { buildMessagesWhereInput } from './build-messages-where.util';
+import { extractTextFromStoredContent } from './extract-stored-text.util';
 import {
   logFailedMessage,
   type LogFailedMessageInput,
 } from './log-failed-message.util';
-
-const messageSelect = {
-  id: true,
-  messageZaloId: true,
-  cliMsgId: true,
-  uidFrom: true,
-  content: true,
-  senderId: true,
-  groupId: true,
-  peerPhone: true,
-  parentId: true,
-  sentAt: true,
-  status: true,
-  failureReason: true,
-  createdAt: true,
-} as const;
+import {
+  linkMediaToFailedMessage,
+  messageCreateSelect,
+  persistSentMessagesWithMedia,
+} from './persist-sent-messages.util';
 
 const messageWithSenderGroupSelect = {
-  ...messageSelect,
+  ...messageCreateSelect,
   sender: {
     select: {
       id: true,
@@ -66,6 +59,10 @@ const messageWithSenderGroupSelect = {
   },
 } as const;
 
+type SendTarget =
+  | { kind: 'group'; groupId: string; threadId: string }
+  | { kind: 'dm'; peerPhone: string; threadId: string };
+
 @Injectable()
 export class MessagesService {
   constructor(
@@ -79,8 +76,20 @@ export class MessagesService {
     base: Omit<LogFailedMessageInput, 'failureReason'>,
     failureReason: string,
     error: Error,
+    savedMedia: SavedMediaFile[] = [],
   ): Promise<never> {
-    await logFailedMessage(this.prismaService, { ...base, failureReason });
+    const failedId = await logFailedMessage(this.prismaService, {
+      ...base,
+      failureReason,
+    });
+    if (failedId && savedMedia.length) {
+      await linkMediaToFailedMessage(
+        this.prismaService,
+        failedId,
+        new Date(),
+        savedMedia,
+      );
+    }
     throw error;
   }
 
@@ -118,6 +127,19 @@ export class MessagesService {
     dto: SendMessageDto,
     files?: Express.Multer.File[],
   ) {
+    const groupId = dto.groupId?.trim();
+    const peerRaw = dto.peerPhone?.trim();
+    if (groupId && peerRaw) {
+      throw new BadRequestException(
+        'Chỉ được truyền groupId hoặc peerPhone, không được cả hai.',
+      );
+    }
+    if (!groupId && !peerRaw) {
+      throw new BadRequestException(
+        'Cần groupId (gửi nhóm) hoặc peerPhone (gửi DM).',
+      );
+    }
+
     const textPart = dto.text?.trim() ?? '';
     const fileList = files?.length ? files : [];
     const contentForDb = buildAttachmentContentForDb(textPart, fileList);
@@ -133,7 +155,8 @@ export class MessagesService {
 
     const failureBase: Omit<LogFailedMessageInput, 'failureReason'> = {
       senderId: dto.zaloAccountId,
-      groupId: dto.groupId,
+      groupId: groupId ?? null,
+      peerPhone: peerRaw ? normalizeVietnamPhone(peerRaw) : null,
       content: contentForDb,
       uidFrom: account.zaloId?.trim() || null,
     };
@@ -187,74 +210,41 @@ export class MessagesService {
       throw e;
     }
 
-    const mapping = await this.prismaService.zaloAccountGroup.findFirst({
-      where: {
+    let target: SendTarget;
+    if (groupId) {
+      target = await this.resolveGroupTarget(
+        dto.zaloAccountId,
+        groupId,
+        failureBase,
+      );
+      await this.enforceMessageIntervalForGroup({
         zaloAccountId: dto.zaloAccountId,
-        groupId: dto.groupId,
-      },
-      select: { id: true, groupZaloId: true },
-    });
-
-    if (!mapping) {
-      return await this.recordFailureAndThrow(
+        groupId,
+        accountName: account.name,
         failureBase,
-        'This Zalo account is not linked to the given group.',
-        new NotFoundException(
-          'This Zalo account is not linked to the given group.',
-        ),
-      );
-    }
-
-    const groupZaloId = mapping.groupZaloId?.trim() ?? '';
-    if (!groupZaloId) {
-      return await this.recordFailureAndThrow(
-        failureBase,
-        'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
-        new BadRequestException(
-          'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
-        ),
-      );
-    }
-
-    const intervalMinutes = await this.configsService.getMessageIntervalMinutes();
-    if (intervalMinutes > 0) {
-      const [zaloGroup, lastMessage] = await Promise.all([
-        this.prismaService.zaloGroup.findUnique({
-          where: { id: dto.groupId },
-          select: { groupName: true },
-        }),
-        this.prismaService.message.findFirst({
-          where: {
-            senderId: dto.zaloAccountId,
-            groupId: dto.groupId,
-            status: 'SENT',
-          },
-          orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-          select: { sentAt: true, createdAt: true },
-        }),
-      ]);
-      if (lastMessage) {
-        const lastAt = lastMessage.sentAt ?? lastMessage.createdAt;
-        const intervalMs = intervalMinutes * 60_000;
-        const elapsed = Date.now() - lastAt.getTime();
-        if (elapsed < intervalMs) {
-          const childName =
-            account.name?.trim() || 'Tài khoản này';
-          const groupLabel = zaloGroup?.groupName?.trim() || 'nhóm này';
-          const remainingMs = intervalMs - elapsed;
-          const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60_000));
-          const agoMinutes = Math.floor(elapsed / 60_000);
-          const agoLabel =
-            agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
-          const intervalMessage =
-            `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`;
-          return await this.recordFailureAndThrow(
-            failureBase,
-            intervalMessage,
-            new BadRequestException(intervalMessage),
-          );
-        }
+      });
+    } else {
+      const normalizedPhone = normalizeVietnamPhone(peerRaw!);
+      if (!isValidVietnamPhoneForPublicTarget(normalizedPhone)) {
+        return await this.recordFailureAndThrow(
+          { ...failureBase, peerPhone: normalizedPhone },
+          'peerPhone không hợp lệ (số di động VN 10 chữ số).',
+          new BadRequestException(
+            'peerPhone không hợp lệ (số di động VN 10 chữ số).',
+          ),
+        );
       }
+      target = await this.resolveDmTarget(
+        session.id,
+        normalizedPhone,
+        { ...failureBase, peerPhone: normalizedPhone },
+      );
+      await this.enforceMessageIntervalForDm({
+        zaloAccountId: dto.zaloAccountId,
+        peerPhone: normalizedPhone,
+        accountName: account.name,
+        failureBase: { ...failureBase, peerPhone: normalizedPhone },
+      });
     }
 
     if (!textPart && !fileList.length) {
@@ -267,93 +257,401 @@ export class MessagesService {
       );
     }
 
-    let tempPaths: string[] = [];
-    try {
-      if (fileList.length) {
-        tempPaths = await writeMulterAttachmentsToTemp(fileList);
-      }
-      const { result } = await this.zaloActionsService.sendMessage({
-        sessionId: session.id,
-        text: textPart,
-        threadId: groupZaloId,
-        ...(tempPaths.length
-          ? { attachmentLocalPaths: tempPaths }
-          : {}),
-      });
+    return this.executeSend({
+      sessionId: session.id,
+      target,
+      textPart,
+      fileList,
+      contentForDb,
+      failureBase,
+      senderId: dto.zaloAccountId,
+      zaloUid,
+    });
+  }
 
-      const bubbles = listZaloSendBubbleIds(result);
-      const sentAt = new Date();
-      const createSelect = {
+  async resend(appUserId: string, messageId: string) {
+    const found = await this.prismaService.message.findUnique({
+      where: { id: messageId },
+      select: {
         id: true,
-        messageZaloId: true,
-        cliMsgId: true,
-        uidFrom: true,
+        parentId: true,
         content: true,
         senderId: true,
         groupId: true,
         peerPhone: true,
-        parentId: true,
-        sentAt: true,
         status: true,
-        failureReason: true,
-        createdAt: true,
-      } as const;
-
-      if (bubbles.length === 0) {
-        const { messageZaloId, cliMsgId } = extractIdsFromZaloSendResult(result);
-        const messageRow = await this.prismaService.message.create({
-          data: {
-            content: contentForDb,
-            senderId: dto.zaloAccountId,
-            groupId: dto.groupId,
-            peerPhone: null,
-            messageZaloId,
-            cliMsgId,
-            uidFrom: zaloUid,
-            sentAt,
-            status: 'SENT',
+        sender: {
+          select: {
+            id: true,
+            zaloId: true,
+            name: true,
+            isMaster: true,
+            status: true,
+            isDeleted: true,
           },
-          select: createSelect,
-        });
-        return { result, message: messageRow, messages: [messageRow] };
+        },
+        childMessages: {
+          orderBy: { createdAt: 'asc' },
+          select: {
+            id: true,
+            media: {
+              orderBy: { attachmentIndex: 'asc' },
+              select: {
+                id: true,
+                fileName: true,
+                mimeType: true,
+                sizeBytes: true,
+                storagePath: true,
+                attachmentIndex: true,
+              },
+            },
+          },
+        },
+        media: {
+          orderBy: { attachmentIndex: 'asc' },
+          select: {
+            id: true,
+            fileName: true,
+            mimeType: true,
+            sizeBytes: true,
+            storagePath: true,
+            attachmentIndex: true,
+          },
+        },
+      },
+    });
+
+    if (!found) {
+      throw new NotFoundException('Message not found.');
+    }
+
+    if (found.sender.isDeleted) {
+      throw new BadRequestException(
+        'Cannot resend: sender Zalo account was removed.',
+      );
+    }
+
+    const root =
+      found.parentId != null
+        ? await this.prismaService.message.findUniqueOrThrow({
+            where: { id: found.parentId },
+            select: {
+              id: true,
+              content: true,
+              senderId: true,
+              groupId: true,
+              peerPhone: true,
+              status: true,
+              childMessages: {
+                orderBy: { createdAt: 'asc' },
+                select: {
+                  id: true,
+                  media: {
+                    orderBy: { attachmentIndex: 'asc' },
+                    select: {
+                      id: true,
+                      fileName: true,
+                      mimeType: true,
+                      sizeBytes: true,
+                      storagePath: true,
+                      attachmentIndex: true,
+                    },
+                  },
+                },
+              },
+              media: {
+                orderBy: { attachmentIndex: 'asc' },
+                select: {
+                  id: true,
+                  fileName: true,
+                  mimeType: true,
+                  sizeBytes: true,
+                  storagePath: true,
+                  attachmentIndex: true,
+                },
+              },
+            },
+          })
+        : found;
+
+    const mediaRows = [
+      ...root.media,
+      ...root.childMessages.flatMap((c) => c.media),
+    ].sort((a, b) => a.attachmentIndex - b.attachmentIndex);
+
+    const hasAttachments = mediaRows.length > 0;
+    const textPart = extractTextFromStoredContent(root.content, hasAttachments);
+
+    if (!textPart && !hasAttachments) {
+      throw new BadRequestException(
+        'Không có nội dung để gửi lại (text rỗng và không có file đính kèm đã lưu).',
+      );
+    }
+
+    if (
+      !hasAttachments &&
+      (root.content.includes('(Đính kèm:') ||
+        root.content.startsWith('Đính kèm:'))
+    ) {
+      throw new BadRequestException(
+        'Tin nhắn có đính kèm nhưng chưa có file trong Media (chỉ áp dụng tin gửi sau khi cập nhật hệ thống).',
+      );
+    }
+
+    const savedForSend: SavedMediaFile[] = [];
+    for (let i = 0; i < mediaRows.length; i++) {
+      const m = mediaRows[i]!;
+      try {
+        const copied = await copyStorageFileForResend(
+          m.storagePath,
+          m.fileName,
+        );
+        savedForSend.push({ ...copied, attachmentIndex: i });
+      } catch {
+        throw new BadRequestException(
+          `Không đọc được file đính kèm "${m.fileName}" trên storage.`,
+        );
+      }
+    }
+
+    const fileList: Express.Multer.File[] = [];
+    for (const s of savedForSend) {
+      fileList.push(await readStorageFileAsMulter(s));
+    }
+
+    const dto: SendMessageDto = {
+      zaloAccountId: root.senderId,
+      ...(root.groupId ? { groupId: root.groupId } : {}),
+      ...(root.peerPhone ? { peerPhone: root.peerPhone } : {}),
+      ...(textPart ? { text: textPart } : {}),
+    };
+
+    return this.send(appUserId, dto, fileList.length ? fileList : undefined);
+  }
+
+  private async resolveGroupTarget(
+    zaloAccountId: string,
+    groupId: string,
+    failureBase: Omit<LogFailedMessageInput, 'failureReason'>,
+  ): Promise<SendTarget> {
+    const mapping = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId,
+        groupId,
+      },
+      select: { id: true, groupZaloId: true },
+    });
+
+    if (!mapping) {
+      throw await this.recordFailureAndThrow(
+        failureBase,
+        'This Zalo account is not linked to the given group.',
+        new NotFoundException(
+          'This Zalo account is not linked to the given group.',
+        ),
+      );
+    }
+
+    const groupZaloId = mapping.groupZaloId?.trim() ?? '';
+    if (!groupZaloId) {
+      throw await this.recordFailureAndThrow(
+        failureBase,
+        'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
+        new BadRequestException(
+          'ZaloAccountGroup has no group_zalo_id; run child group scan or re-link the account to this group.',
+        ),
+      );
+    }
+
+    return { kind: 'group', groupId, threadId: groupZaloId };
+  }
+
+  private async resolveDmTarget(
+    sessionId: string,
+    normalizedPhone: string,
+    failureBase: Omit<LogFailedMessageInput, 'failureReason'>,
+  ): Promise<SendTarget> {
+    try {
+      const { user } = await this.zaloActionsService.findUser({
+        sessionId,
+        phoneNumber: normalizedPhone,
+      });
+      const u = user as { uid?: string } | undefined;
+      const raw = u?.uid;
+      const threadId = raw != null ? String(raw).trim() : '';
+      if (!threadId) {
+        throw await this.recordFailureAndThrow(
+          failureBase,
+          'Không thấy tài khoản Zalo tương ứng với số điện thoại.',
+          new BadRequestException(
+            'Không thấy tài khoản Zalo tương ứng với số điện thoại.',
+          ),
+        );
+      }
+      return { kind: 'dm', peerPhone: normalizedPhone, threadId };
+    } catch (e) {
+      if (e instanceof BadRequestException || e instanceof NotFoundException) {
+        throw e;
+      }
+      throw await this.recordFailureAndThrow(
+        failureBase,
+        e instanceof Error
+          ? e.message
+          : 'Gọi findUser theo số thất bại (kiểm tra số, session).',
+        new BadRequestException(
+          e instanceof Error
+            ? e.message
+            : 'Gọi findUser theo số thất bại (kiểm tra số, session).',
+        ),
+      );
+    }
+  }
+
+  private async enforceMessageIntervalForGroup(args: {
+    zaloAccountId: string;
+    groupId: string;
+    accountName: string | null;
+    failureBase: Omit<LogFailedMessageInput, 'failureReason'>;
+  }): Promise<void> {
+    const intervalMinutes = await this.configsService.getMessageIntervalMinutes();
+    if (intervalMinutes <= 0) {
+      return;
+    }
+
+    const [zaloGroup, lastMessage] = await Promise.all([
+      this.prismaService.zaloGroup.findUnique({
+        where: { id: args.groupId },
+        select: { groupName: true },
+      }),
+      this.prismaService.message.findFirst({
+        where: {
+          senderId: args.zaloAccountId,
+          groupId: args.groupId,
+          status: 'SENT',
+        },
+        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+        select: { sentAt: true, createdAt: true },
+      }),
+    ]);
+
+    if (!lastMessage) {
+      return;
+    }
+
+    const lastAt = lastMessage.sentAt ?? lastMessage.createdAt;
+    const intervalMs = intervalMinutes * 60_000;
+    const elapsed = Date.now() - lastAt.getTime();
+    if (elapsed >= intervalMs) {
+      return;
+    }
+
+    const childName = args.accountName?.trim() || 'Tài khoản này';
+    const groupLabel = zaloGroup?.groupName?.trim() || 'nhóm này';
+    const remainingMs = intervalMs - elapsed;
+    const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60_000));
+    const agoMinutes = Math.floor(elapsed / 60_000);
+    const agoLabel =
+      agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
+    const intervalMessage =
+      `${childName} vừa gửi tin nhắn vào group ${groupLabel} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo vào nhóm này`;
+    await this.recordFailureAndThrow(
+      args.failureBase,
+      intervalMessage,
+      new BadRequestException(intervalMessage),
+    );
+  }
+
+  private async enforceMessageIntervalForDm(args: {
+    zaloAccountId: string;
+    peerPhone: string;
+    accountName: string | null;
+    failureBase: Omit<LogFailedMessageInput, 'failureReason'>;
+  }): Promise<void> {
+    const intervalMinutes = await this.configsService.getMessageIntervalMinutes();
+    if (intervalMinutes <= 0) {
+      return;
+    }
+
+    const lastMessage = await this.prismaService.message.findFirst({
+      where: {
+        senderId: args.zaloAccountId,
+        groupId: null,
+        peerPhone: args.peerPhone,
+        status: 'SENT',
+      },
+      orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+      select: { sentAt: true, createdAt: true },
+    });
+
+    if (!lastMessage) {
+      return;
+    }
+
+    const lastAt = lastMessage.sentAt ?? lastMessage.createdAt;
+    const intervalMs = intervalMinutes * 60_000;
+    const elapsed = Date.now() - lastAt.getTime();
+    if (elapsed >= intervalMs) {
+      return;
+    }
+
+    const childName = args.accountName?.trim() || 'Tài khoản này';
+    const remainingMs = intervalMs - elapsed;
+    const waitMinutes = Math.max(1, Math.ceil(remainingMs / 60_000));
+    const agoMinutes = Math.floor(elapsed / 60_000);
+    const agoLabel =
+      agoMinutes >= 1 ? `${agoMinutes} phút` : 'chưa đầy 1 phút';
+    const intervalMessage =
+      `${childName} vừa gửi tin nhắn tới số ${args.peerPhone} cách đây ${agoLabel}, bạn cần chờ thêm ${waitMinutes} phút nữa để gửi tin nhắn tiếp theo tới số này`;
+    await this.recordFailureAndThrow(
+      args.failureBase,
+      intervalMessage,
+      new BadRequestException(intervalMessage),
+    );
+  }
+
+  private async executeSend(args: {
+    sessionId: string;
+    target: SendTarget;
+    textPart: string;
+    fileList: Express.Multer.File[];
+    contentForDb: string;
+    failureBase: Omit<LogFailedMessageInput, 'failureReason'>;
+    senderId: string;
+    zaloUid: string;
+  }) {
+    let savedMedia: SavedMediaFile[] = [];
+    let tempPaths: string[] = [];
+
+    try {
+      if (args.fileList.length) {
+        savedMedia = await saveMulterFilesToStorage(args.fileList);
+        tempPaths = savedMediaToAttachmentPaths(savedMedia);
       }
 
-      const contents = buildAttachmentBubbleContents(
-        textPart,
-        fileList,
-        bubbles,
-        contentForDb,
-      );
-      const rows = await this.prismaService.$transaction(async (tx) => {
-        const out: Prisma.MessageGetPayload<{
-          select: typeof createSelect;
-        }>[] = [];
-        let parentRowId: string | null = null;
-        for (let idx = 0; idx < bubbles.length; idx++) {
-          const bubble = bubbles[idx]!;
-          const content = contents[idx] ?? contentForDb;
-          const row = await tx.message.create({
-            data: {
-              content,
-              senderId: dto.zaloAccountId,
-              groupId: dto.groupId,
-              peerPhone: null,
-              messageZaloId: bubble.messageZaloId,
-              cliMsgId: bubble.cliMsgId,
-              uidFrom: zaloUid,
-              sentAt,
-              status: 'SENT',
-              parentId: idx === 0 ? null : parentRowId!,
-            },
-            select: createSelect,
-          });
-          if (idx === 0) {
-            parentRowId = row.id;
-          }
-          out.push(row);
-        }
-        return out;
+      const { result } = await this.zaloActionsService.sendMessage({
+        sessionId: args.sessionId,
+        text: args.textPart,
+        threadId: args.target.threadId,
+        threadType:
+          args.target.kind === 'dm' ? ThreadType.User : ThreadType.Group,
+        ...(tempPaths.length ? { attachmentLocalPaths: tempPaths } : {}),
       });
+
+      const rows = await persistSentMessagesWithMedia(
+        this.prismaService,
+        result,
+        {
+          senderId: args.senderId,
+          groupId:
+            args.target.kind === 'group' ? args.target.groupId : null,
+          peerPhone:
+            args.target.kind === 'dm' ? args.target.peerPhone : null,
+          zaloUid: args.zaloUid,
+        },
+        args.textPart,
+        args.fileList,
+        savedMedia,
+      );
 
       return { result, message: rows[0], messages: rows };
     } catch (e) {
@@ -361,13 +659,19 @@ export class MessagesService {
         e instanceof Error
           ? e.message
           : 'Gửi tin qua giao thức Zalo thất bại.';
-      await logFailedMessage(this.prismaService, {
-        ...failureBase,
+      const failedId = await logFailedMessage(this.prismaService, {
+        ...args.failureBase,
         failureReason,
       });
+      if (failedId && savedMedia.length) {
+        await linkMediaToFailedMessage(
+          this.prismaService,
+          failedId,
+          new Date(),
+          savedMedia,
+        );
+      }
       throw e;
-    } finally {
-      await cleanupAttachmentTempPaths(tempPaths);
     }
   }
 

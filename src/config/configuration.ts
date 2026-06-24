@@ -135,4 +135,10 @@ export default () => ({
       return Number.isFinite(n) && n > 0 ? n : undefined;
     })(),
   },
+  /** Local directory for persisted message attachments (default: `./storage/media`). */
+  media: {
+    storagePath:
+      process.env.MEDIA_STORAGE_PATH?.trim() ||
+      undefined,
+  },
 });

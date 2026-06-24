@@ -1,18 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import type { Express } from 'express';
 import { ThreadType } from 'zca-js';
-import type { Prisma } from '@prisma/client';
 import { PrismaService } from '../../database/prisma/prisma.service';
 import {
-  extractIdsFromZaloSendResult,
-  listZaloSendBubbleIds,
-} from '../../zalo/parse-zalo-send-message-result';
-import {
-  buildAttachmentBubbleContents,
   buildAttachmentContentForDb,
-  cleanupAttachmentTempPaths,
-  writeMulterAttachmentsToTemp,
 } from '../../common/utils/attachment-files.util';
+import {
+  saveMulterFilesToStorage,
+  savedMediaToAttachmentPaths,
+  type SavedMediaFile,
+} from '../../common/utils/media-storage.util';
 import {
   isValidVietnamPhoneForPublicTarget,
   normalizeVietnamPhone,
@@ -30,22 +27,10 @@ import {
   logFailedMessage,
   type LogFailedMessageInput,
 } from '../messages/log-failed-message.util';
-
-const createSelect = {
-  id: true,
-  messageZaloId: true,
-  cliMsgId: true,
-  uidFrom: true,
-  content: true,
-  senderId: true,
-  groupId: true,
-  peerPhone: true,
-  parentId: true,
-  sentAt: true,
-  status: true,
-  failureReason: true,
-  createdAt: true,
-} as const;
+import {
+  linkMediaToFailedMessage,
+  persistSentMessagesWithMedia,
+} from '../messages/persist-sent-messages.util';
 
 @Injectable()
 export class PublicZaloSendService {
@@ -81,16 +66,25 @@ export class PublicZaloSendService {
     base: Omit<LogFailedMessageInput, 'failureReason'>,
     code: PublicZaloSendCodeValue,
     detail?: string,
+    savedMedia: SavedMediaFile[] = [],
   ): Promise<{
     code: PublicZaloSendCodeValue;
     message: string;
     data?: Record<string, unknown>;
   }> {
     const response = this.msg(code, detail);
-    await logFailedMessage(this.prisma, {
+    const failedId = await logFailedMessage(this.prisma, {
       ...base,
       failureReason: response.message,
     });
+    if (failedId && savedMedia.length) {
+      await linkMediaToFailedMessage(
+        this.prisma,
+        failedId,
+        new Date(),
+        savedMedia,
+      );
+    }
     return response;
   }
 
@@ -448,10 +442,12 @@ export class PublicZaloSendService {
     message: string;
     data?: Record<string, unknown>;
   }> {
+    let savedMedia: SavedMediaFile[] = [];
     let tempPaths: string[] = [];
     try {
       if (ctx.fileList.length) {
-        tempPaths = await writeMulterAttachmentsToTemp(ctx.fileList);
+        savedMedia = await saveMulterFilesToStorage(ctx.fileList);
+        tempPaths = savedMediaToAttachmentPaths(savedMedia);
       }
 
       const { result } = await this.zaloActions.sendMessage({
@@ -462,13 +458,18 @@ export class PublicZaloSendService {
         ...(tempPaths.length ? { attachmentLocalPaths: tempPaths } : {}),
       });
 
-      const contentForDb = ctx.contentForDb;
-      const rows = await this.persistMessages(
+      const rows = await persistSentMessagesWithMedia(
+        this.prisma,
         result,
-        ctx,
-        contentForDb,
+        {
+          senderId: ctx.senderId,
+          groupId: ctx.groupId,
+          peerPhone: ctx.peerPhone,
+          zaloUid: ctx.zaloUid,
+        },
         ctx.textPart,
         ctx.fileList,
+        savedMedia,
       );
 
       return this.msg(0, undefined, {
@@ -498,80 +499,9 @@ export class PublicZaloSendService {
         },
         13,
         detail,
+        savedMedia,
       );
-    } finally {
-      await cleanupAttachmentTempPaths(tempPaths);
     }
-  }
-
-  private async persistMessages(
-    result: unknown,
-    ctx: {
-      senderId: string;
-      groupId: string | null;
-      peerPhone: string | null;
-      zaloUid: string;
-    },
-    contentForDb: string,
-    textPart: string,
-    fileList: Express.Multer.File[],
-  ) {
-    const bubbles = listZaloSendBubbleIds(result);
-    const sentAt = new Date();
-    if (bubbles.length === 0) {
-      const { messageZaloId, cliMsgId } = extractIdsFromZaloSendResult(result);
-      return [
-        await this.prisma.message.create({
-          data: {
-            content: contentForDb,
-            senderId: ctx.senderId,
-            groupId: ctx.groupId,
-            peerPhone: ctx.peerPhone,
-            messageZaloId,
-            cliMsgId,
-            uidFrom: ctx.zaloUid,
-            sentAt,
-            status: 'SENT',
-          },
-          select: createSelect,
-        }),
-      ];
-    }
-    const contents = buildAttachmentBubbleContents(
-      textPart,
-      fileList,
-      bubbles,
-      contentForDb,
-    );
-    return this.prisma.$transaction(async (tx) => {
-      const out: Prisma.MessageGetPayload<{ select: typeof createSelect }>[] =
-        [];
-      let parentRowId: string | null = null;
-      for (let idx = 0; idx < bubbles.length; idx++) {
-        const bubble = bubbles[idx]!;
-        const content = contents[idx] ?? contentForDb;
-        const row = await tx.message.create({
-          data: {
-            content,
-            senderId: ctx.senderId,
-            groupId: ctx.groupId,
-            peerPhone: ctx.peerPhone,
-            messageZaloId: bubble.messageZaloId,
-            cliMsgId: bubble.cliMsgId,
-            uidFrom: ctx.zaloUid,
-            sentAt,
-            status: 'SENT',
-            parentId: idx === 0 ? null : parentRowId!,
-          },
-          select: createSelect,
-        });
-        if (idx === 0) {
-          parentRowId = row.id;
-        }
-        out.push(row);
-      }
-      return out;
-    });
   }
 
   /**

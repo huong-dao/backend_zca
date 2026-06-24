@@ -15,14 +15,14 @@ export type LogFailedMessageInput = {
 export async function logFailedMessage(
   prisma: PrismaService,
   input: LogFailedMessageInput,
-): Promise<void> {
+): Promise<string | null> {
   const failureReason = input.failureReason.trim();
   if (!failureReason) {
-    return;
+    return null;
   }
 
   try {
-    await prisma.message.create({
+    const row = await prisma.message.create({
       data: {
         content: input.content,
         senderId: input.senderId,
@@ -33,10 +33,13 @@ export async function logFailedMessage(
         status: 'FAILED',
         failureReason,
       },
+      select: { id: true },
     });
+    return row.id;
   } catch (e) {
     logger.warn(
       `Could not persist failed message log: ${e instanceof Error ? e.message : String(e)}`,
     );
+    return null;
   }
 }

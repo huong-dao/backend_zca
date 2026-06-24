@@ -14,6 +14,7 @@ import { JwtAuthGuard } from './modules/auth/guards/jwt-auth.guard';
 import { ApiKeysModule } from './modules/api-keys/api-keys.module';
 import { UsersModule } from './modules/users/users.module';
 import { MessagesModule } from './modules/messages/messages.module';
+import { MediaModule } from './modules/media/media.module';
 import { ZaloAccountsModule } from './modules/zalo-accounts/zalo-accounts.module';
 import { ZaloGroupsModule } from './modules/zalo-groups/zalo-groups.module';
 import { ZaloLoginSessionsModule } from './modules/zalo-login-sessions/zalo-login-sessions.module';
@@ -35,6 +36,7 @@ import { BackgroundJobsModule } from './modules/background-jobs/background-jobs.
     ConfigsModule,
     UsersModule,
     MessagesModule,
+    MediaModule,
     ZaloAccountsModule,
     ZaloGroupsModule,
     ZaloLoginSessionsModule,

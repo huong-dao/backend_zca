@@ -55,4 +55,13 @@ export class MessagesController {
   ) {
     return this.messagesService.undo(user.id, id);
   }
+
+  /** Resend using stored message target/content and persisted Media attachments. */
+  @Post('resend/:id')
+  resend(
+    @CurrentUser() user: AuthenticatedUser,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.messagesService.resend(user.id, id);
+  }
 }
