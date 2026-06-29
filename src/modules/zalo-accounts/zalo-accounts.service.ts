@@ -414,7 +414,8 @@ export class ZaloAccountsService {
 
   /**
    * Master's child accounts that already have a `zalo_account_groups` row for `groupId`.
-   * Same eligibility filters as {@link findChildZaloWithMinGroupForMaster}; tie-break: lowest `groupCount`, then `id`.
+   * Includes `INACTIVE` children (caller must reject send when not `ACTIVE`).
+   * Prefers `ACTIVE` when multiple mapped children exist; tie-break: lowest `groupCount`, then `id`.
    */
   async findChildZaloInGroupForMaster(masterId: string, groupId: string) {
     const maps = await this.prismaService.zaloAccountGroup.findMany({
@@ -423,7 +424,6 @@ export class ZaloAccountsService {
         zaloAccount: {
           isDeleted: false,
           isMaster: false,
-          status: 'ACTIVE',
           zaloId: { not: null },
           masters: { some: { masterId } },
         },
@@ -443,17 +443,23 @@ export class ZaloAccountsService {
         },
       },
     });
-    const active = maps
+    const eligible = maps
       .map((m) => m.zaloAccount)
       .filter((c) => Boolean(c.zaloId?.trim()));
-    if (active.length === 0) {
+    if (eligible.length === 0) {
       return null;
     }
-    active.sort(
-      (a, b) =>
-        a.groupCount - b.groupCount || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
-    );
-    return active[0] ?? null;
+    eligible.sort((a, b) => {
+      const aActive = a.status === 'ACTIVE' ? 0 : 1;
+      const bActive = b.status === 'ACTIVE' ? 0 : 1;
+      if (aActive !== bActive) {
+        return aActive - bActive;
+      }
+      return (
+        a.groupCount - b.groupCount || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
+      );
+    });
+    return eligible[0] ?? null;
   }
 
   /**

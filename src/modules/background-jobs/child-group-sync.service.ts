@@ -357,6 +357,61 @@ export class ChildGroupSyncService {
   }
 
   /**
+   * Manual release when scan work appears done but `status` stayed `INACTIVE`
+   * (e.g. worker died after linking groups). Rejects while Bull still has jobs for this child.
+   */
+  async releaseChildGroupScanLock(zaloAccountId: string): Promise<{
+    released: boolean;
+    zaloAccountId: string;
+    status: string;
+  }> {
+    this.assertEnabled();
+    const account = await this.prisma.zaloAccount.findFirst({
+      where: { id: zaloAccountId, isDeleted: false },
+      select: { id: true, isMaster: true, status: true },
+    });
+    if (!account) {
+      throw new NotFoundException('Zalo account not found.');
+    }
+    if (account.isMaster) {
+      throw new BadRequestException(
+        'Only a child Zalo account can release a group scan lock.',
+      );
+    }
+    if (account.status !== 'INACTIVE') {
+      return { released: false, zaloAccountId, status: 'ACTIVE' };
+    }
+    if (await this.hasPendingChildScanJobs(zaloAccountId)) {
+      throw new ConflictException(
+        'Child group scan is still queued or running in the worker.',
+      );
+    }
+
+    const ok = await this.revertInactiveScanAndIdle(zaloAccountId);
+    if (ok) {
+      this.logger.log(
+        `Child scan lock released manually: zaloAccountId=${zaloAccountId}`,
+      );
+      return { released: true, zaloAccountId, status: 'ACTIVE' };
+    }
+    return { released: false, zaloAccountId, status: 'INACTIVE' };
+  }
+
+  /** True if Bull still has waiting, delayed, or active jobs for this child account. */
+  private async hasPendingChildScanJobs(
+    zaloAccountId: string,
+  ): Promise<boolean> {
+    const lists = await Promise.all([
+      this.queue.getJobs(['waiting'], 0, 200),
+      this.queue.getJobs(['delayed'], 0, 200),
+      this.queue.getJobs(['active'], 0, 200),
+    ]);
+    return lists.some((jobs) =>
+      jobs.some((j) => j.data?.zaloAccountId === zaloAccountId),
+    );
+  }
+
+  /**
    * Periodic watchdog: clears INACTIVE children whose Bull/job-state indicates no healthy scan.
    */
   async reconcileStaleInactiveChildScans(): Promise<{ released: number }> {
@@ -378,6 +433,10 @@ export class ChildGroupSyncService {
 
     let released = 0;
     for (const row of inactiveChildren) {
+      if (await this.hasPendingChildScanJobs(row.id)) {
+        continue;
+      }
+
       const jobKey = childGroupScanJobKey(row.id);
       const state = await this.prisma.backgroundJobState.findUnique({
         where: { jobKey },
@@ -432,22 +491,24 @@ export class ChildGroupSyncService {
     }
     await this.jobState.markChildGroupScanRunning(p.zaloAccountId);
     let continuationScheduled = false;
+    let scanFailed = false;
     try {
       continuationScheduled = await this.runScanPayload(p);
     } catch (e) {
+      scanFailed = true;
       this.logger.error(
         `child-group-scan failed: ${e instanceof Error ? e.message : String(e)}`,
         e instanceof Error ? e.stack : undefined,
       );
-      await this.revertInactiveScanAndIdle(p.zaloAccountId);
       throw e;
-    }
-    if (!continuationScheduled) {
-      const ok = await this.revertInactiveScanAndIdle(p.zaloAccountId);
-      if (ok) {
-        this.logger.log(
-          `Child group scan finished; status=ACTIVE (zaloAccountId=${p.zaloAccountId})`,
-        );
+    } finally {
+      if (scanFailed || !continuationScheduled) {
+        const ok = await this.revertInactiveScanAndIdle(p.zaloAccountId);
+        if (ok && !scanFailed) {
+          this.logger.log(
+            `Child group scan finished; status=ACTIVE (zaloAccountId=${p.zaloAccountId})`,
+          );
+        }
       }
     }
   }

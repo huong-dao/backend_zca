@@ -31,4 +31,17 @@ export class ChildGroupSyncDisabledService {
     void _childZaloAccountId;
     return Promise.resolve();
   }
+
+  releaseChildGroupScanLock(
+    _zaloAccountId: string,
+  ): Promise<{
+    released: boolean;
+    zaloAccountId: string;
+    status: string;
+  }> {
+    void _zaloAccountId;
+    throw new BadRequestException(
+      'Group sync and child scan are disabled. Set GROUP_SYNC_ENABLED=true and run Redis, or use this only in environments that need it.',
+    );
+  }
 }

@@ -298,6 +298,7 @@ export class PublicZaloSendService {
 
     const childPreferInGroup =
       await this.zaloAccounts.findChildZaloInGroupForMaster(master.id, group.id);
+    // Fallback only when no child is mapped to this group yet (auto-invite path).
     const child =
       childPreferInGroup ??
       (await this.zaloAccounts.findChildZaloWithMinGroupForMaster(master.id));

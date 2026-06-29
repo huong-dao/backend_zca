@@ -117,6 +117,15 @@ export class ZaloAccountsController {
     return this.childGroupSync.startChildGroupScan(user.id, id, dto.sessionId);
   }
 
+  /**
+   * Release a stuck child scan lock (`INACTIVE` after scan work finished).
+   * Rejects while Bull still has queued/active jobs for this account.
+   */
+  @Post(':id/child-group-scan/release')
+  releaseChildGroupScanLock(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.childGroupSync.releaseChildGroupScanLock(id);
+  }
+
   @Put('set-master/:id')
   setMaster(@Param('id', new ParseUUIDPipe()) id: string) {
     return this.zaloAccountsService.setMaster(id);

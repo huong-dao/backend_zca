@@ -25,7 +25,29 @@ const pendingGroupWhere: Prisma.ZaloGroupWhereInput = {
   OR: [{ isUpdateName: false }, { globalId: null }, { globalId: '' }],
 };
 
+const masterMappedGroupWhere: Prisma.ZaloAccountGroupWhereInput = {
+  zaloAccount: {
+    isMaster: true,
+    isDeleted: false,
+    zaloId: { not: null },
+  },
+};
+
+type GroupSyncCandidate = {
+  id: string;
+  groupName: string;
+  isUpdateName: boolean;
+  globalId: string | null;
+};
+
 type GroupInfoMapEntry = { name?: string; globalId?: string };
+
+const groupSyncCandidateSelect = {
+  id: true,
+  groupName: true,
+  isUpdateName: true,
+  globalId: true,
+} as const;
 
 @Injectable()
 export class GroupMetadataSyncService {
@@ -46,15 +68,10 @@ export class GroupMetadataSyncService {
       this.config.get<number | undefined>('groupSync.maxGroupsPerFetch') ??
       Math.max(1, chunkSize * maxCallsPerRun);
 
-    const groups = await this.prisma.zaloGroup.findMany({
-      where: pendingGroupWhere,
-      take: maxGroupsPerFetch,
-      orderBy: { createdAt: 'asc' },
-      select: { id: true, groupName: true, isUpdateName: true, globalId: true },
-    });
+    const groups = await this.fetchGroupsForSyncBatch(maxGroupsPerFetch);
 
     if (groups.length === 0) {
-      this.logger.debug('Group metadata sync: no pending groups.');
+      this.logger.debug('Group metadata sync: no groups to sync.');
       return {
         candidates: 0,
         withMaster: 0,
@@ -78,11 +95,7 @@ export class GroupMetadataSyncService {
       const mapping = await this.prisma.zaloAccountGroup.findFirst({
         where: {
           groupId: g.id,
-          zaloAccount: {
-            isMaster: true,
-            isDeleted: false,
-            zaloId: { not: null },
-          },
+          ...masterMappedGroupWhere,
         },
         orderBy: { joinedAt: 'asc' },
         select: {
@@ -204,6 +217,42 @@ export class GroupMetadataSyncService {
       failed,
       skippedGlobalIdConflict,
     };
+  }
+
+  /**
+   * Pending groups first (missing name/globalId), then rotate name refresh for
+   * already-synced groups mapped to a master (oldest `updatedAt` first).
+   */
+  private async fetchGroupsForSyncBatch(
+    maxGroupsPerFetch: number,
+  ): Promise<GroupSyncCandidate[]> {
+    const pending = await this.prisma.zaloGroup.findMany({
+      where: pendingGroupWhere,
+      take: maxGroupsPerFetch,
+      orderBy: { createdAt: 'asc' },
+      select: groupSyncCandidateSelect,
+    });
+
+    if (pending.length >= maxGroupsPerFetch) {
+      return pending;
+    }
+
+    const refresh = await this.prisma.zaloGroup.findMany({
+      where: {
+        isUpdateName: true,
+        globalId: { not: null },
+        NOT: { globalId: '' },
+        accountMaps: { some: masterMappedGroupWhere },
+        ...(pending.length > 0
+          ? { id: { notIn: pending.map((g) => g.id) } }
+          : {}),
+      },
+      take: maxGroupsPerFetch - pending.length,
+      orderBy: { updatedAt: 'asc' },
+      select: groupSyncCandidateSelect,
+    });
+
+    return [...pending, ...refresh];
   }
 
   private async tryGetLatestSession(zaloUid: string): Promise<{

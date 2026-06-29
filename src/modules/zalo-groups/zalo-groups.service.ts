@@ -651,7 +651,11 @@ export class ZaloGroupsService {
             }
             const row = await tx.zaloGroup.update({
               where: { id: groupId },
-              data: { originName: group.originName },
+              data: {
+                groupName: group.groupName,
+                originName: group.originName,
+                isUpdateName: true,
+              },
               select: zaloGroupSelect,
             });
             updatedOriginNameRows.push(row);
