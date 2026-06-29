@@ -776,18 +776,15 @@ For each **new** `group_zalo_id` (no existing `ZaloAccountGroup` row for this ac
 - one row is created in `ZaloAccountGroup` to map that group to the provided Zalo account
 - the target account `groupCount` is recalculated after the transaction
 
-`group_zalo_id` is the Zalo group grid id returned for that account (from `getAllGroups` / `getGroupInfo`). By default, existing mappings for this account are **skipped** (no second insert). Optional body field **`mode`** changes that (see below).
+`group_zalo_id` is the Zalo group grid id returned for that account (from `getAllGroups` / `getGroupInfo`). By default, existing mappings for this account are **not inserted again**; their linked **`ZaloGroup` names are refreshed** when the same `group_zalo_id` appears in `groups` (see below). Optional body field **`mode`** is accepted for backward compatibility but no longer required for re-scan.
 
-For each **new** `ZaloGroup` row, both `groupName` and `originName` are set to the trimmed `group_name` at insert time (`isUpdateName` remains `false` until background metadata sync or a rename update).
+For each **new** `ZaloGroup` row, both `groupName` and `originName` are set to the trimmed `group_name` at insert time.
 
-**Re-scan after Zalo rename (master “quét nhóm”):** when the user changes a group name on Zalo and the frontend re-imports the list, send **`mode: "update origin name"`** so existing `group_zalo_id` rows are refreshed from the request instead of being skipped. The server updates the linked `ZaloGroup` with:
-- `groupName` ← trimmed `group_name` from the request (display name used in UI, `POST /messages/send`, `POST /public/zalo/send`, etc.)
-- `originName` ← same trimmed `group_name`
-- `isUpdateName` ← `true`
+**Re-scan (master “quét nhóm”):** send the current list from Zalo in `groups`. Existing **`group_zalo_id`** rows update `groupName` / `originName` when included in the payload. **Renames on Zalo outside ZCA** are picked up by background **`group-metadata-sync`** (`GROUP_SYNC_ENABLED=true`) — do not batch `getGroupInfo` on every scan.
 
-New `group_zalo_id` values in the same request are still inserted as usual. Other values for `mode` are rejected (validation).
+**Rename from ZCA UI:** use **`PATCH /zalo-groups/:id/group-name`** — calls Zalo `changeGroupName` and updates DB (see below).
 
-**Note:** Background job **`group-metadata-sync`** (when `GROUP_SYNC_ENABLED=true`) also refreshes `groupName` from Zalo `getGroupInfo` on a schedule; bulk re-scan with `"update origin name"` applies names immediately from the client payload.
+**Note:** `PATCH /zalo-accounts/:id/group-data` only caches `groupData`; it does **not** update `ZaloGroup` names.
 
 #### Request
 - Params:
@@ -835,8 +832,8 @@ With `"mode": "update origin name"` at the top level of the body (next to `group
 #### Response
 
 - `created`: new `ZaloGroup` rows (same shape as single create).
-- `updatedOriginName`: groups whose linked `ZaloGroup` was updated when `mode` is `"update origin name"` (each item includes refreshed **`groupName`** and **`originName`**, and **`isUpdateName: true`**). Empty array unless that mode is set.
-- `skipped.existingGroupZaloIds`: empty when `mode` is `"update origin name"` and every requested existing id was handled as an update; otherwise lists `group_zalo_id` values that were skipped because they already exist for this account.
+- `updatedOriginName`: groups whose linked `ZaloGroup` was updated (existing `group_zalo_id` in request). Each item includes refreshed **`groupName`**, **`originName`**, **`isUpdateName: true`**.
+- `skipped.existingGroupZaloIds`: always empty when existing ids appear in `groups` (they are updated, not skipped).
 
 ```json
 {
@@ -878,10 +875,10 @@ With `"mode": "update origin name"` at the top level of the body (next to `group
 ```
 
 #### Frontend notes
-- **Master group scan / re-scan:** after `getAllGroups` (+ optional `getGroupInfo` for `global_id`), POST this endpoint with the master’s `zaloAccountId` as `:id`.
-- **First sync:** omit `mode` (or only send new `group_zalo_id` values).
-- **Re-scan when names changed on Zalo:** set **`mode: "update origin name"`** and send the full group list (or at least rows to refresh) with current `group_name` from Zalo so **`groupName`** in ZCA matches the app.
-- Without `"update origin name"`, existing `group_zalo_id` entries are **not** updated — they appear in `skipped.existingGroupZaloIds`.
+- **Master group scan / re-scan:** after `getAllGroups`, POST this endpoint with the master’s `zaloAccountId` as `:id` (new groups only need correct `group_zalo_id`; names from Zalo can follow via background sync).
+- **User renames a group in ZCA:** `PATCH /zalo-groups/:id/group-name` (Zalo + DB).
+- **User renames on Zalo app:** wait for **`group-metadata-sync`** or re-import with updated `group_name` in bulk.
+- **`PATCH .../group-data` alone does not rename groups** in `zalo_groups`.
 
 #### Error cases
 - `400`: validation error
@@ -890,6 +887,67 @@ With `"mode": "update origin name"` at the top level of the body (next to `group
 - `403`: role is not allowed
 - `404`: Zalo account not found
 - `500`: unexpected server error
+
+#### Authentication
+- JWT required
+- Guards: `JwtAuthGuard`, `RolesGuard`
+- Roles: authenticated `ADMIN` or `USER`
+
+### PATCH `/zalo-groups/:id/group-name`
+#### Endpoint
+- Method: `PATCH`
+- Full path: `/zalo-groups/:id/group-name`
+- Function: `ZaloGroupsController.changeGroupName`
+
+#### Description
+**Đổi tên nhóm từ ZCA:** gọi Zalo **`changeGroupName`** (zca-js) trên session **master**, rồi cập nhật `ZaloGroup.groupName`, `originName`, `isUpdateName` trong DB.
+
+`:id` = internal `zalo_groups.id` (UUID). Master’s **`group_zalo_id`** for the Zalo API call is resolved from `zalo_account_groups` using `masterZaloAccountId`.
+
+See also `docs/Zalo_Integration.mdc` — **API: changeGroupName**.
+
+#### Request
+- Params:
+  - `id`: `string`, UUID — `zalo_groups.id`
+- Body:
+  - `group_name`: `string`, required — tên mới (1–255 ký tự)
+  - `sessionId`: `string`, UUID — master `zalo_login_sessions.id`
+  - `masterZaloAccountId`: `string`, UUID — master `zalo_accounts.id` (`isMaster = true`)
+
+Example:
+
+```json
+{
+  "group_name": "Viện Nghiên cứu Miễn dịch Vin (BIO-0527)",
+  "sessionId": "e2c52ab6-5134-4f9c-9968-3e8b430094aa",
+  "masterZaloAccountId": "7c13f32f-90eb-483f-b5e0-c3b7fa120001"
+}
+```
+
+#### Response
+
+```json
+{
+  "success": true,
+  "group": {
+    "id": "5d6a8d48-b45c-43d8-9b0d-5cc3bd110001",
+    "groupName": "Viện Nghiên cứu Miễn dịch Vin (BIO-0527)",
+    "originName": "Viện Nghiên cứu Miễn dịch Vin (BIO-0527)",
+    "isUpdateName": true,
+    "createdAt": "2026-04-15T08:20:00.000Z",
+    "updatedAt": "2026-04-17T10:05:00.000Z"
+  },
+  "zalo": {
+    "status": 0
+  }
+}
+```
+
+#### Error cases
+- `400`: validation error; not a master; empty name; Zalo API rejected (`ZaloApiError`)
+- `401` / `403`: as other `zalo-groups` routes
+- `404`: group or master not found; group not linked to master
+- `500`: session restore / unexpected error
 
 #### Authentication
 - JWT required

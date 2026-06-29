@@ -20,8 +20,8 @@ import { PrismaService } from '../../database/prisma/prisma.service';
 import type { ZaloSessionCredentialsPayload } from '../zalo-login-sessions/zalo-login-sessions.service';
 import { ChildGroupSyncService } from '../background-jobs/child-group-sync.service';
 import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sessions.service';
+import { ChangeZaloGroupNameDto } from './dto/change-zalo-group-name.dto';
 import {
-  CREATE_MULTIPLE_ZALO_GROUPS_MODE_UPDATE_ORIGIN_NAME,
   CreateMultipleZaloGroupsDto,
 } from './dto/create-multiple-zalo-groups.dto';
 import type {
@@ -561,6 +561,74 @@ export class ZaloGroupsService {
     };
   }
 
+  /**
+   * Rename on Zalo (`changeGroupName`) then update `ZaloGroup.groupName` / `originName` in DB.
+   */
+  async changeGroupNameOnZalo(
+    internalGroupId: string,
+    dto: ChangeZaloGroupNameDto,
+  ): Promise<{
+    success: true;
+    group: ZaloGroupRecord;
+    zalo: { status: number };
+  }> {
+    await this.ensureGroupExists(internalGroupId);
+
+    const trimmedName = dto.group_name.trim();
+    if (!trimmedName) {
+      throw new BadRequestException('group_name must not be empty.');
+    }
+
+    const master = await this.prismaService.zaloAccount.findFirst({
+      where: { id: dto.masterZaloAccountId, isDeleted: false },
+      select: { id: true, isMaster: true },
+    });
+    if (!master) {
+      throw new NotFoundException('Master Zalo account not found.');
+    }
+    if (!master.isMaster) {
+      throw new BadRequestException(
+        'masterZaloAccountId must reference a master account (isMaster = true).',
+      );
+    }
+
+    const mapping = await this.prismaService.zaloAccountGroup.findFirst({
+      where: {
+        zaloAccountId: master.id,
+        groupId: internalGroupId,
+      },
+      select: { groupZaloId: true },
+      orderBy: { joinedAt: 'asc' },
+    });
+    if (!mapping?.groupZaloId?.trim()) {
+      throw new NotFoundException(
+        'This group is not linked to the given master account (no ZaloAccountGroup mapping).',
+      );
+    }
+    const groupZaloId = mapping.groupZaloId.trim();
+
+    const zaloResult = await this.withZaloSession(
+      dto.sessionId,
+      async (zca) => zca.changeGroupName(trimmedName, groupZaloId),
+    );
+
+    const group = await this.prismaService.zaloGroup.update({
+      where: { id: internalGroupId },
+      data: {
+        groupName: trimmedName,
+        originName: trimmedName,
+        isUpdateName: true,
+      },
+      select: zaloGroupSelect,
+    });
+
+    this.logger.log(
+      `Group renamed on Zalo + DB: groupId=${internalGroupId} masterId=${master.id}`,
+    );
+
+    return { success: true, group, zalo: zaloResult };
+  }
+
   async createMultiple(
     zaloAccountId: string,
     dto: CreateMultipleZaloGroupsDto,
@@ -632,9 +700,6 @@ export class ZaloGroupsService {
       }
     }
 
-    const isUpdateOriginNameMode =
-      dto.mode === CREATE_MULTIPLE_ZALO_GROUPS_MODE_UPDATE_ORIGIN_NAME;
-
     const groupsToCreate = requestedGroupZaloIds
       .filter((groupZaloId) => !existingGroupZaloIds.has(groupZaloId))
       .map((groupZaloId) => uniqueGroups.get(groupZaloId)!);
@@ -643,23 +708,23 @@ export class ZaloGroupsService {
       await this.prismaService.$transaction(async (tx) => {
         const updatedOriginNameRows: ZaloGroupRecord[] = [];
 
-        if (isUpdateOriginNameMode) {
-          for (const [groupZaloId, { groupId }] of firstMappingByGroupZaloId) {
-            const group = uniqueGroups.get(groupZaloId);
-            if (!group) {
-              continue;
-            }
-            const row = await tx.zaloGroup.update({
-              where: { id: groupId },
-              data: {
-                groupName: group.groupName,
-                originName: group.originName,
-                isUpdateName: true,
-              },
-              select: zaloGroupSelect,
-            });
-            updatedOriginNameRows.push(row);
+        // Always refresh names for existing mappings included in this request
+        // (master re-scan). `mode: "update origin name"` is still accepted for compat.
+        for (const [groupZaloId, { groupId }] of firstMappingByGroupZaloId) {
+          const group = uniqueGroups.get(groupZaloId);
+          if (!group) {
+            continue;
           }
+          const row = await tx.zaloGroup.update({
+            where: { id: groupId },
+            data: {
+              groupName: group.groupName,
+              originName: group.originName,
+              isUpdateName: true,
+            },
+            select: zaloGroupSelect,
+          });
+          updatedOriginNameRows.push(row);
         }
 
         const createdGroups: ZaloGroupRecord[] = [];
@@ -700,12 +765,8 @@ export class ZaloGroupsService {
         };
       });
 
-    const skippedExistingIds = isUpdateOriginNameMode
-      ? []
-      : [...existingGroupZaloIds];
-    const skippedExistingCount = isUpdateOriginNameMode
-      ? 0
-      : existingGroupZaloIds.size;
+    const skippedExistingIds: string[] = [];
+    const skippedExistingCount = 0;
 
     return {
       created,

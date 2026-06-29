@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   ParseUUIDPipe,
+  Patch,
   Post,
   Put,
   Query,
@@ -22,6 +23,7 @@ import {
 } from './dto/find-zalo-groups.dto';
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { RemoveMemberFromZaloGroupDto } from './dto/remove-member-from-zalo-group.dto';
+import { ChangeZaloGroupNameDto } from './dto/change-zalo-group-name.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 import { ZaloGroupsService } from './zalo-groups.service';
 
@@ -77,6 +79,17 @@ export class ZaloGroupsController {
       await this.zaloGroupsService.createMultiple(id, dto);
 
     return result;
+  }
+
+  /**
+   * Rename on Zalo (`changeGroupName`) and update `ZaloGroup` in DB.
+   */
+  @Patch(':id/group-name')
+  changeGroupName(
+    @Param('id', new ParseUUIDPipe()) id: string,
+    @Body() dto: ChangeZaloGroupNameDto,
+  ) {
+    return this.zaloGroupsService.changeGroupNameOnZalo(id, dto);
   }
 
   @Post('invite-member')

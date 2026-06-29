@@ -43,6 +43,13 @@ export class ZcaApiHelper {
     return this.api.getGroupInfo(groupId);
   }
 
+  changeGroupName(
+    name: string,
+    groupId: string,
+  ): Promise<{ status: number }> {
+    return this.api.changeGroupName(name, groupId);
+  }
+
   getUserInfo(
     userId: string | string[],
     avatarSize?: AvatarSize,

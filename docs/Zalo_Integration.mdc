@@ -163,6 +163,51 @@ const groups: GetAllGroupsResponse = await api.getAllGroups();
 console.log(groups.version, groups.gridVerMap);
 ```
 
+## API: changeGroupName
+
+### Description
+Cập nhật **tên nhóm** trên Zalo (API `/api/group/updateinfo` qua zca-js).
+
+Backend Nest: `ZcaApiHelper.changeGroupName` — dùng trong **`PATCH /zalo-groups/:id/group-name`** (đổi tên trên Zalo rồi cập nhật `ZaloGroup` trong DB). Cần **`group_zalo_id`** (grid id) của master và session master có quyền admin nhóm.
+
+---
+
+### Method (zca-js)
+api.changeGroupName(name, groupId)
+
+---
+
+### Parameters
+
+- name: string  
+  → Tên nhóm mới
+
+- groupId: string  
+  → Zalo group grid id (`group_zalo_id` trên thiết bị master)
+
+---
+
+### Return
+
+```ts
+export type ChangeGroupNameResponse = {
+  status: number;
+};
+```
+
+`Promise<ChangeGroupNameResponse>`
+
+---
+
+### Example
+
+```ts
+api
+  .changeGroupName('Tên Mới', '0000000000000000000')
+  .then(console.log)
+  .catch(console.error);
+```
+
 ## API: getUserInfo
 
 ### Description
