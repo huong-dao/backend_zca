@@ -150,6 +150,31 @@ export class PublicZaloSendService {
     }
   }
 
+  private async pickChildWithSession<
+    T extends {
+      id: string;
+      zaloId: string | null;
+      phone: string | null;
+      name: string | null;
+      status: string;
+    },
+  >(
+    candidates: T[],
+  ): Promise<{ child: T; sessionId: string } | null> {
+    for (const child of candidates) {
+      if (child.status !== 'ACTIVE' || !child.zaloId?.trim()) {
+        continue;
+      }
+      const session = await this.zaloLoginSessions.tryFindLatestByZaloUid(
+        child.zaloId.trim(),
+      );
+      if (session) {
+        return { child, sessionId: session.id };
+      }
+    }
+    return null;
+  }
+
   private async sendDm(
     normalizedPhone: string,
     textPart: string,
@@ -163,7 +188,30 @@ export class PublicZaloSendService {
     if (!pair) {
       return this.msg(7, 'Chưa có cặp tài khoản master/child sẵn sàng cho kênh DM công khai.');
     }
-    const { child, master } = pair;
+    const { master } = pair;
+    const dmCandidates = await this.zaloAccounts.listChildZaloWithMinGroupForMaster(
+      master.id,
+    );
+    const picked = await this.pickChildWithSession(dmCandidates);
+    if (!picked) {
+      if (dmCandidates.length === 0) {
+        return this.msg(7, 'Chưa có cặp tài khoản master/child sẵn sàng cho kênh DM công khai.');
+      }
+      const failureBaseNoSession: Omit<LogFailedMessageInput, 'failureReason'> = {
+        senderId: dmCandidates[0]!.id,
+        groupId: null,
+        peerPhone: normalizedPhone,
+        content: contentForDb,
+        uidFrom: dmCandidates[0]!.zaloId?.trim() || null,
+      };
+      return this.failWithLog(
+        failureBaseNoSession,
+        9,
+        'Không có tài khoản child nào đang đăng nhập Zalo (QR) để gửi DM.',
+        savedMedia,
+      );
+    }
+    const { child, sessionId } = picked;
     const failureBase: Omit<LogFailedMessageInput, 'failureReason'> = {
       senderId: child.id,
       groupId: null,
@@ -191,21 +239,6 @@ export class PublicZaloSendService {
         failureBase,
         intervalDm.code,
         intervalDm.detail,
-        savedMedia,
-      );
-    }
-
-    let sessionId: string;
-    try {
-      const full = await this.zaloLoginSessions.findLatestByZaloUid(
-        child.zaloId.trim(),
-      );
-      sessionId = full.id;
-    } catch {
-      return this.failWithLog(
-        failureBase,
-        9,
-        'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
         savedMedia,
       );
     }
@@ -296,15 +329,54 @@ export class PublicZaloSendService {
       return this.msg(6, 'Không có tài khoản master active liên kết với nhóm này.');
     }
 
-    const childPreferInGroup =
-      await this.zaloAccounts.findChildZaloInGroupForMaster(master.id, group.id);
-    // Fallback only when no child is mapped to this group yet (auto-invite path).
-    const child =
-      childPreferInGroup ??
-      (await this.zaloAccounts.findChildZaloWithMinGroupForMaster(master.id));
-    if (!child) {
-      return this.msg(7, 'Master này chưa có tài khoản child dùng để gửi.');
+    const inGroupCandidates =
+      await this.zaloAccounts.listChildZaloInGroupForMaster(master.id, group.id);
+    let pickedFromFallback: { child: (typeof inGroupCandidates)[number]; sessionId: string } | null =
+      null;
+    let childFromGroup = false;
+
+    if (inGroupCandidates.length > 0) {
+      pickedFromFallback = await this.pickChildWithSession(inGroupCandidates);
+      childFromGroup = pickedFromFallback != null;
+      if (!pickedFromFallback) {
+        const fallbackSender = inGroupCandidates[0]!;
+        return this.failWithLog(
+          {
+            senderId: fallbackSender.id,
+            groupId: group.id,
+            peerPhone: null,
+            content: contentForDb,
+            uidFrom: fallbackSender.zaloId?.trim() || null,
+          },
+          9,
+          'Có child trong nhóm nhưng không ai đang đăng nhập Zalo (QR); đăng nhập ít nhất một child trong nhóm.',
+          savedMedia,
+        );
+      }
+    } else {
+      const fallbackCandidates =
+        await this.zaloAccounts.listChildZaloWithMinGroupForMaster(master.id);
+      pickedFromFallback = await this.pickChildWithSession(fallbackCandidates);
+      if (!pickedFromFallback) {
+        if (fallbackCandidates.length === 0) {
+          return this.msg(7, 'Master này chưa có tài khoản child dùng để gửi.');
+        }
+        const fallbackSender = fallbackCandidates[0]!;
+        return this.failWithLog(
+          {
+            senderId: fallbackSender.id,
+            groupId: group.id,
+            peerPhone: null,
+            content: contentForDb,
+            uidFrom: fallbackSender.zaloId?.trim() || null,
+          },
+          9,
+          'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
+          savedMedia,
+        );
+      }
     }
+    const { child, sessionId } = pickedFromFallback;
     const failureBase: Omit<LogFailedMessageInput, 'failureReason'> = {
       senderId: child.id,
       groupId: group.id,
@@ -321,7 +393,7 @@ export class PublicZaloSendService {
       );
     }
     const childPhone = child.phone?.trim();
-    if (!childPhone && childPreferInGroup == null) {
+    if (!childPhone && !childFromGroup) {
       return this.failWithLog(
         failureBase,
         8,
@@ -341,21 +413,6 @@ export class PublicZaloSendService {
         failureBase,
         intervalGroup.code,
         intervalGroup.detail,
-        savedMedia,
-      );
-    }
-
-    let sessionId: string;
-    try {
-      const full = await this.zaloLoginSessions.findLatestByZaloUid(
-        child.zaloId.trim(),
-      );
-      sessionId = full.id;
-    } catch {
-      return this.failWithLog(
-        failureBase,
-        9,
-        'Cần đăng nhập Zalo bằng mã QR cho tài khoản child trước khi gửi.',
         savedMedia,
       );
     }

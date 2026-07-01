@@ -151,14 +151,22 @@ export class ZaloLoginSessionsService {
   }
 
   async findLatestByZaloUid(zaloUid: string): Promise<ZaloLoginSessionFull> {
+    const session = await this.tryFindLatestByZaloUid(zaloUid);
+    if (!session) {
+      throw new NotFoundException('No session for this Zalo uid.');
+    }
+    return session;
+  }
+
+  /** Latest stored session for `zaloUid`, or `null` when none exists (no throw). */
+  async tryFindLatestByZaloUid(
+    zaloUid: string,
+  ): Promise<ZaloLoginSessionFull | null> {
     const row = await this.prisma.zaloLoginSession.findFirst({
       where: { zaloUid },
       orderBy: { updatedAt: 'desc' },
     });
-    if (!row) {
-      throw new NotFoundException('No session for this Zalo uid.');
-    }
-    return this.rowToFull(row);
+    return row ? this.rowToFull(row) : null;
   }
 
   /**

@@ -377,9 +377,9 @@ export class ZaloAccountsService {
   }
 
   /**
-   * Child of the given master with lowest `groupCount`, then stable by `id`.
+   * Active children of the given master, sorted by lowest `groupCount`, then `id`.
    */
-  async findChildZaloWithMinGroupForMaster(masterId: string) {
+  async listChildZaloWithMinGroupForMaster(masterId: string) {
     const rels = await this.prismaService.zaloAccountRelation.findMany({
       where: { masterId },
       include: {
@@ -402,13 +402,18 @@ export class ZaloAccountsService {
       .filter(
         (c) => !c.isDeleted && c.status === 'ACTIVE' && !c.isMaster && c.zaloId,
       );
-    if (active.length === 0) {
-      return null;
-    }
     active.sort(
       (a, b) =>
         a.groupCount - b.groupCount || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0),
     );
+    return active;
+  }
+
+  /**
+   * Child of the given master with lowest `groupCount`, then stable by `id`.
+   */
+  async findChildZaloWithMinGroupForMaster(masterId: string) {
+    const active = await this.listChildZaloWithMinGroupForMaster(masterId);
     return active[0] ?? null;
   }
 
@@ -417,7 +422,7 @@ export class ZaloAccountsService {
    * Includes `INACTIVE` children (caller must reject send when not `ACTIVE`).
    * Prefers `ACTIVE` when multiple mapped children exist; tie-break: lowest `groupCount`, then `id`.
    */
-  async findChildZaloInGroupForMaster(masterId: string, groupId: string) {
+  async listChildZaloInGroupForMaster(masterId: string, groupId: string) {
     const maps = await this.prismaService.zaloAccountGroup.findMany({
       where: {
         groupId,
@@ -446,9 +451,6 @@ export class ZaloAccountsService {
     const eligible = maps
       .map((m) => m.zaloAccount)
       .filter((c) => Boolean(c.zaloId?.trim()));
-    if (eligible.length === 0) {
-      return null;
-    }
     eligible.sort((a, b) => {
       const aActive = a.status === 'ACTIVE' ? 0 : 1;
       const bActive = b.status === 'ACTIVE' ? 0 : 1;
@@ -459,6 +461,11 @@ export class ZaloAccountsService {
         a.groupCount - b.groupCount || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
       );
     });
+    return eligible;
+  }
+
+  async findChildZaloInGroupForMaster(masterId: string, groupId: string) {
+    const eligible = await this.listChildZaloInGroupForMaster(masterId, groupId);
     return eligible[0] ?? null;
   }
 
