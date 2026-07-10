@@ -90,13 +90,16 @@ export class ChildGroupGridResolveService {
 
     const batchSize =
       this.config.get<number>('childGroupSync.getGroupInfoBatchSize') ?? 20;
-    const maxCalls =
+    // Background child-scan caps calls/run; post-invite resolve must find ONE known
+    // globalId and may need to walk the full unmapped list (child can have 200+ groups).
+    const maxCallsConfig =
       this.config.get<number>('childGroupSync.maxGetGroupInfoCallsPerRun') ??
       10;
 
     let lastWorkListLen = 0;
     let scannedGrids = 0;
     let sawExpectedGlobalId = false;
+    let exhaustedWorkList = false;
 
     for (
       let attempt = 1;
@@ -138,14 +141,25 @@ export class ChildGroupGridResolveService {
       }
       let prev: ZaloSessionCredentialsPayload = full.credentials;
       const zca = new ZcaApiHelper(ap);
-      const callsLimit = maxCalls;
+
+      // With a known target globalId: scan every unmapped grid until match.
+      // Without it: keep the background-style call cap.
+      const callsLimit = expectedGlobalId
+        ? Math.ceil(workList.length / batchSize)
+        : maxCallsConfig;
       scannedGrids = 0;
       sawExpectedGlobalId = false;
+      exhaustedWorkList = false;
+
+      this.logger.log(
+        `resolve grid: attempt ${attempt}/${CHILD_GRID_APPEAR_RETRY_ATTEMPTS} unmapped=${workList.length} batchSize=${batchSize} callsLimit=${callsLimit} expectedGlobalId=${expectedGlobalId || '(none)'}`,
+      );
 
       for (let c = 0; c < callsLimit; c += 1) {
         const base = c * batchSize;
         const chunk = workList.slice(base, base + batchSize);
         if (chunk.length === 0) {
+          exhaustedWorkList = true;
           break;
         }
         scannedGrids += chunk.length;
@@ -184,12 +198,20 @@ export class ChildGroupGridResolveService {
         if (nowTrim) {
           return nowTrim;
         }
+        // Found the canonical group on this child session but link did not stick —
+        // no point scanning the rest of the list.
+        if (sawExpectedGlobalId) {
+          break;
+        }
+      }
+      if (scannedGrids >= workList.length) {
+        exhaustedWorkList = true;
       }
 
       // Target group not linked this attempt — maybe invite not visible yet on child.
       if (attempt < CHILD_GRID_APPEAR_RETRY_ATTEMPTS && !sawExpectedGlobalId) {
         this.logger.log(
-          `resolve grid: chưa thấy globalId đích trên child (attempt ${attempt}/${CHILD_GRID_APPEAR_RETRY_ATTEMPTS}, unmapped=${workList.length}, scanned=${scannedGrids}); retry.`,
+          `resolve grid: chưa thấy globalId đích trên child (attempt ${attempt}/${CHILD_GRID_APPEAR_RETRY_ATTEMPTS}, unmapped=${workList.length}, scanned=${scannedGrids}, exhausted=${exhaustedWorkList}); retry.`,
         );
         await this.sleep(CHILD_GRID_APPEAR_RETRY_DELAY_MS);
         continue;
@@ -204,7 +226,9 @@ export class ChildGroupGridResolveService {
     }
     if (!sawExpectedGlobalId) {
       throw new BadRequestException(
-        `Child đã có ${lastWorkListLen} grid chưa map; đã getGroupInfo ${scannedGrids} grid nhưng không thấy globalId=${expectedGlobalId} của nhóm "${targetGroup.groupName ?? groupId}". Thường là child chưa vào nhóm trên Zalo (invite chưa thành / đang chờ duyệt), hoặc grid đích nằm ngoài giới hạn quét — chạy quét nhóm child đầy đủ.`,
+        exhaustedWorkList
+          ? `Đã quét hết ${scannedGrids} grid chưa map trên child nhưng không thấy globalId=${expectedGlobalId} của nhóm "${targetGroup.groupName ?? groupId}". Child chưa vào nhóm trên Zalo (invite chưa thành / đang chờ duyệt), hoặc globalId trong DB không khớp Zalo.`
+          : `Child có ${lastWorkListLen} grid chưa map; mới getGroupInfo ${scannedGrids} grid và chưa thấy globalId=${expectedGlobalId} của nhóm "${targetGroup.groupName ?? groupId}".`,
       );
     }
     throw new BadRequestException(
