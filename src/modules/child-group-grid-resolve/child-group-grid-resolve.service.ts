@@ -22,10 +22,17 @@ import { ZaloLoginSessionsService } from '../zalo-login-sessions/zalo-login-sess
 type GridInfoEntry = { name?: string; globalId?: string };
 
 const ZALO_RESOLVE_API_TIMEOUT_MS = 120_000;
+/** After master invite, Zalo may lag before the group appears on the child session. */
+const CHILD_GRID_APPEAR_RETRY_ATTEMPTS = 4;
+const CHILD_GRID_APPEAR_RETRY_DELAY_MS = 2_000;
 
 /**
  * Đồng bộ inline (không Bull): sau khi master `addUserToGroup`, lấy `group_zalo_id` **phía child**
  * qua getAllGroups + getGroupInfo + cùng quy tắc link như child scan.
+ *
+ * Vì sao cần bước này: grid id (`group_zalo_id`) **khác nhau theo từng tài khoản**.
+ * Master mời bằng grid của master; `sendMessage` bằng session child phải dùng grid của child.
+ * Cầu nối là `globalId` (canonical) từ `getGroupInfo` ↔ `ZaloGroup.globalId`.
  */
 @Injectable()
 export class ChildGroupGridResolveService {
@@ -56,6 +63,15 @@ export class ChildGroupGridResolveService {
       return existingTrim;
     }
 
+    const targetGroup = await this.prisma.zaloGroup.findFirst({
+      where: { id: groupId },
+      select: { id: true, globalId: true, groupName: true },
+    });
+    if (!targetGroup) {
+      throw new BadRequestException('ZaloGroup không tồn tại để map phía child.');
+    }
+    const expectedGlobalId = targetGroup.globalId?.trim() || '';
+
     const masterIds = await this.getMasterIdsForChild(zaloAccountId);
     if (masterIds.length === 0) {
       throw new BadRequestException(
@@ -72,56 +88,84 @@ export class ChildGroupGridResolveService {
       throw new BadRequestException('Tài khoản child thiếu zalo_id.');
     }
 
-    const workList = await this.listUnmappedChildGridIds(
-      sessionId,
-      zaloAccountId,
-    );
-    if (workList.length === 0) {
-      throw new BadRequestException(
-        'Không có grid nhóm mới trên Zalo (getAllGroups) để map — kiểm tra child đã vào nhóm chưa.',
-      );
-    }
-
-    const batchSize = this.config.get<number>(
-      'childGroupSync.getGroupInfoBatchSize',
-    ) ?? 20;
+    const batchSize =
+      this.config.get<number>('childGroupSync.getGroupInfoBatchSize') ?? 20;
     const maxCalls =
-      this.config.get<number>(
-        'childGroupSync.maxGetGroupInfoCallsPerRun',
-      ) ?? 10;
+      this.config.get<number>('childGroupSync.maxGetGroupInfoCallsPerRun') ??
+      10;
 
-    const full = await this.loginSessions.findOneFullBySessionId(sessionId);
-    let ap: API;
-    try {
-      ap = await createZcaApiFromCredentials(full.credentials);
-    } catch (e) {
-      this.logger.error(
-        `resolve grid: session restore failed: ${e instanceof Error ? e.message : String(e)}`,
-      );
-      throw badRequestForZaloSessionRestoreFailure(
-        e instanceof Error ? e.message : String(e),
-      );
-    }
-    let prev: ZaloSessionCredentialsPayload = full.credentials;
-    const zca = new ZcaApiHelper(ap);
-    const callsLimit = maxCalls;
+    let lastWorkListLen = 0;
+    let scannedGrids = 0;
+    let sawExpectedGlobalId = false;
 
-    for (let c = 0; c < callsLimit; c += 1) {
-      const base = c * batchSize;
-      const chunk = workList.slice(base, base + batchSize);
-      if (chunk.length === 0) {
-        break;
+    for (
+      let attempt = 1;
+      attempt <= CHILD_GRID_APPEAR_RETRY_ATTEMPTS;
+      attempt += 1
+    ) {
+      const workList = await this.listUnmappedChildGridIds(
+        sessionId,
+        zaloAccountId,
+      );
+      lastWorkListLen = workList.length;
+
+      if (workList.length === 0) {
+        if (attempt < CHILD_GRID_APPEAR_RETRY_ATTEMPTS) {
+          this.logger.log(
+            `resolve grid: child getAllGroups chưa có grid mới (attempt ${attempt}/${CHILD_GRID_APPEAR_RETRY_ATTEMPTS}); chờ ${CHILD_GRID_APPEAR_RETRY_DELAY_MS}ms.`,
+          );
+          await this.sleep(CHILD_GRID_APPEAR_RETRY_DELAY_MS);
+          continue;
+        }
+        throw new BadRequestException(
+          expectedGlobalId
+            ? `Child getAllGroups không có grid nhóm mới sau khi mời — session child chưa thấy nhóm (globalId=${expectedGlobalId}, group="${targetGroup.groupName ?? groupId}"). Kiểm tra child đã vào nhóm trên Zalo (không chỉ pending duyệt).`
+            : 'Không có grid nhóm mới trên Zalo (getAllGroups) để map — kiểm tra child đã vào nhóm chưa.',
+        );
       }
-      const arg: string | string[] =
-        chunk.length === 1 ? chunk[0]! : chunk;
-      const res = await this.withZaloCallTimeout(
-        zca.getGroupInfo(arg),
-        `getGroupInfo(${String(Array.isArray(arg) ? arg.length : 1)} ids)`,
-      );
-      const grid = this.readGrid(res);
-      for (const gridId of chunk) {
-        const entry = grid?.[gridId];
-        if (entry) {
+
+      const full = await this.loginSessions.findOneFullBySessionId(sessionId);
+      let ap: API;
+      try {
+        ap = await createZcaApiFromCredentials(full.credentials);
+      } catch (e) {
+        this.logger.error(
+          `resolve grid: session restore failed: ${e instanceof Error ? e.message : String(e)}`,
+        );
+        throw badRequestForZaloSessionRestoreFailure(
+          e instanceof Error ? e.message : String(e),
+        );
+      }
+      let prev: ZaloSessionCredentialsPayload = full.credentials;
+      const zca = new ZcaApiHelper(ap);
+      const callsLimit = maxCalls;
+      scannedGrids = 0;
+      sawExpectedGlobalId = false;
+
+      for (let c = 0; c < callsLimit; c += 1) {
+        const base = c * batchSize;
+        const chunk = workList.slice(base, base + batchSize);
+        if (chunk.length === 0) {
+          break;
+        }
+        scannedGrids += chunk.length;
+        const arg: string | string[] =
+          chunk.length === 1 ? chunk[0]! : chunk;
+        const res = await this.withZaloCallTimeout(
+          zca.getGroupInfo(arg),
+          `getGroupInfo(${String(Array.isArray(arg) ? arg.length : 1)} ids)`,
+        );
+        const grid = this.readGrid(res);
+        for (const gridId of chunk) {
+          const entry = grid?.[gridId];
+          if (!entry) {
+            continue;
+          }
+          const gFromZ =
+            typeof entry.globalId === 'string' ? entry.globalId.trim() : '';
+          if (expectedGlobalId && gFromZ && gFromZ === expectedGlobalId) {
+            sawExpectedGlobalId = true;
+          }
           await this.tryLinkChildToMasterGroup(
             zaloAccountId,
             masterIds,
@@ -129,23 +173,47 @@ export class ChildGroupGridResolveService {
             entry,
           );
         }
-      }
-      prev = await this.persistCredsAndReturnNext(sessionId, ap, prev);
-      await this.loginSessions.touchBySessionId(sessionId);
+        prev = await this.persistCredsAndReturnNext(sessionId, ap, prev);
+        await this.loginSessions.touchBySessionId(sessionId);
 
-      const nowRow = await this.prisma.zaloAccountGroup.findFirst({
-        where: { zaloAccountId, groupId },
-        select: { groupZaloId: true },
-      });
-      const nowTrim = nowRow?.groupZaloId?.trim();
-      if (nowTrim) {
-        return nowTrim;
+        const nowRow = await this.prisma.zaloAccountGroup.findFirst({
+          where: { zaloAccountId, groupId },
+          select: { groupZaloId: true },
+        });
+        const nowTrim = nowRow?.groupZaloId?.trim();
+        if (nowTrim) {
+          return nowTrim;
+        }
       }
+
+      // Target group not linked this attempt — maybe invite not visible yet on child.
+      if (attempt < CHILD_GRID_APPEAR_RETRY_ATTEMPTS && !sawExpectedGlobalId) {
+        this.logger.log(
+          `resolve grid: chưa thấy globalId đích trên child (attempt ${attempt}/${CHILD_GRID_APPEAR_RETRY_ATTEMPTS}, unmapped=${workList.length}, scanned=${scannedGrids}); retry.`,
+        );
+        await this.sleep(CHILD_GRID_APPEAR_RETRY_DELAY_MS);
+        continue;
+      }
+      break;
     }
 
+    if (!expectedGlobalId) {
+      throw new BadRequestException(
+        `Đã gọi getGroupInfo (${scannedGrids}/${lastWorkListLen} grid chưa map) nhưng ZaloGroup id=${groupId} chưa có globalId trong DB — chạy đồng bộ metadata nhóm (master) trước.`,
+      );
+    }
+    if (!sawExpectedGlobalId) {
+      throw new BadRequestException(
+        `Child đã có ${lastWorkListLen} grid chưa map; đã getGroupInfo ${scannedGrids} grid nhưng không thấy globalId=${expectedGlobalId} của nhóm "${targetGroup.groupName ?? groupId}". Thường là child chưa vào nhóm trên Zalo (invite chưa thành / đang chờ duyệt), hoặc grid đích nằm ngoài giới hạn quét — chạy quét nhóm child đầy đủ.`,
+      );
+    }
     throw new BadRequestException(
-      'Đã gọi getGroupInfo nhưng chưa map được group_zalo_id phía child (thiếu globalId trên ZaloGroup, hoặc child chưa trong nhóm). Thử chạy đồng bộ metadata nhóm / quét nhóm child.',
+      `Đã thấy globalId=${expectedGlobalId} trên session child nhưng chưa tạo được zalo_account_groups (master chưa map nhóm này, hoặc race). Kiểm tra master có dòng zalo_account_groups cho group id=${groupId}.`,
     );
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async getMasterIdsForChild(childId: string): Promise<string[]> {

@@ -661,7 +661,7 @@ export class ZaloAccountsService {
       );
     }
 
-    const zaloResult = await this.withZaloUidSession(
+    await this.withZaloUidSession(
       master.zaloId,
       async (zca) => {
         const ownId = String(zca.getOwnId() ?? '').trim();
@@ -681,31 +681,137 @@ export class ZaloAccountsService {
           );
         }
 
+        let sawAlreadyMember = false;
         try {
-          return await zca.addUserToGroup(inviteUid, params.groupZaloId);
+          const zaloResult = await zca.addUserToGroup(
+            inviteUid,
+            params.groupZaloId,
+          );
+          if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
+            const detail = this.formatZaloAddUserToGroupFailure(zaloResult);
+            throw new BadRequestException(
+              detail ||
+                'Zalo addUserToGroup did not complete successfully for the child user.',
+            );
+          }
         } catch (err) {
+          if (err instanceof HttpException) {
+            throw err;
+          }
           if (
             err instanceof ZaloApiError &&
             err.code === ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE
           ) {
+            sawAlreadyMember = true;
             this.logger.log(
-              `addUserToGroup: Zalo ${ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE} (already member) for uid=${inviteUid} grid=${params.groupZaloId} — treating as success.`,
+              `addUserToGroup: Zalo ${ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE} for uid=${inviteUid} grid=${params.groupZaloId} — verifying membership via getGroupInfo.`,
             );
-            return { errorMembers: [], error_data: {} };
+          } else {
+            throw err;
           }
-          throw err;
         }
+
+        // Master grid ≠ child grid. Confirm invitee is actually in the group
+        // (178 alone is not enough — wrong uid / pending approve can still yield 178-like paths).
+        const membership = await this.readGroupMembershipForUid(
+          zca,
+          params.groupZaloId,
+          inviteUid,
+        );
+        if (membership.inMembers) {
+          return;
+        }
+        if (membership.inPending) {
+          throw new BadRequestException(
+            `Child uid=${inviteUid} is pending group approval (chưa phải thành viên). Duyệt trên Zalo hoặc tắt “phê duyệt thành viên mới”, rồi gửi lại.`,
+          );
+        }
+        if (sawAlreadyMember) {
+          throw new BadRequestException(
+            `Zalo báo 178 (đã là thành viên) cho uid=${inviteUid} nhưng getGroupInfo(master grid=${params.groupZaloId}) không thấy uid đó trong memVerList/memberIds. Kiểm tra SĐT child / findUser uid và đúng nhóm (group_zalo_id master).`,
+          );
+        }
+        throw new BadRequestException(
+          `Sau addUserToGroup, child uid=${inviteUid} chưa có trong nhóm (master grid=${params.groupZaloId}).`,
+        );
       },
       { useZaloListener: true },
     );
+  }
 
-    if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
-      const detail = this.formatZaloAddUserToGroupFailure(zaloResult);
-      throw new BadRequestException(
-        detail ||
-          'Zalo addUserToGroup did not complete successfully for the child user.',
-      );
+  /** Normalize Zalo member ids (`uid` or `uid_0`) for comparison. */
+  private normalizeZaloMemberId(raw: unknown): string {
+    const s = raw != null ? String(raw).trim() : '';
+    if (!s) {
+      return '';
     }
+    const under = s.indexOf('_');
+    return under > 0 ? s.slice(0, under) : s;
+  }
+
+  private async readGroupMembershipForUid(
+    zca: ZcaApiHelper,
+    groupZaloId: string,
+    inviteUid: string,
+  ): Promise<{ inMembers: boolean; inPending: boolean }> {
+    const want = this.normalizeZaloMemberId(inviteUid);
+    if (!want) {
+      return { inMembers: false, inPending: false };
+    }
+    let res: unknown;
+    try {
+      res = await zca.getGroupInfo(groupZaloId);
+    } catch (e) {
+      this.logger.warn(
+        `getGroupInfo after invite failed for grid=${groupZaloId}: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      return { inMembers: false, inPending: false };
+    }
+    const map =
+      res != null && typeof res === 'object'
+        ? (res as { gridInfoMap?: Record<string, Record<string, unknown>> })
+            .gridInfoMap
+        : undefined;
+    const entry = map?.[groupZaloId];
+    if (!entry || typeof entry !== 'object') {
+      return { inMembers: false, inPending: false };
+    }
+    const memberBags: unknown[] = [
+      entry.memVerList,
+      entry.memberIds,
+      Array.isArray(entry.currentMems)
+        ? (entry.currentMems as { id?: unknown }[]).map((m) => m?.id)
+        : [],
+    ];
+    const memberIds = new Set<string>();
+    for (const bag of memberBags) {
+      if (!Array.isArray(bag)) {
+        continue;
+      }
+      for (const id of bag) {
+        const n = this.normalizeZaloMemberId(id);
+        if (n) {
+          memberIds.add(n);
+        }
+      }
+    }
+    const pendingRaw =
+      entry.pendingApprove != null && typeof entry.pendingApprove === 'object'
+        ? (entry.pendingApprove as { uids?: unknown }).uids
+        : null;
+    const pendingIds = new Set<string>();
+    if (Array.isArray(pendingRaw)) {
+      for (const id of pendingRaw) {
+        const n = this.normalizeZaloMemberId(id);
+        if (n) {
+          pendingIds.add(n);
+        }
+      }
+    }
+    return {
+      inMembers: memberIds.has(want),
+      inPending: pendingIds.has(want),
+    };
   }
 
   private isZaloAddUserToGroupResultOk(result: unknown): boolean {
