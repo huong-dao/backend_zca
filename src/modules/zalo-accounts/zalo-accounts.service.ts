@@ -294,6 +294,9 @@ type FindOneAccountRecord = ZaloAccountBaseRecord & {
 /** zca-js `sendFriendRequest`: already friends or reciprocal accept. */
 const ZALO_SENDREQ_ALREADY_LINKED_CODES = new Set([222, 225]);
 
+/** Zalo `addUserToGroup`: invitee(s) already in the group — treat as idempotent success. */
+const ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE = 178;
+
 /** Zalo may reject empty `msg` with a generic invalid-params error. */
 const DEFAULT_FRIEND_REQUEST_MESSAGE = 'Xin kết bạn với tôi nhé';
 
@@ -605,6 +608,10 @@ export class ZaloAccountsService {
   /**
    * Master session: `findUser(phone)` + `addUserToGroup` — chỉ mời child vào nhóm trên Zalo.
    * Không ghi `zalo_account_groups` — `group_zalo_id` phía child cần resolve sau (ví dụ public-zalo-send gọi `ChildGroupGridResolveService`).
+   *
+   * Zalo **178** (“đã là thành viên”) được coi là thành công idempotent — caller vẫn phải resolve
+   * `group_zalo_id` phía child. Nếu `findUser(phone)` ra đúng uid của master thì fail rõ ràng
+   * (tránh mời chính master → luôn 178 trong khi nhóm “chỉ có master”).
    */
   async addChildZaloToGroupByMasterZaloId(params: {
     masterZaloAccountId: string;
@@ -631,7 +638,7 @@ export class ZaloAccountsService {
         isMaster: true,
         status: 'ACTIVE',
       },
-      select: { zaloId: true },
+      select: { zaloId: true, phone: true },
     });
     if (!master?.zaloId) {
       throw new BadRequestException('Master has no zalo_id or is not active.');
@@ -642,18 +649,61 @@ export class ZaloAccountsService {
       throw new BadRequestException('Child phone is required to add to group.');
     }
 
+    const masterPhoneDigits = (master.phone ?? '').replace(/\D/g, '');
+    const childPhoneDigits = phone.replace(/\D/g, '');
+    if (
+      masterPhoneDigits.length > 0 &&
+      childPhoneDigits.length > 0 &&
+      masterPhoneDigits === childPhoneDigits
+    ) {
+      throw new BadRequestException(
+        `Child phone (${phone}) matches the master account phone — cannot invite. Fix zalo_accounts.phone on the child.`,
+      );
+    }
+
     const zaloResult = await this.withZaloUidSession(
       master.zaloId,
       async (zca) => {
+        const ownId = String(zca.getOwnId() ?? '').trim();
         const p = await zca.findUser(phone);
-        return zca.addUserToGroup(p.uid, params.groupZaloId);
+        const inviteUid = p?.uid != null ? String(p.uid).trim() : '';
+        if (!inviteUid) {
+          throw new BadRequestException(
+            `findUser(${phone}) did not return a uid for the child.`,
+          );
+        }
+        if (
+          (ownId && inviteUid === ownId) ||
+          inviteUid === master.zaloId!.trim()
+        ) {
+          throw new BadRequestException(
+            `findUser(${phone}) resolved to the master uid (${inviteUid}). Check child phone / that master and child are different Zalo accounts.`,
+          );
+        }
+
+        try {
+          return await zca.addUserToGroup(inviteUid, params.groupZaloId);
+        } catch (err) {
+          if (
+            err instanceof ZaloApiError &&
+            err.code === ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE
+          ) {
+            this.logger.log(
+              `addUserToGroup: Zalo ${ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE} (already member) for uid=${inviteUid} grid=${params.groupZaloId} — treating as success.`,
+            );
+            return { errorMembers: [], error_data: {} };
+          }
+          throw err;
+        }
       },
       { useZaloListener: true },
     );
 
     if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
+      const detail = this.formatZaloAddUserToGroupFailure(zaloResult);
       throw new BadRequestException(
-        'Zalo addUserToGroup did not complete successfully for the child user.',
+        detail ||
+          'Zalo addUserToGroup did not complete successfully for the child user.',
       );
     }
   }
@@ -663,19 +713,47 @@ export class ZaloAccountsService {
       return false;
     }
     const r = result as Record<string, unknown>;
+    const ed = r.error_data;
+    const errorCodesWithMembers: string[] = [];
+    if (ed != null && typeof ed === 'object') {
+      for (const [code, v] of Object.entries(ed as Record<string, unknown>)) {
+        if (Array.isArray(v) && v.length > 0) {
+          errorCodesWithMembers.push(String(code));
+        }
+      }
+    }
+    if (errorCodesWithMembers.length > 0) {
+      // Soft per-member errors: only "already member" (178) counts as OK.
+      return errorCodesWithMembers.every(
+        (c) => c === String(ZALO_ADD_TO_GROUP_ALREADY_MEMBER_CODE),
+      );
+    }
     const em = r.errorMembers;
     if (Array.isArray(em) && em.length > 0) {
       return false;
     }
+    return true;
+  }
+
+  private formatZaloAddUserToGroupFailure(result: unknown): string {
+    if (result == null || typeof result !== 'object') {
+      return '';
+    }
+    const r = result as Record<string, unknown>;
+    const parts: string[] = [];
+    const em = r.errorMembers;
+    if (Array.isArray(em) && em.length > 0) {
+      parts.push(`errorMembers=${em.join(',')}`);
+    }
     const ed = r.error_data;
     if (ed != null && typeof ed === 'object') {
-      for (const v of Object.values(ed as Record<string, unknown>)) {
+      for (const [code, v] of Object.entries(ed as Record<string, unknown>)) {
         if (Array.isArray(v) && v.length > 0) {
-          return false;
+          parts.push(`[${code}] ${v.join(',')}`);
         }
       }
     }
-    return true;
+    return parts.join('; ');
   }
 
   async createFriend(
