@@ -339,19 +339,30 @@ export class PublicZaloSendService {
       pickedFromFallback = await this.pickChildWithSession(inGroupCandidates);
       childFromGroup = pickedFromFallback != null;
       if (!pickedFromFallback) {
-        const fallbackSender = inGroupCandidates[0]!;
-        return this.failWithLog(
-          {
-            senderId: fallbackSender.id,
-            groupId: group.id,
-            peerPhone: null,
-            content: contentForDb,
-            uidFrom: fallbackSender.zaloId?.trim() || null,
-          },
-          9,
-          'Có child trong nhóm nhưng không ai đang đăng nhập Zalo (QR); đăng nhập ít nhất một child trong nhóm.',
-          savedMedia,
+        const allMasterChildren =
+          await this.zaloAccounts.listChildZaloWithMinGroupForMaster(master.id);
+        const inGroupIds = new Set(inGroupCandidates.map((c) => c.id));
+        const outsideGroupCandidates = allMasterChildren.filter(
+          (c) => !inGroupIds.has(c.id),
         );
+        pickedFromFallback =
+          await this.pickChildWithSession(outsideGroupCandidates);
+        childFromGroup = false;
+        if (!pickedFromFallback) {
+          const fallbackSender = inGroupCandidates[0]!;
+          return this.failWithLog(
+            {
+              senderId: fallbackSender.id,
+              groupId: group.id,
+              peerPhone: null,
+              content: contentForDb,
+              uidFrom: fallbackSender.zaloId?.trim() || null,
+            },
+            9,
+            'Không có child nào đang đăng nhập Zalo (QR) để gửi; child trong nhóm đều offline và không còn child online khác để mời vào nhóm.',
+            savedMedia,
+          );
+        }
       }
     } else {
       const fallbackCandidates =
