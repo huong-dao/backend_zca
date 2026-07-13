@@ -567,14 +567,41 @@ export class ZaloAccountsService {
         'Both Zalo accounts must have zalo_id for friend automation.',
       );
     }
+
+    // DB đã APPROVE → tin cấu hình hệ thống, không ép master session để verify lại.
     if (approved) {
-      const onZalo = await this.isMasterChildFriendsOnZalo(
-        { zaloId: masterAccount.zaloId, phone: masterAccount.phone },
-        { zaloId: childAccount.zaloId, phone: childAccount.phone },
+      return;
+    }
+
+    const alreadyFriends = await this.areMasterChildFriendsOnZaloEitherSide(
+      { zaloId: masterAccount.zaloId, phone: masterAccount.phone },
+      { zaloId: childAccount.zaloId, phone: childAccount.phone },
+    );
+    if (alreadyFriends) {
+      await this.upsertMasterChildFriendApprove(
+        masterAccountId,
+        childAccountId,
       );
-      if (onZalo) {
-        return;
+      return;
+    }
+
+    const masterSession = await this.loginSessions.tryFindLatestByZaloUid(
+      masterAccount.zaloId.trim(),
+    );
+    const childSession = await this.loginSessions.tryFindLatestByZaloUid(
+      childAccount.zaloId.trim(),
+    );
+    if (!masterSession || !childSession) {
+      const missing: string[] = [];
+      if (!masterSession) {
+        missing.push('master');
       }
+      if (!childSession) {
+        missing.push('child');
+      }
+      throw new BadRequestException(
+        `Chưa có phiên Zalo (QR) cho tài khoản ${missing.join(' và ')} — cần đăng nhập QR để tự động kết bạn, hoặc ghi nhận quan hệ APPROVE trong zalo_account_friends nếu đã kết bạn trên Zalo.`,
+      );
     }
 
     await this.pairZaloAccountsAsFriends(
@@ -582,6 +609,13 @@ export class ZaloAccountsService {
       { zaloId: childAccount.zaloId, phone: childAccount.phone },
     );
 
+    await this.upsertMasterChildFriendApprove(masterAccountId, childAccountId);
+  }
+
+  private async upsertMasterChildFriendApprove(
+    masterAccountId: string,
+    childAccountId: string,
+  ): Promise<void> {
     const anyRow = await this.prismaService.zaloAccountFriend.findFirst({
       where: {
         OR: [
@@ -605,6 +639,34 @@ export class ZaloAccountsService {
           status: 'APPROVE',
         },
       });
+    }
+  }
+
+  private async areMasterChildFriendsOnZaloEitherSide(
+    master: { zaloId: string; phone: string | null },
+    child: { zaloId: string; phone: string | null },
+  ): Promise<boolean> {
+    if (await this.isMasterChildFriendsOnZalo(master, child)) {
+      return true;
+    }
+    return this.isChildFriendsWithMasterOnZalo(child, master);
+  }
+
+  private async isChildFriendsWithMasterOnZalo(
+    child: { zaloId: string; phone: string | null },
+    master: { zaloId: string; phone: string | null },
+  ): Promise<boolean> {
+    try {
+      return await this.withZaloUidSession(child.zaloId, async (zca) => {
+        const masterUid = await this.resolvePeerZaloUserIdForFriendApi(
+          zca,
+          master,
+          'master account',
+        );
+        return this.isUidInZaloFriendList(zca, masterUid);
+      });
+    } catch {
+      return false;
     }
   }
 
@@ -666,7 +728,7 @@ export class ZaloAccountsService {
           'child account',
         );
 
-        if (!(await this.isUidInMasterFriends(zca, inviteUid))) {
+        if (!(await this.isUidInZaloFriendList(zca, inviteUid))) {
           throw new BadRequestException(
             'Master và child chưa là bạn bè trên Zalo (theo danh sách bạn của master). Hệ thống sẽ thử kết bạn lại ở bước trước; nếu vẫn lỗi, kiểm tra session master/child và quyền kết bạn.',
           );
@@ -728,14 +790,14 @@ export class ZaloAccountsService {
           child,
           'child account',
         );
-        return this.isUidInMasterFriends(zca, childUid);
+        return this.isUidInZaloFriendList(zca, childUid);
       });
     } catch {
       return false;
     }
   }
 
-  private async isUidInMasterFriends(
+  private async isUidInZaloFriendList(
     zca: ZcaApiHelper,
     uid: string,
   ): Promise<boolean> {
