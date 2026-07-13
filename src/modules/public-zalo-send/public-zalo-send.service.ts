@@ -480,6 +480,7 @@ export class PublicZaloSendService {
         )) ?? '';
 
       if (!groupZaloIdForSend) {
+        let inviteError: string | undefined;
         try {
           await this.zaloAccounts.addChildZaloToGroupByMasterZaloId({
             masterZaloAccountId: master.id,
@@ -489,13 +490,12 @@ export class PublicZaloSendService {
             groupInternalId: group.id,
           });
         } catch (e) {
-          return this.failWithLog(
-            failureBase,
-            11,
+          inviteError =
             e instanceof Error
               ? e.message
-              : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
-            savedMedia,
+              : 'Không thể thêm child vào nhóm trên Zalo (master mời).';
+          this.logger.warn(
+            `public zalo send: master invite skipped or failed (${inviteError}); will still resolve child group_zalo_id.`,
           );
         }
 
@@ -509,14 +509,14 @@ export class PublicZaloSendService {
               },
             );
         } catch (e) {
-          return this.failWithLog(
-            failureBase,
-            11,
+          const resolveDetail =
             e instanceof Error
               ? e.message
-              : 'Không map được group_zalo_id phía child sau khi mời vào nhóm.',
-            savedMedia,
-          );
+              : 'Không map được group_zalo_id phía child sau khi mời vào nhóm.';
+          const detail = inviteError
+            ? `${resolveDetail} (invite: ${inviteError})`
+            : resolveDetail;
+          return this.failWithLog(failureBase, 11, detail, savedMedia);
         }
       }
     }

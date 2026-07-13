@@ -90,6 +90,24 @@ export class ChildGroupGridResolveService {
       throw new BadRequestException('Tài khoản child thiếu zalo_id.');
     }
 
+    const targetGroup = await this.prisma.zaloGroup.findFirst({
+      where: { id: groupId },
+      select: { globalId: true },
+    });
+    const targetGlobalId = targetGroup?.globalId?.trim();
+    if (targetGlobalId) {
+      const matched = await this.resolveChildGridMatchingGlobalId({
+        zaloAccountId,
+        groupId,
+        sessionId,
+        targetGlobalId,
+        masterIds,
+      });
+      if (matched) {
+        return matched;
+      }
+    }
+
     const workList = await this.listUnmappedChildGridIds(
       sessionId,
       zaloAccountId,
@@ -145,6 +163,7 @@ export class ChildGroupGridResolveService {
             masterIds,
             gridId,
             entry,
+            groupId,
           );
         }
       }
@@ -164,6 +183,104 @@ export class ChildGroupGridResolveService {
     throw new BadRequestException(
       'Đã gọi getGroupInfo nhưng chưa map được group_zalo_id phía child (thiếu globalId trên ZaloGroup, hoặc child chưa trong nhóm). Thử chạy đồng bộ metadata nhóm / quét nhóm child.',
     );
+  }
+
+  /**
+   * Tìm grid phía child có `globalId` trùng nhóm đích (sau master mời) — retry vì Zalo có thể chậm cập nhật getAllGroups.
+   */
+  private async resolveChildGridMatchingGlobalId(args: {
+    zaloAccountId: string;
+    groupId: string;
+    sessionId: string;
+    targetGlobalId: string;
+    masterIds: string[];
+  }): Promise<string | null> {
+    const batchSize =
+      this.config.get<number>('childGroupSync.getGroupInfoBatchSize') ?? 20;
+    const maxAttempts = 3;
+    const delayMs = 2000;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      if (attempt > 0) {
+        await this.sleep(delayMs);
+      }
+
+      const gridIds = await this.listChildGridIdsFromZalo(args.sessionId);
+      if (gridIds.length === 0) {
+        continue;
+      }
+
+      const full = await this.loginSessions.findOneFullBySessionId(
+        args.sessionId,
+      );
+      let ap: API;
+      try {
+        ap = await createZcaApiFromCredentials(full.credentials);
+      } catch {
+        continue;
+      }
+      let prev: ZaloSessionCredentialsPayload = full.credentials;
+      const zca = new ZcaApiHelper(ap);
+
+      try {
+        for (let base = 0; base < gridIds.length; base += batchSize) {
+          const chunk = gridIds.slice(base, base + batchSize);
+          const arg: string | string[] = chunk.length === 1 ? chunk[0]! : chunk;
+          const res = await this.withZaloCallTimeout(
+            zca.getGroupInfo(arg),
+            `getGroupInfo(targetGlobalId, ${chunk.length})`,
+          );
+          const grid = this.readGrid(res);
+          for (const gridId of chunk) {
+            const entry = grid?.[gridId];
+            const globalFromZ = entry?.globalId?.trim();
+            if (!entry || !globalFromZ || globalFromZ !== args.targetGlobalId) {
+              continue;
+            }
+            await this.tryLinkChildToMasterGroup(
+              args.zaloAccountId,
+              args.masterIds,
+              gridId,
+              entry,
+              args.groupId,
+            );
+            const row = await this.prisma.zaloAccountGroup.findFirst({
+              where: {
+                zaloAccountId: args.zaloAccountId,
+                groupId: args.groupId,
+              },
+              select: { groupZaloId: true },
+            });
+            const mapped = row?.groupZaloId?.trim();
+            if (mapped) {
+              return mapped;
+            }
+          }
+        }
+      } finally {
+        prev = await this.persistCredsAndReturnNext(args.sessionId, ap, prev);
+        await this.loginSessions.touchBySessionId(args.sessionId);
+      }
+    }
+
+    return null;
+  }
+
+  private async listChildGridIdsFromZalo(sessionId: string): Promise<string[]> {
+    const gridVerMap = await this.withZaloCallTimeout(
+      this.withZaloSessionShort(sessionId, async (zca) => {
+        const g = await zca.getAllGroups();
+        return g?.gridVerMap ?? {};
+      }),
+      'getAllGroups',
+    );
+    return Object.keys((gridVerMap as Record<string, string>) || {}).filter(
+      (k) => k.length > 0,
+    );
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private async getMasterIdsForChild(childId: string): Promise<string[]> {
@@ -307,12 +424,13 @@ export class ChildGroupGridResolveService {
     return m as Record<string, GridInfoEntry>;
   }
 
-  /** Cùng điều kiện với child scan — tạo `zalo_account_groups` với grid phía child. */
+  /** Cùng điều kiện với child scan — tạo/cập nhật `zalo_account_groups` với grid phía child. */
   private async tryLinkChildToMasterGroup(
     zaloAccountId: string,
     masterIds: string[],
     groupZaloId: string,
     entry: GridInfoEntry,
+    preferredGroupId?: string,
   ): Promise<void> {
     const globalFromZ =
       typeof entry.globalId === 'string' && entry.globalId.trim()
@@ -324,10 +442,22 @@ export class ChildGroupGridResolveService {
       );
       return;
     }
-    let group: { id: string } | null = await this.prisma.zaloGroup.findFirst({
-      where: { globalId: globalFromZ },
-      select: { id: true },
-    });
+    let group: { id: string } | null = null;
+    if (preferredGroupId) {
+      const preferred = await this.prisma.zaloGroup.findFirst({
+        where: { id: preferredGroupId },
+        select: { id: true, globalId: true },
+      });
+      if (preferred?.globalId?.trim() === globalFromZ) {
+        group = { id: preferred.id };
+      }
+    }
+    if (!group) {
+      group = await this.prisma.zaloGroup.findFirst({
+        where: { globalId: globalFromZ },
+        select: { id: true },
+      });
+    }
     if (!group) {
       const masterMapRows = await this.prisma.zaloAccountGroup.findMany({
         where: { zaloAccountId: { in: masterIds } },
@@ -380,33 +510,67 @@ export class ChildGroupGridResolveService {
     if (!masterHasGroup) {
       return;
     }
-    const exists = await this.prisma.zaloAccountGroup.findFirst({
-      where: { zaloAccountId, groupId: group.id },
-    });
-    if (exists) {
+    await this.upsertChildGroupMapping(zaloAccountId, group.id, groupZaloId);
+  }
+
+  private async upsertChildGroupMapping(
+    zaloAccountId: string,
+    groupInternalId: string,
+    groupZaloId: string,
+  ): Promise<void> {
+    const gridTrim = groupZaloId.trim();
+    if (!gridTrim) {
       return;
     }
-    try {
-      await this.prisma.zaloAccountGroup.create({
-        data: { zaloAccountId, groupZaloId, groupId: group.id },
-      });
-      const groupCount = await this.prisma.zaloAccountGroup.count({
-        where: { zaloAccountId },
-      });
-      await this.prisma.zaloAccount.update({
-        where: { id: zaloAccountId },
-        data: { groupCount },
-      });
-    } catch (e) {
-      if (
-        e &&
-        typeof e === 'object' &&
-        'code' in e &&
-        (e as { code: string }).code === 'P2002'
-      ) {
-        return;
-      }
-      throw e;
+    const existing = await this.prisma.zaloAccountGroup.findFirst({
+      where: { zaloAccountId, groupId: groupInternalId },
+      select: { id: true, groupZaloId: true },
+    });
+    if (existing?.groupZaloId?.trim()) {
+      return;
     }
+    if (existing) {
+      await this.prisma.zaloAccountGroup.update({
+        where: { id: existing.id },
+        data: { groupZaloId: gridTrim },
+      });
+    } else {
+      try {
+        await this.prisma.zaloAccountGroup.create({
+          data: {
+            zaloAccountId,
+            groupZaloId: gridTrim,
+            groupId: groupInternalId,
+          },
+        });
+      } catch (e) {
+        if (
+          e &&
+          typeof e === 'object' &&
+          'code' in e &&
+          (e as { code: string }).code === 'P2002'
+        ) {
+          const again = await this.prisma.zaloAccountGroup.findFirst({
+            where: { zaloAccountId, groupId: groupInternalId },
+            select: { id: true, groupZaloId: true },
+          });
+          if (again && !again.groupZaloId?.trim()) {
+            await this.prisma.zaloAccountGroup.update({
+              where: { id: again.id },
+              data: { groupZaloId: gridTrim },
+            });
+          }
+          return;
+        }
+        throw e;
+      }
+    }
+    const groupCount = await this.prisma.zaloAccountGroup.count({
+      where: { zaloAccountId },
+    });
+    await this.prisma.zaloAccount.update({
+      where: { id: zaloAccountId },
+      data: { groupCount },
+    });
   }
 }

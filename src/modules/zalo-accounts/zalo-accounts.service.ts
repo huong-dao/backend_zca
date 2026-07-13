@@ -652,10 +652,11 @@ export class ZaloAccountsService {
       throw new BadRequestException('Child has no zalo_id.');
     }
 
+    let inviteUid = '';
     const zaloResult = await this.withZaloUidSession(
       master.zaloId,
       async (zca) => {
-        const inviteUid = await this.resolvePeerZaloUserIdForFriendApi(
+        inviteUid = await this.resolvePeerZaloUserIdForFriendApi(
           zca,
           {
             zaloId: child.zaloId,
@@ -691,6 +692,13 @@ export class ZaloAccountsService {
     );
 
     if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
+      const members = this.extractZaloAddUserErrorMembers(zaloResult);
+      if (inviteUid && members.includes(inviteUid)) {
+        this.logger.warn(
+          `addUserToGroup returned errorMembers for invite uid=${inviteUid}; child may already be in group — caller should resolve group_zalo_id.`,
+        );
+        return;
+      }
       throw new BadRequestException(
         this.formatZaloAddUserToGroupFailure(zaloResult),
       );
