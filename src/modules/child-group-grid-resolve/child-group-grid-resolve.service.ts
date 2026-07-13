@@ -40,6 +40,24 @@ export class ChildGroupGridResolveService {
   /**
    * @returns `group_zalo_id` trên session child cho `groupId` nội bộ, sau khi DB đã có map (create).
    */
+  async tryResolveChildGroupZaloIdAfterMasterInvite(params: {
+    zaloAccountId: string;
+    groupId: string;
+    sessionId: string;
+  }): Promise<string | null> {
+    try {
+      return await this.resolveChildGroupZaloIdAfterMasterInvite(params);
+    } catch (e) {
+      this.logger.debug(
+        `tryResolveChildGroupZaloId: ${e instanceof Error ? e.message : String(e)}`,
+      );
+      return null;
+    }
+  }
+
+  /**
+   * @returns `group_zalo_id` trên session child cho `groupId` nội bộ, sau khi DB đã có map (create).
+   */
   async resolveChildGroupZaloIdAfterMasterInvite(params: {
     zaloAccountId: string;
     groupId: string;

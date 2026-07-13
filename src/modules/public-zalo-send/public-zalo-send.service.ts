@@ -470,43 +470,54 @@ export class PublicZaloSendService {
         );
       }
 
-      try {
-        await this.zaloAccounts.addChildZaloToGroupByMasterZaloId({
-          masterZaloAccountId: master.id,
-          childZaloAccountId: child.id,
-          childPhoneForFindUser: childPhone ?? '',
-          groupZaloId: masterGroupZaloId,
-          groupInternalId: group.id,
-        });
-      } catch (e) {
-        return this.failWithLog(
-          failureBase,
-          11,
-          e instanceof Error
-            ? e.message
-            : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
-          savedMedia,
-        );
-      }
+      groupZaloIdForSend =
+        (await this.childGroupGridResolve.tryResolveChildGroupZaloIdAfterMasterInvite(
+          {
+            zaloAccountId: child.id,
+            groupId: group.id,
+            sessionId,
+          },
+        )) ?? '';
 
-      try {
-        groupZaloIdForSend =
-          await this.childGroupGridResolve.resolveChildGroupZaloIdAfterMasterInvite(
-            {
-              zaloAccountId: child.id,
-              groupId: group.id,
-              sessionId,
-            },
+      if (!groupZaloIdForSend) {
+        try {
+          await this.zaloAccounts.addChildZaloToGroupByMasterZaloId({
+            masterZaloAccountId: master.id,
+            childZaloAccountId: child.id,
+            childPhoneForFindUser: childPhone ?? '',
+            groupZaloId: masterGroupZaloId,
+            groupInternalId: group.id,
+          });
+        } catch (e) {
+          return this.failWithLog(
+            failureBase,
+            11,
+            e instanceof Error
+              ? e.message
+              : 'Không thể thêm child vào nhóm trên Zalo (master mời).',
+            savedMedia,
           );
-      } catch (e) {
-        return this.failWithLog(
-          failureBase,
-          11,
-          e instanceof Error
-            ? e.message
-            : 'Không map được group_zalo_id phía child sau khi mời vào nhóm.',
-          savedMedia,
-        );
+        }
+
+        try {
+          groupZaloIdForSend =
+            await this.childGroupGridResolve.resolveChildGroupZaloIdAfterMasterInvite(
+              {
+                zaloAccountId: child.id,
+                groupId: group.id,
+                sessionId,
+              },
+            );
+        } catch (e) {
+          return this.failWithLog(
+            failureBase,
+            11,
+            e instanceof Error
+              ? e.message
+              : 'Không map được group_zalo_id phía child sau khi mời vào nhóm.',
+            savedMedia,
+          );
+        }
       }
     }
 

@@ -568,7 +568,13 @@ export class ZaloAccountsService {
       );
     }
     if (approved) {
-      return;
+      const onZalo = await this.isMasterChildFriendsOnZalo(
+        { zaloId: masterAccount.zaloId, phone: masterAccount.phone },
+        { zaloId: childAccount.zaloId, phone: childAccount.phone },
+      );
+      if (onZalo) {
+        return;
+      }
     }
 
     await this.pairZaloAccountsAsFriends(
@@ -618,44 +624,172 @@ export class ZaloAccountsService {
         zaloAccountId: params.childZaloAccountId,
         groupId: params.groupInternalId,
       },
-      select: { id: true },
+      select: { id: true, groupZaloId: true },
     });
-    if (existing) {
+    if (existing?.groupZaloId?.trim()) {
       return;
     }
 
-    const master = await this.prismaService.zaloAccount.findFirst({
-      where: {
-        id: params.masterZaloAccountId,
-        isDeleted: false,
-        isMaster: true,
-        status: 'ACTIVE',
-      },
-      select: { zaloId: true },
-    });
+    const [master, child] = await Promise.all([
+      this.prismaService.zaloAccount.findFirst({
+        where: {
+          id: params.masterZaloAccountId,
+          isDeleted: false,
+          isMaster: true,
+          status: 'ACTIVE',
+        },
+        select: { zaloId: true },
+      }),
+      this.prismaService.zaloAccount.findFirst({
+        where: { id: params.childZaloAccountId, isDeleted: false },
+        select: { zaloId: true, phone: true },
+      }),
+    ]);
     if (!master?.zaloId) {
       throw new BadRequestException('Master has no zalo_id or is not active.');
     }
-
-    const phone = params.childPhoneForFindUser.trim();
-    if (!phone) {
-      throw new BadRequestException('Child phone is required to add to group.');
+    if (!child?.zaloId) {
+      throw new BadRequestException('Child has no zalo_id.');
     }
 
     const zaloResult = await this.withZaloUidSession(
       master.zaloId,
       async (zca) => {
-        const p = await zca.findUser(phone);
-        return zca.addUserToGroup(p.uid, params.groupZaloId);
+        const inviteUid = await this.resolvePeerZaloUserIdForFriendApi(
+          zca,
+          {
+            zaloId: child.zaloId,
+            phone:
+              params.childPhoneForFindUser.trim() || child.phone?.trim() || null,
+          },
+          'child account',
+        );
+
+        if (!(await this.isUidInMasterFriends(zca, inviteUid))) {
+          throw new BadRequestException(
+            'Master và child chưa là bạn bè trên Zalo (theo danh sách bạn của master). Hệ thống sẽ thử kết bạn lại ở bước trước; nếu vẫn lỗi, kiểm tra session master/child và quyền kết bạn.',
+          );
+        }
+
+        let result: unknown = await zca.addUserToGroup(
+          inviteUid,
+          params.groupZaloId,
+        );
+        if (!this.isZaloAddUserToGroupResultOk(result)) {
+          const multi = await zca.inviteUserToGroups(
+            inviteUid,
+            params.groupZaloId,
+          );
+          if (this.isZaloInviteUserToGroupsResultOk(multi)) {
+            return multi;
+          }
+          result = multi;
+        }
+        return result;
       },
       { useZaloListener: true },
     );
 
     if (!this.isZaloAddUserToGroupResultOk(zaloResult)) {
       throw new BadRequestException(
-        'Zalo addUserToGroup did not complete successfully for the child user.',
+        this.formatZaloAddUserToGroupFailure(zaloResult),
       );
     }
+  }
+
+  private isZaloInviteUserToGroupsResultOk(result: unknown): boolean {
+    if (result == null || typeof result !== 'object') {
+      return false;
+    }
+    const r = result as Record<string, unknown>;
+    const em = r.errorMembers;
+    if (Array.isArray(em) && em.length > 0) {
+      return false;
+    }
+    return true;
+  }
+
+  private async isMasterChildFriendsOnZalo(
+    master: { zaloId: string; phone: string | null },
+    child: { zaloId: string; phone: string | null },
+  ): Promise<boolean> {
+    try {
+      return await this.withZaloUidSession(master.zaloId, async (zca) => {
+        const childUid = await this.resolvePeerZaloUserIdForFriendApi(
+          zca,
+          child,
+          'child account',
+        );
+        return this.isUidInMasterFriends(zca, childUid);
+      });
+    } catch {
+      return false;
+    }
+  }
+
+  private async isUidInMasterFriends(
+    zca: ZcaApiHelper,
+    uid: string,
+  ): Promise<boolean> {
+    const needle = uid.trim();
+    if (!needle) {
+      return false;
+    }
+    const raw = await zca.getAllFriends(20_000, 1);
+    const list = Array.isArray(raw) ? raw : [];
+    for (const u of list) {
+      if (!u || typeof u !== 'object') {
+        continue;
+      }
+      const o = u as Record<string, unknown>;
+      const userIdRaw = o.userId ?? o.uid;
+      if (typeof userIdRaw === 'string' && userIdRaw.trim() === needle) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private formatZaloAddUserToGroupFailure(result: unknown): string {
+    const members = this.extractZaloAddUserErrorMembers(result);
+    const base =
+      'Zalo addUserToGroup did not complete successfully for the child user.';
+    if (members.length > 0) {
+      return `${base} errorMembers: ${members.join(', ')}`;
+    }
+    const ed = this.extractZaloAddUserErrorDataSummary(result);
+    if (ed) {
+      return `${base} error_data: ${ed}`;
+    }
+    return `${base} Kiểm tra master là admin nhóm, master–child đã kết bạn trên Zalo, child chưa ở trong nhóm, và group_zalo_id master còn hợp lệ.`;
+  }
+
+  private extractZaloAddUserErrorMembers(result: unknown): string[] {
+    if (result == null || typeof result !== 'object') {
+      return [];
+    }
+    const em = (result as Record<string, unknown>).errorMembers;
+    if (!Array.isArray(em)) {
+      return [];
+    }
+    return em.filter((x): x is string => typeof x === 'string');
+  }
+
+  private extractZaloAddUserErrorDataSummary(result: unknown): string | null {
+    if (result == null || typeof result !== 'object') {
+      return null;
+    }
+    const ed = (result as Record<string, unknown>).error_data;
+    if (ed == null || typeof ed !== 'object') {
+      return null;
+    }
+    const parts: string[] = [];
+    for (const [k, v] of Object.entries(ed as Record<string, unknown>)) {
+      if (Array.isArray(v) && v.length > 0) {
+        parts.push(`${k}=[${v.map(String).join(',')}]`);
+      }
+    }
+    return parts.length > 0 ? parts.join('; ') : null;
   }
 
   private isZaloAddUserToGroupResultOk(result: unknown): boolean {
