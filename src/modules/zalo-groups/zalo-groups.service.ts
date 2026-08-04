@@ -32,6 +32,7 @@ import {
   FindZaloGroupsByAccountQuery,
   FindZaloGroupsDto,
 } from './dto/find-zalo-groups.dto';
+import { GetZaloGroupInfoDto } from './dto/get-zalo-group-info.dto';
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { RemoveMemberFromZaloGroupDto } from './dto/remove-member-from-zalo-group.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
@@ -326,6 +327,14 @@ export class ZaloGroupsService {
         joinedAt,
       })),
     };
+  }
+
+  /** Live group metadata from Zalo via `getGroupInfo` for the selected login session. */
+  async getGroupInfo(dto: GetZaloGroupInfoDto) {
+    return this.withZaloSession(dto.sessionId, async (zca) => {
+      const groupInfo = await zca.getGroupInfo(dto.groupId);
+      return { groupInfo };
+    });
   }
 
   async create(dto: UpsertZaloGroupDto) {

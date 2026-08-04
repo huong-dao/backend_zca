@@ -24,6 +24,7 @@ import {
 import { InviteMemberToZaloGroupDto } from './dto/invite-member-to-zalo-group.dto';
 import { RemoveMemberFromZaloGroupDto } from './dto/remove-member-from-zalo-group.dto';
 import { ChangeZaloGroupNameDto } from './dto/change-zalo-group-name.dto';
+import { GetZaloGroupInfoDto } from './dto/get-zalo-group-info.dto';
 import { UpsertZaloGroupDto } from './dto/upsert-zalo-group.dto';
 import { ZaloGroupsService } from './zalo-groups.service';
 
@@ -90,6 +91,15 @@ export class ZaloGroupsController {
     @Body() dto: ChangeZaloGroupNameDto,
   ) {
     return this.zaloGroupsService.changeGroupNameOnZalo(id, dto);
+  }
+
+  /**
+   * Fetch live Zalo group metadata (`getGroupInfo`) using a logged-in session.
+   * Pair with `GET /zalo/actions/groups?sessionId=...` to list grid ids first.
+   */
+  @Post('group-info')
+  getGroupInfo(@Body() dto: GetZaloGroupInfoDto) {
+    return this.zaloGroupsService.getGroupInfo(dto);
   }
 
   @Post('invite-member')
